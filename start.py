@@ -21,10 +21,10 @@ This
 """
 
 # TARGET:
-#       LocalWeb: run SimpleHTTPServer and open a browser to it.
-#       TK: run a local TK app.
-#       TKWeb: Open a TK app getting the info (json) from a specific URL.
-#       TKLocalWeb: run a SimpleHTTPServer and open a TKWeb.
+#       test: very basic text based UI
+#       localweb: run a HTTPServer and open a browser to it.
+#       tk: run a local TK app.
+# Idea: get the config from a specific web page (might be usefull for an initial install).
 
 import argparse
 import logging

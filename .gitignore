@@ -8,3 +8,8 @@ susm*
 
 # Makefile
 Makefile
+
+# Javascript and CSS files
+*.js
+*.css
+

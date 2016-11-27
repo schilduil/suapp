@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-import json
-
 import suapp.jandw
 from logdecorator import *
 
@@ -94,6 +92,7 @@ class Configuration(suapp.jandw.Wooster):
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
+        import json
         print("=====================")
         print("Configuration")
         print("---------------------")

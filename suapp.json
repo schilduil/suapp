@@ -9,6 +9,10 @@
         "modules": {
             "base": {
                 "level": "INFO"
+            },
+            "httpd": {
+                "level": "DEBUG",
+                "filename": "~/.suapp/log/httpd.accces_log"
             }
         }
     },

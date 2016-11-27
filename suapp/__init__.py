@@ -140,9 +140,14 @@ class SuApp(object):
             # Configuring the further modules logging settings.
             if "modules" in self.configuration["log"]:
                 for module in self.configuration["log"]["modules"]:
+                    module_logger = logging.getLogger("modules.%s" % (module))
                     if "level" in self.configuration["log"]["modules"][module]:
                         level = convert_to_log_level(self.configuration["log"]["modules"][module]["level"])
-                        logging.getLogger("modules.%s" % (module)).setLevel(level)
+                        module_logger.setLevel(level)
+                    if "filename" in self.configuration["log"]["modules"][module]:
+                        log.info("!Logging modules.%s to %s" % (module, self.configuration["log"]["modules"][module]["filename"]))
+                        module_logger.propagate = False
+                        module_logger.addHandler(logging.FileHandler(os.path.expanduser(self.configuration["log"]["modules"][module]["filename"])))
         except ConfigurationError:
             # Re-raise
             raise
