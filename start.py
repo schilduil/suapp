@@ -47,7 +47,7 @@ def configuration_to_flat_dict(configuration, prefix = None):
             config_flat.update(configuration_to_flat_dict(value, prefix = new_prefix))
         else:
             config_flat['.'.join(new_prefix)] = value
-    print("%s: %s - %s" % (prefix, configuration, config_flat)) # DELME
+    #print("%s: %s - %s" % (prefix, configuration, config_flat)) # DELME
     return config_flat
 
 
@@ -61,7 +61,7 @@ def configuration_to_configparser(configuration):
         except ValueError:
             section = ""
             key = fullkey
-        print("[%s] %s: %s - %s" % (section, key, value, fullkey))
+        #print("[%s] %s: %s - %s" % (section, key, value, fullkey))
         try:
             if section != "":
                 config_parser.add_section(section)

@@ -268,7 +268,7 @@ class RecordWindow(ToplevelWooster):
 
     @loguse
     def __edit(self, key):
-        print("Key: %s" % (key))
+        print("Key: %s" % (key)) # DELME
         # If the value is composite (map), open a RecordWindow modal
         # If the value is singular, open a EditWindow modal
         return
@@ -382,7 +382,7 @@ class UniqueRecordFactory(RecordFactory):
         self.windowreferences[key].focus_set()
 
 
-class AboutTL(ToplevelWooster):
+class AboutWindow(ToplevelWooster):
 
     @loguse
     def __init__(self, master=None):
@@ -420,7 +420,6 @@ class About(suapp.jandw.Wooster):
 
     @loguse
     def inflow(self, jeeves, drone):
-        print("About window: %s" % self.window)
         if self.window:
             if self.window.closed:
                 self.window = None
@@ -428,7 +427,7 @@ class About(suapp.jandw.Wooster):
             if isinstance(drone.fromvertex, Frame):
                 logging.getLogger(__name__).debug(": About[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
-                self.window = AboutFrame(drone.fromvertex)
+                self.window = AboutWindow(drone.fromvertex)
             else:
                 logging.getLogger(__name__).debug(": About[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()
@@ -480,6 +479,7 @@ class Application(Frame, suapp.jandw.Wooster):
         self.menuHelp = Menu(self.menuBar, tearoff=0)
         self.menuBar.add_cascade(label="Help", menu=self.menuHelp)
         self.menuHelp.add_command(label="About", command=self.__about)
+        self.menuHelp.add_command(label="Configuration", command=self.__configuration)
 
     @loguse
     def __testTable(self, tablename):
@@ -492,6 +492,10 @@ class Application(Frame, suapp.jandw.Wooster):
     @loguse
     def __about(self):
         self.jeeves.drone(self, "ABOUT", self.jeeves.MODE_MODAL, None)
+
+    @loguse
+    def __configuration(self):
+        self.jeeves.drone(self, "CONFIGURATION", self.jeeves.MODE_MODAL, None)
 
     @loguse
     def inflow(self, jeeves, drone):
@@ -535,7 +539,7 @@ class Application(Frame, suapp.jandw.Wooster):
         self.destroy()
         self.quit()
 
-class ConfigurationTL(ToplevelWooster):
+class ConfigurationWindow(ToplevelWooster):
 
     @loguse
     def __init__(self, master=None):
@@ -551,7 +555,7 @@ class ConfigurationTL(ToplevelWooster):
     @loguse
     def createWidgets(self):
         self.text = Text(self, wrap=WORD)
-        self.text.insert(END, "Configuration of the Application.\n\t1. Yes\n\t2. No\n\t3.")
+        self.text.insert(END, "Configuration of the Application.")
         self.text.config(state=DISABLED)
         self.text.grid()
         self.button = Button(self, text="Close", command=self.close)
@@ -560,10 +564,18 @@ class ConfigurationTL(ToplevelWooster):
 
     @loguse
     def inflow(self, jeeves, drone):
-        self.jeeves = jeeves
+        import json
+        self.text.config(state=NORMAL)
+        self.text.delete(1.0, END)
+        self.text.insert(END, "Configuration of the Application:\n\n%s" % (json.dumps(jeeves.app.configuration, indent = "\t")))
+        self.text.config(state=DISABLED)
+        self.update()
 
 
 class Configuration(suapp.jandw.Wooster):
+
+    name = "CONFIGURATION"
+
     '''
     Perhaps I should replace the FACTORY with just a FUNCTION (though it doesn't make a lot of difference in python)
     '''
@@ -580,7 +592,7 @@ class Configuration(suapp.jandw.Wooster):
             if isinstance(drone.fromvertex, Frame):
                 logging.getLogger(__name__).debug(": Configuration[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
-                self.window = AboutFrame(drone.fromvertex)
+                self.window = ConfigurationWindow(drone.fromvertex)
             else:
                 logging.getLogger(__name__).debug(": Configuration[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()

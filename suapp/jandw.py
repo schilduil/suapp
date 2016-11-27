@@ -23,7 +23,8 @@ class Wooster(object):
         pass
 
     def inflow(self, jeeves, drone):
-        pass
+        # The only thing it does is store the Jeeves object.
+        self.jeeves = jeeves
         # MODE: Modal=1, Replace=2, Both=3
         # jeeves.drone(self, name, mode, dataobject)
 
