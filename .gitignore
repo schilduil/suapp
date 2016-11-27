@@ -11,5 +11,5 @@ Makefile
 
 # Javascript and CSS files
 *.js
-*.css
+targets/localweb/css/*/*/*.css
 
