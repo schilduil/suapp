@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """
 Starts up a SuApp application.
@@ -26,14 +27,53 @@ This
 #       TKLocalWeb: run a SimpleHTTPServer and open a TKWeb.
 
 import argparse
-import json
+import logging
 import os.path
 import sys
 
 import suapp
 
 
-def read_conf(jsonfilename):
+def configuration_to_flat_dict(configuration, prefix = None):
+    if not prefix:
+        prefix = []
+    config_flat = dict()
+    for key,value in configuration.items():
+        new_prefix = list(prefix)
+        new_prefix.append(key)
+        if type(value) == type(config_flat):
+            new_prefix = list(prefix)
+            new_prefix.append(key)
+            config_flat.update(configuration_to_flat_dict(value, prefix = new_prefix))
+        else:
+            config_flat['.'.join(new_prefix)] = value
+    print("%s: %s - %s" % (prefix, configuration, config_flat)) # DELME
+    return config_flat
+
+
+def configuration_to_configparser(configuration):
+    import configparser
+    config_parser = configparser.RawConfigParser()
+    config_flat = configuration_to_flat_dict(configuration)
+    for fullkey,value in config_flat.items():
+        try:
+            (section,key) = fullkey.rsplit('.',1)
+        except ValueError:
+            section = ""
+            key = fullkey
+        print("[%s] %s: %s - %s" % (section, key, value, fullkey))
+        try:
+            if section != "":
+                config_parser.add_section(section)
+        except configparser.DuplicateSectionError:
+            # Ignore
+            pass
+        config_parser.set(section, key, value)
+    return config_parser
+
+
+def read_conf_json(jsonfilename):
+    import json
     try:
         with open(jsonfilename) as data_file:    
             return json.load(data_file)
@@ -45,6 +85,21 @@ def read_conf(jsonfilename):
         print()
         print("Could not parse the configuration: %s." % (e))
         exit(1)
+
+
+def read_conf(filename):
+    if filename.endswith(".json"):
+        configuration = read_conf_json(filename)
+        try:
+            import os.path
+            import tempfile
+            config_parser = configuration_to_configparser(configuration)
+            with open(os.path.join(tempfile.gettempdir(),'suapp.cfg'), 'w') as config_parser_file_handle:
+                config_parser.write(config_parser_file_handle)
+        except:
+            # Ignore if this fails, just for debugging.
+            pass
+        return configuration
 
 
 def update_conf(configuration, option_string):
@@ -69,7 +124,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Start a SuApp application.')
     parser.add_argument('-o', '--options', help="[key=value]* overrides to the configuration")
-    parser.add_argument('-c', '--configuration', help="path or filename of the configuration json", default="suapp.json")
+    parser.add_argument('-c', '--configuration', help="path or filename of the configuration file (json)", default="suapp.json")
     parser.add_argument('-t', '--target', help="target user interface")
     args = parser.parse_args()
 
@@ -110,5 +165,7 @@ if __name__ == "__main__":
             logging.getLogger(__name__).fatal("Unexpected end of SuApp: %s" % (e))
         finally:
             print("Unexpected end of SuApp!")
-            print(e)
+            import traceback
+            exc_type, exc_value, exc_traceback = sys.exc_info() 
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
 
