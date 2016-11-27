@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-"""
-Copyright (C), 2013, The Schilduil Team. All rights reserved.
-"""
+
 import suapp.jandw
 from tkinter import *
 from tkinter.ttk import *
