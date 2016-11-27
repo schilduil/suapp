@@ -6,3 +6,5 @@ __pycache__/
 comments.txt
 susm*
 
+# Makefile
+Makefile
