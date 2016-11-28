@@ -2,14 +2,22 @@
 # -*- coding: utf-8 -*-
 
 
+import hashlib
+import http.cookies
 import http.server
+import json
 from threading import Thread
+import time
 import os.path
+import urllib.parse
 import webbrowser
 
 import suapp.jandw
 from logdecorator import *
 
+
+users = {"admin": "admin", "user": "user"}
+groups = {"administrators": ["admin"]}
 
 html_template = """<html>
     <head>
@@ -43,6 +51,7 @@ html_template = """<html>
     </body>
 </html>"""
 
+
 #            <script src="/js/html5shiv/3.7.0/html5shiv.js"></script>
 #            <script src="/js/respond.js/1.3.0/respond.min.js"></script>
 
@@ -50,15 +59,335 @@ html_template = """<html>
 #            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
 
 
+class Session(dict):
+    """
+    Session is a dictionary that contains all session relevant objects.
+    
+    There is also a id variable that contains the session id.
+    """
+    def __init__(self, sessionid):
+        self.id = sessionid
+        
+            
+class SessionStore(dict):
+    """
+    The SessionStore is a dictionary specifically for all the session objects in
+    use. 
+    
+    You however cannot just add a session to it. You must use the new() method
+    to create a new session object in the store. It will return the new session 
+    object.
+    The generated session id is based on the timestamp in HEX preceded with a
+    prefix. Unused sessions will be removed from the session store. By default 
+    the timeout is 3600 seconds. You can set both the prefix and timeout (in
+    seconds) in the constructor:
+        SessionStore(prefix = "SUAPP", timeout = 300)
+    """
+    def __init__(self, prefix = None, timeout = None):
+        """
+        Constructs the session store.
+        
+        By default the session id previx is SUAPP and 
+        the timeout is 3600 seconds (1 hour).
+        """
+        if not prefix:
+            prefix = "SUAPP"
+        self.prefix = str(prefix)
+        if not timeout:
+            timeout = 3600
+        self.timeout = int(timeout)
+         
+    def new(self):
+        """
+        Call this method for creating a new session object in the store.
+        
+        It resturns the session object.
+        """
+        sessionid = self.prefix + hashlib.sha1(time.time().hex().encode('utf-8')).hexdigest()
+        now = time.time()
+        session = Session(sessionid)
+        session.update({"created": now, "last-used": now})
+        super().__setitem__(sessionid, session)
+        return session
+    
+    def __setitem__(self, sessionid, session):
+        """
+        Overridden to block adding a session to the store.
+        """
+        raise NotImplementedError("You can't just add objects to the SessionStore. Use new to create a new Session object.")
+    
+    def __getitem__(self, sessionid):
+        """
+        Overridden to check if the session isn't stale.
+        """
+        session = super().__getitem__(sessionid)
+        now = time.time()
+        if session["last-used"] + self.timeout < now:
+            # Stale session, removing it and acting as if it never existed.
+            del self[sessionid]
+            raise KeyError("The session %s has expired." % sessionid)
+        session["last-used"] = now
+        return session
+        
+    def __str__(self):
+        result = []
+        for session in super():
+            result.append(session.id)
+        return ",".join(result)
+
+        
 class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
     jeeves = None
     start = None
+    sessions = SessionStore()
+    
+    @loguse
+    def cookies(self):
+        """
+        Gets the cookie information.
+        """
+        self.cookie=http.cookies.SimpleCookie()
+        #print("Headers: %s" % (self.headers)) # DELME
+        if "Cookie" in self.headers:
+            #print("Cookie: %s" % (self.headers["Cookie"])) # DELME
+            # Not sure why I need .split(";",1)[0], but otherwise it takes the last on on the line.
+            # It seems the SimpleCookie only takes the last in case of multiples.
+            # Not sure this is the solution: does the browser always put the new one in front?
+            self.cookie = http.cookies.SimpleCookie(self.headers["Cookie"].split(";",1)[0])
+    
+    @loguse
+    def session(self):
+        """
+        Session management
+        
+        If the client has sent a cookie named sessionId, that is used.
+        It returns the corresponding session object from the session store.
+        If there is no sessionId or it can't find it in the session store it
+        will create a new session and set it as a cookie.
+        """
+        self.expired_cookie = None
+        session = None
+        # Getting the session from the cookie.
+        #print("> session() %s" % (self.path)) # DELME
+        if "sessionId" in self.cookie:
+            #print("> session() there is a sessionId cookie") # DELME
+            sessionId = self.cookie["sessionId"].value
+            #print("> session() %s" % (sessionId)) # DELME
+            try:
+                session = LocalWebHandler.sessions[sessionId]
+                #print("> session() from sessions: %s" % (session.id)) # DELME
+            except KeyError:
+                # Not found or it is expired
+                # (which is more or less the same thing)
+                self.expired_cookie = sessionId
+                session = None
+        # There was no session or the session expired. Create a new one.
+        #print("> session() checking for session %s" % (session)) # DELME
+        if not session:
+            #print("> session() no session.") # DELME
+            session = LocalWebHandler.sessions.new()
+            #print("> session() new session %s" % (session.id)) # DELME
+            self.cookie["sessionId"] = session.id
+            #print("> session() put in cookie: %s" % (self.cookie["sessionId"])) # DELME
+        #print("> session() session returning: %s" % (session.id)) # DELME
+        self.session_id = session.id
+        return session
+    
+    @loguse
+    def do_service_logoff(self, session, fields, json_object = None, payload = None):
+        """
+        Service that logs out the user by deleting the session.
+        """
+        # Delete the session
+        try:
+            # Remove the current session
+            del LocalWebHandler.sessions[session]
+            # Reinitialize the session.
+            session()
+        except:
+            pass
+        return (200, "text/json; charset=utf-8", {"result": True})
+        
+    @loguse
+    def do_service_public_logon(self, session, fields, json_object = None, payload = None):
+        """
+        Service that logs on the user in this session.
+        
+        It tries to get the credentials from these sources, in this order:
+            * json body
+            * POST / GET parameters (depending on the http method used)
+            * Authentication header (basic authentication)
+        """
+        #print("LOGON: session: %s" % (session.id)) # DELME
+        # First check if someone is already logged in.
+        userid = None
+        try:
+            userid = session["userid"]
+        except:
+            pass
+        # Checking to see if there is a force option in the fields or json.
+        # In that case force the logoff first.
+        if userid:
+            try:
+                if "force" in fields:
+                    self.do_logoff(session, fields)
+                    userid = None
+            except:
+                pass
+        if userid:
+            try:
+                if "force" in json_object:
+                    self.do_logoff(session, fields)
+                    userid = None
+            except:
+                pass
+        if userid:
+            # There is already someone logged in and it was not forced out.
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "User %s is already logged in. Log out first before logging in." % (userid)})
+
+        #print("LOGON: session: %s" % (session.id)) # DELME
+        # Logging in
+        username = None
+        password = None
+        # First try to get the credentials from the json.
+        try:
+            username = json_object["username"]
+            password = json_object["password"]
+        except:
+            pass
+        if not username:
+            # Try to get the credentials from the fields.
+            try:
+                username = fields["username"][-1]
+                password = fields["password"][-1]
+            except:
+                pass
+        if not username:
+            # At last try basic authentication
+            try:
+                # Get the header "Authorization" and base64 decode it and extract username:password.
+                # base64.b64encode("username:password".encode('utf-8'))
+                import base64
+                auth_header = self.headers["Authorization"] # b'dGVzdDp0ZXN0'
+                #print("Authorization: %s" % (auth_header[6:])) # DELME
+                if auth_header.startswith("Basic "):
+                    #print("Authorization: %s" % (base64.b63decode(auth_header[6:]))) # DELME
+                    (username, password) = base64.b64decode(auth_header[6:]).decode('utf-8').split(":", 1)
+                    #print("Basic %s:%s" % (username, password)) # DELME
+            except:
+                pass
+        # Authenticate.
+        # TODO: Connect to a real repository.
+        #print("%s:%s" % (username, password)) # DELME
+        #print("LOGON: session: %s" % (session.id)) # DELME
+        try:
+            if password == users[username]:
+                session["userid"] = username
+                return (200, "text/json; charset=utf-8", {"result": True, "userid": session["userid"]})
+        except KeyError:
+            # Couldn't find user in the user repository.
+            pass
+        return (200, "text/json; charset=utf-8", {"result": False, "message": "Incorrect credentials provided."})
 
     @loguse
-    def content_main(self, jeeves, drone, prefix = None):
-        if not prefix:
+    def authorized(self, session, fields):
+        """
+        Returns a number indicating the permissions.
+        
+        TODO: group based authorization: now it's just Y/N an everything.
+        Using UNIX filesystem permission rwx
+             4: read
+             2: write
+             1: execute
+        """
+        # Check the user
+        user_id = None
+        try:
+            user_id = session["userid"]
+        except:
+            pass
+        if self.path.startswith('/service/public/'):
+            return 6
+        # Not a logged in user, let's see if we can log you in.
+        if not user_id:
+            (result_code, result_type, result_message) = self.do_service_public_logon(session, fields)
+            if result_code == 200:
+                if result_message['result']:
+                    user_id = result_message['userid']
+                else:
+                    try:
+                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % result_message['message'])
+                    except:
+                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % json.dumps(result_message))
+
+        # FOR NOW: anybody logged in has all the rights.
+        # Needs mapping from groups > /services/ROLE/... with permissions.
+        #     e.g. administrators > admin (bad example as they can do all)
+        if user_id:
+            if user_id in groups["administrators"]:
+                # Admin has all rights.
+                return 7
+            elif self.path.startswith('/service/admin/'):
+                return 0
+            else:
+                return 4
+        # This is not a logged in user: no authorization.
+        return None
+
+    @loguse
+    def do_service_admin_sessions(self, session, fields, json_object):
+        """
+        Test service that just returns the sessions.
+        """
+        return (200, "text/json; charset=utf-8", {"result": True, "sessions": LocalWebHandler.sessions})
+        
+    @loguse
+    def do_service_who(self, session, fields, json_object):
+        """
+        Test service that just returns the logged in user.
+        """
+        try:
+            return (200, "text/json; charset=utf-8", {"result": True, "userid": session["userid"]})
+        except:
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "No user logged on."})
+        
+    @loguse
+    def do_service_sessionid(self, session, fields, json_object):
+        """
+        Test service that just returns the sessionid.
+        """
+        return (200, "text/json; charset=utf-8", {"result": True, "sessionid": session.id})
+        
+    @loguse
+    def do_service_sessionobject(self, session, fields, json_object):
+        """
+        DANGER: Test service that returns the content of a session.
+        
+        Possibly very dangerous because of information leakage.
+        By default it will return the session content for the current session
+        but you can pass a specific "sessionid" in the json body.
+        """
+        session_id = session.id
+        try:
+            # If the request was for a specific session
+            session_id = json_object["sessionid"]
+        except:
+            pass
+        
+        try:
+            out_object = LocalWebHandler.sessions[session_id]
+            return (200, "text/json; charset=utf-8", out_object)
+        except:
+            # Unknown session id:
+            return (200, "text/json; charset=utf-8", {})
+
+    @loguse
+    def content_main(self, jeeves, drone, prefix = None, menu = None, main = None):
+        if prefix == None:
             prefix = ""
+        if menu == None:
+            menu = {"File": {"Quit": "EXIT"}, "Help": {"About": "ABOUT", "Configuration": "CONFIGURATION"}}
         dataobject = None
         if drone:
             if drone.dataobject:
@@ -91,7 +420,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-left">')
         output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % (name))
         # TODO: for now this is only 2 deep, perhaps we should make this multilevel.
-        menu = {"File": {"Quit": "EXIT"}, "Help": {"About": "ABOUT", "Configuration": "CONFIGURATION"}}
         for menu_name,menu_sub in menu.items():
             if type(menu_sub) == type(menu):
                 output.append(prefix + '\t\t\t\t<li class="dropdown">')
@@ -138,6 +466,8 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
         output.append(prefix + '\t\t\t<main>')
         output.append(prefix + '\t\t\t\t<p>')
+        if main:
+            output.append(prefix + '\t\t\t\t\t%s' % (main))
         # TODO
         output.append(prefix + '\t\t\t\t</p>')
         output.append(prefix + '\t\t\t</main>')
@@ -159,86 +489,298 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         output.append(prefix + '</div>')
         return (name, "\n".join(output))
 
-    @loguse
-    def do_GET(self):
-        static = False
-        mimetype = "text/html"
-        if self.path.startswith("/css/"):
-            static = True
-            mimetype = "text/css"
-        elif self.path.startswith("/js/"):
-            static = True
-            mimetype = "text/js"
-        if static:
-            # Static content: css, js, ...
-            try:
-                localfile = os.path.join(os.path.dirname(__file__), self.path[1:])
-                with open(localfile, 'rb') as f:
-                    self.send_response(200)
-                    self.send_header('Content-type','text/css')
-                    self.end_headers()
-                    self.wfile.write(f.read())
-            except FileNotFoundError:
-                self.send_response(404)
-                self.send_header('Content-type', 'text/plain')
-                self.end_headers()
-                message = "File %s not found.\n%s" % (self.path, localfile)
-                self.wfile.write(message.encode('utf-8'))
-            return
 
-        message = ""
+    @loguse
+    def do_dynamic_page(self, session, fields):
+        """
+        Returns a dynamic page.
+        
+        Unimplemented, so returns a 404 Page not found.
+        """
+        return_code = 200
+        return_mime = 'text/html; charset=utf-8'
+        return_message = ""
         try:
-            (title, body) = self.content_main(LocalWebHandler.jeeves, LocalWebHandler.start, "        ")
+            (title, body) = self.content_main(LocalWebHandler.jeeves, LocalWebHandler.start, prefix = "        ")
             # AOK
-            self.send_response(200)
-            # It's HTML in unicode (UTF-8)
-            self.send_header('Content-type','text/html; charset=utf-8')
-            self.end_headers()
-            # Send the html message
-            message = html_template % {
+            return_message = html_template % {
                 'title': title,
                 'body': body
             }
-        except err:
-            # ERROR
-            self.send_response(500)
-            # It's just text with the error message.
-            self.send_header('Content-type','text/plain; charset=utf-8')
-            # Message
-            message = "%s" % (err)
+        except:
+            # TODO: needs to splilt up between types of errors: 500 (real), 404 (not found)
+            return_code = 500
+            return_mime = 'text/plain; charset=utf-8'
+            return_message = "%s" % (err)
 
-        self.wfile.write(message.encode("utf-8"))
-        return
+        # The imporant stuff is the OUT message.
+        #return (404, "text/plain; charset=utf-8", "Page not found.")
+        return (return_code, return_mime, return_message)
 
+    @loguse
+    def _do(self, return_code, return_mime, return_message):
+        """
+        It will create and send the http output.
+        
+        It does this, including headers, based on the  return_code, return_mime
+        and return_message.
+        """
+        self.send_response(return_code)
+        self.send_header('Content-type', return_mime)
+        if self.expired_cookie:
+            self.send_header('Set-Cookie', "sessionId=%s; Expires=Thu, 01 Jan 1970 00:00:00 GMT" % self.expired_cookie)
+            self.expired_cookie = None
+        for morsel in self.cookie.values():
+            self.send_header('Set-Cookie', morsel.output(header='').lstrip() + '; Path=/')
+        # self.send_header("Content-length", len(DUMMY_RESPONSE))
+        self.end_headers()
+        self.wfile.write(return_message.encode('utf-8'))
+
+    @loguse
+    def do_error_page(self, return_code, return_mime, return_message):
+        logging.getLogger(self.__module__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
+        message = return_message
+        if return_mime.startswith("text/plain"):
+            # template
+            try:
+                body = ""
+                if return_code == 403:
+                    if return_message == "Not logged in.":
+                        (title, body) = self.content_main(
+                            LocalWebHandler.jeeves, 
+                            None, 
+                            prefix = "        ", 
+                            menu = {},
+                            main = 'Go to the logon page <a href="/public/logon">here</a>.')
+                        # '<h1>%s: %s</h1>\n<p>Go to the logon page <a href="/public/logon">here</a>.</p>' % (return_code, return_message)
+                    else:
+                        body = "<h1>%s: %s</h1>\n<p>Sorry, you don't have access to this.</p>"
+                else:
+                    body = "<h1>%s: %s</h1>\n<p>Oops, something went wrong.</p>" % (return_code, return_message)
+                message = html_template % {
+                    'title': "%s: %s" % (return_code, return_message),
+                    'body': body
+                }
+                return_mime = 'text/html; charset=utf-8'
+            except:
+                pass
+        self._do(return_code, return_mime, message)
+
+    @loguse
+    def do(self, return_code, return_mime, return_message):
+        """
+        It will create and send the http output or the error page.
+        """
+        if return_code >= 400:
+            self.do_error_page(return_code, return_mime, return_message)
+        else:
+            self._do(return_code, return_mime, return_message)
+
+    @loguse
+    def do_dynamic(self, fields, json_object = None, payload = None):
+        """
+        This method will reply to a dynamic request.
+        
+        If json is found in the body this is decoded and can be found in
+        json_object. Otherwise the body of the request is in payload.
+        
+        If the request path looks like "/service/*" it looks for the
+        self.do_service_*() method to handle it for it. If that doesn't exist it
+        returns with a 404. For a service that returns json, you can add the
+        "pretty" GET/POST variable to return a nicely formatted answer instead 
+        of the default one line short json.
+        
+        If it isn't a service it passes handling the request to
+        do_dynamic_page().
+        """
+        self.cookies()
+        session = self.session()
+        return_code = 200
+        return_mime = "text/html; charset=utf-8"
+        return_message = ""
+        # Check authorization
+        auth_level = self.authorized(session, fields)
+        if self.path.startswith('/public/'):
+            auth_level = 7
+        if auth_level != None:
+            if (auth_level & 4):
+                if self.path.startswith("/service/"):
+                    # Looking up if we have a do_service_{} method.
+                    temp = self.path.split("?")
+                    method_name = "do" + "_".join(temp[0].split("/"))
+                    try:
+                        (return_code, return_mime, return_message) = getattr(self, method_name.lower())(session, fields, json_object)
+                    except AttributeError:
+                        # Not found
+                        return_code = 404
+                        return_mime = "text/json; charset=utf-8"
+                        return_message = {"result": False, "message": "Service %s not found." % (method_name.lower())}
+                    if return_mime == "text/json; charset=utf-8":
+                        # The output should be json, so transforming it to json:
+                        if "pretty" in fields:
+                            return_message = json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                        else:
+                            return_message = json.dumps(return_message)
+                else:
+                    (return_code, return_mime, return_message) = self.do_dynamic_page(session, fields)
+            else:
+                (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Not authorized.')
+        else:
+            (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Not logged in.')
+        # And make a http response from it all.
+        self.do(return_code, return_mime, return_message)
+        
+    @loguse
+    def do_static(self, fields, mimetype):
+        """
+        Serve the request from the file system.
+        """
+        # Get the cookies.
+        self.cookies()
+        # Initialize the session.
+        session = self.session()
+        # Check authorization
+        auth_level = self.authorized(session, fields)
+        # Some mime types are always accessable: css, js
+        if self.path.startswith('/public/'):
+            auth_level = 7
+        elif mimetype.startswith("text/css"):
+            auth_level = 4
+        elif mimetype.startswith("application/x-javascript"):
+            auth_level = 4
+        if auth_level != None:
+            if (auth_level & 4):
+                try:
+                    localfile = os.path.join(os.path.dirname(__file__), self.path[1:])
+                    with open(localfile, 'rb') as f:
+                        self.send_response(200)
+                        self.send_header('Content-type', mimetype)
+                        self.end_headers()
+                        self.wfile.write(f.read())
+                except FileNotFoundError:
+                    self.send_response(404)
+                    self.send_header('Content-type', 'text/plain; charset=utf-8')
+                    self.end_headers()
+                    message = "File %s not found.\n%s" % (self.path, localfile)
+                    self.wfile.write(message.encode('utf-8'))
+                return
+            else:
+                # 403: Not authorized
+                self.do(403,'text/plain; charset=utf-8','Not authorized.')
+        else:
+            # 403: Not authorized
+            self.do(403,'text/plain; charset=utf-8','Not logged in.')
+
+    @loguse
+    def do_POST(self):
+        """
+        Entry point for an http POST request.
+        """
+        length = int(self.headers['Content-Length'])
+        fields = {}
+        try:
+            fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        except:
+            # We don't care if we can't get the GET parameters.
+            pass
+        field_data = self.rfile.read(length)
+        # TODO: depending on the mime type.
+        #     application/x-www-form-urlencoded # parameters
+        #     text/json                         # json
+        #     multipart/form-data               # upload
+        
+        # Fields from the POST body get precedence over those from GET.
+        fields.update(urllib.parse.parse_qs(field_data))
+        do_dynamic(fields)
+    
+    @loguse
+    def do_PUT(self):
+        """
+        Entry point for an http PUT request.
+        """
+        length = int(self.headers.getheader('content-length'))
+        field_data = self.rfile.read(length)
+        try:
+            # See if it is json
+            json_object = json.loads(field_data.decode('utf-8'))
+            self.do_dynamic(fields, json_object = json_object)
+        except:
+            self.do_dynamic(fields, payload = field_data)
+    
+    @loguse
+    def do_GET(self):
+        """
+        Entry point for an http GET request.
+        """
+        # TODO: this parsing does not work on keys without a variable.
+        fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        #print("Fields: %s" % (fields)) # DELME
+        # Anything starting with /js/, /css/, /img/ is static content.
+        if self.path == "/favicon.ico":
+            self.do_static(fields)
+        elif self.path.startswith("/js/"):
+            self.do_static(fields, "application/x-javascript")
+        elif self.path.startswith("/img/"):
+            file_name = self.path.split("?",1)[0]
+            if file_name.endswith(".png"):
+                self.do_static(fields, "image/png")
+            elif file_name.endswith(".ico"):
+                self.do_static(fields, "image/x-icon")
+            elif file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
+                self.do_static(fields, "image/jpeg")
+            elif file_name.endswith(".gif"):
+                self.do_static(fields, "image/gif")
+            else:
+                self.do_static(fields, "binary/octet-stream")
+        elif self.path.startswith("/css/"):
+            self.do_static(fields, "text/css; charset=utf-8")
+        else:
+            self.do_dynamic(fields)
+
+    # No @loguse as then we would be logging what we are logging.
     def log_message(self, format, *args):
-        # Logging to modules.httpd logger.
-        # It is recommended to have a special entry in the configuration for this:
-        # ...
-        #       "modules": {
-        #            ...
-        #            "httpd": {
-        #                "level": "DEBUG",
-        #                "filename": "~/.suapp/log/httpd.accces_log"
-        #            }
-        #            ...
-        # ...
-        logging.getLogger("modules.httpd").debug("[%s] %s - - [%s] %s" % (hex(hash(self)), self.address_string(),self.log_date_time_string(),format%args))
+        """
+        Logging to modules.httpd logger.
+        
+        It is recommended to have a special entry in the configuration for this:
+        ...
+              "modules": {
+                   ...
+                   "httpd": {
+                       "level": "DEBUG",
+                       "filename": "~/.suapp/log/httpd.accces_log"
+                   }
+                   ...
+        ...
+        """
+        session_id = ""
+        try:
+            session_id = self.session_id
+        except:
+            pass
+        logging.getLogger("modules.httpd").debug("[%s|%s] %s - - [%s] %s" % (hex(hash(self)), session_id, self.address_string(),self.log_date_time_string(),format%args))
 
 
 class BrowserThread(Thread):
 
     # @loguse seems to break it.
     def __init__(self, ip, port):
+        """
+        Set the ip and port for the browser upon creation.
+        """
         self.ip = ip
         self.port = port
         super().__init__()
-    
+
     @loguse
     def run(self):
+        """
+        Run the thread: i.e. wait and lauch the browser.
+        """
         import time
         # Waiting for x seconds to be sure the http server is up.
         time.sleep(0)
-        webbrowser.open("http://%s:%s/" % (self.ip, self.port))
+        webbrowser.open("http://%s:%s/?username=user&password=user" % (self.ip, self.port))
 
 
 class Application(suapp.jandw.Wooster):
@@ -250,7 +792,7 @@ class Application(suapp.jandw.Wooster):
         self.dataobject = None
         self.testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
         self.tables = {}
-    
+
     @loguse
     def inflow(self, jeeves, drone):
         # The port by default is ord(S)+10 + ord(U)
@@ -286,7 +828,7 @@ class Application(suapp.jandw.Wooster):
         '''
         pass
 
-        
+
 class About(suapp.jandw.Wooster):
 
     @loguse
@@ -308,7 +850,7 @@ class About(suapp.jandw.Wooster):
         answer = input("Choose option: ")
         print()
 
-        
+
 class Configuration(suapp.jandw.Wooster):
 
     @loguse
@@ -321,4 +863,4 @@ class Configuration(suapp.jandw.Wooster):
         print("---------------------")
         answer = input("Choose option: ")
         print()
-
+ 
