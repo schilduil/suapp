@@ -758,7 +758,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             session_id = self.session_id
         except:
             pass
-        logging.getLogger("modules.httpd").debug("[%s|%s] %s - - [%s] %s" % (hex(hash(self)), session_id, self.address_string(),self.log_date_time_string(),format%args))
+        logging.getLogger("modules.httpd").debug("%s %s %s - - [%s] %s" % (hex(hash(self))[-8:], session_id[-8:], self.address_string(),self.log_date_time_string(),format%args))
 
 
 class BrowserThread(Thread):
