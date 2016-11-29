@@ -9,7 +9,7 @@ Optional parameters:
         filename (without path): look for it in the default location.
         filename with path: take it as it is.
         path of existing directory: look for suapp.json in there.
-    -t <target>: tk [DEFAULT], console, web, ...
+    -t <target>: tk [DEFAULT], test, localweb, ...
     Other config parameters you want to overwrite in the form of
     "a.b.c=VALUE,a.d.e.f=1".
     
@@ -35,6 +35,14 @@ import suapp
 
 
 def configuration_to_flat_dict(configuration, prefix = None):
+    """
+    Flattens the configuration from multiple levels to one.
+    
+    From:
+        {"a": {"b": "c": "value"}}}
+    To:
+        {"a.b.c": "value"}
+    """
     if not prefix:
         prefix = []
     config_flat = dict()
@@ -52,6 +60,15 @@ def configuration_to_flat_dict(configuration, prefix = None):
 
 
 def configuration_to_configparser(configuration):
+    """
+    Converts the configuration to a configuration for configparser.
+    
+    From:
+        {"a": {"b": "c": "value"}}}
+    To:
+        [a.b]
+        c = value
+    """
     import configparser
     config_parser = configparser.RawConfigParser()
     config_flat = configuration_to_flat_dict(configuration)
@@ -73,6 +90,9 @@ def configuration_to_configparser(configuration):
 
 
 def read_conf_json(jsonfilename):
+    """
+    Reads and parses the json configuration file.
+    """
     import json
     try:
         with open(jsonfilename) as data_file:    
@@ -88,6 +108,12 @@ def read_conf_json(jsonfilename):
 
 
 def read_conf(filename):
+    """
+    Read the configuration from a file.
+    
+    For now only a json configuration file is supported.
+    It will also write out {/tmp}/suapp.cfg with configparser as a test.
+    """
     if filename.endswith(".json"):
         configuration = read_conf_json(filename)
         try:
@@ -103,6 +129,17 @@ def read_conf(filename):
 
 
 def update_conf(configuration, option_string):
+    """
+    Updates the configuration with different options.
+    
+    The option_string is a comma separate list of configuration key=value pairs.
+    Dots in the key reflect the depth in the configuration.
+    
+    From:
+        a.b.c=value
+    To:
+        {"a": {"b": "c": "value"}}}
+    """
     if not option_string:
         return
     options = option_string.split(",")
