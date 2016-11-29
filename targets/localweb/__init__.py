@@ -203,6 +203,8 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         try:
             # Remove the current session
             del LocalWebHandler.sessions[session]
+            # Reset the cookie so the old one isn't reused.
+            self.cookie=http.cookies.SimpleCookie()
             # Reinitialize the session.
             session()
         except:
