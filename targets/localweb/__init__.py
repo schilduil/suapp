@@ -109,7 +109,7 @@ class SessionStore(dict):
         session.update({"created": now, "last-used": now})
         super().__setitem__(sessionid, session)
         return session
-    
+
     def __setitem__(self, sessionid, session):
         """
         Overridden to block adding a session to the store.
@@ -201,10 +201,8 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         # Delete the session
         try:
-            # Remove the current session
-            del LocalWebHandler.sessions[session]
-            # Reset the cookie so the old one isn't reused.
-            self.cookie=http.cookies.SimpleCookie()
+            # Remove the current session id.
+            del LocalWebHandler.sessions[session.id]
             # Reinitialize the session.
             session()
         except:
