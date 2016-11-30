@@ -29,7 +29,7 @@ class Application(suapp.jandw.Wooster):
         print(self.name)
         print("---------------------")
         if 'tables' in self.dataobject:
-            logging.getLogger(__name__).debug(": Application[%r].inflow() : Setting tables." % (self))
+            logging.getLogger(self.__module__).debug(": Application[%r].inflow() : Setting tables." % (self))
             self.tables = self.dataobject['tables']
         print(self.tables)
         self.jeeves = jeeves
@@ -78,9 +78,9 @@ class About(suapp.jandw.Wooster):
                 for line in fh:
                     print(line, end="")
         except OSError as e:
-            logging.getLogger(__name__).warning("Could not open about text file %s.", drone.dataobject)
+            logging.getLogger(self.__module__).warning("Could not open about text file %s.", drone.dataobject)
         except IOError as e:
-            logging.getLogger(__name__).warning("Could not open about text file %s.", drone.dataobject)
+            logging.getLogger(self.__module__).warning("Could not open about text file %s.", drone.dataobject)
         print()
         print("---------------------")
         answer = input("Choose option: ")

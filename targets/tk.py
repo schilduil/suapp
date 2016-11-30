@@ -177,7 +177,7 @@ class TableWindow(ToplevelWooster):
                 self.listbox.insert(END, ["%s" % (key), "%s" % (self.data[key])])
                 row += 1
         except Exception as err:
-            logging.getLogger(__name__).error(": TableWindow[%r].createWidgets : Not iterable? %s" % (self, err))
+            logging.getLogger(self.__module__).error(": TableWindow[%r].createWidgets : Not iterable? %s" % (self, err))
             raise
         self.listbox.grid(column=0, columnspan=2, row=row, sticky=E+W)
         row += 1
@@ -243,11 +243,11 @@ class TableFactory(suapp.jandw.Wooster):
                     #print("Table: %s: %s" % (drone.dataobject['table'], drone.dataobject['tables'][drone.dataobject['table']]))
                     table = drone.dataobject['tables'][drone.dataobject['table']]
         if isinstance(drone.fromvertex, Frame):
-            logging.getLogger(__name__).debug(": TableFactory[%r].inflow : Using parent" % (self))
+            logging.getLogger(self.__module__).debug(": TableFactory[%r].inflow : Using parent" % (self))
             # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
             window = TableWindow(table, drone.fromvertex)
         else:
-            logging.getLogger(__name__).debug(": TableFactory[%r].inflow : Not using parent" % (self))
+            logging.getLogger(self.__module__).debug(": TableFactory[%r].inflow : Not using parent" % (self))
             window = TableWindow(table)
         window.inflow(jeeves, drone)
         window.lift()
@@ -313,7 +313,7 @@ class RecordWindow(ToplevelWooster):
                 self.columnconfigure(2, weight=0)
                 row += 1
         except Exception as err:
-            logging.getLogger(__name__).error(": RecordWindow[%r].createWidgets : Not iterable? %s" % (self, err))
+            logging.getLogger(self.__module__).error(": RecordWindow[%r].createWidgets : Not iterable? %s" % (self, err))
             raise
         self.buttonS = Button(self, text="Save", command=self.close) # u25b6
         self.buttonS.grid(column=0, row=row)
@@ -340,11 +340,11 @@ class RecordFactory(suapp.jandw.Wooster):
     @loguse
     def inflow(self, jeeves, drone):
         if isinstance(drone.fromvertex, Frame):
-            logging.getLogger(__name__).debug(": RecordFactory[%r].inflow : Using parent" % (self))
+            logging.getLogger(self.__module__).debug(": RecordFactory[%r].inflow : Using parent" % (self))
             # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
             RecordWindow(drone.fromvertex).inflow(jeeves, drone)
         else:
-            logging.getLogger(__name__).debug(": RecordFactory[%r].inflow : Not using parent" % (self))
+            logging.getLogger(self.__module__).debug(": RecordFactory[%r].inflow : Not using parent" % (self))
             RecordWindow().inflow(jeeves, drone)
 
 
@@ -363,19 +363,19 @@ class UniqueRecordFactory(RecordFactory):
             key = table.getKey(object)
             # We looked it up so we just as wel might put it in.
             drone.dataobject['key'] = key
-        logging.getLogger(__name__).debug(": UniqueRecordFactory[%r].inflow : windowreferences: %s in %s" % (self, key, self.windowreferences))
+        logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : windowreferences: %s in %s" % (self, key, self.windowreferences))
         if key in self.windowreferences:
-            logging.getLogger(__name__).debug(": UniqueRecordFactory[%r].inflow : Reusing for %s" % (self, key))
+            logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Reusing for %s" % (self, key))
             if self.windowreferences[key].closed:
-                logging.getLogger(__name__).debug(": UniqueRecordFactory[%r].inflow : Oops that one is already closed so not reusing it." % (self))
+                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Oops that one is already closed so not reusing it." % (self))
                 del self.windowreferences[key]
         if key not in self.windowreferences:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(__name__).debug(": UniqueRecordFactory[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.windowreferences[key] = RecordWindow(drone.fromvertex)
             else:
-                logging.getLogger(__name__).debug(": UniqueRecordFactory[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Not using parent" % (self))
                 self.windowreferences[key] = RecordWindow()
             self.windowreferences[key].inflow(jeeves, drone)
         self.windowreferences[key].lift()
@@ -425,11 +425,11 @@ class About(suapp.jandw.Wooster):
                 self.window = None
         if not self.window:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(__name__).debug(": About[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(": About[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.window = AboutWindow(drone.fromvertex)
             else:
-                logging.getLogger(__name__).debug(": About[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(": About[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()
         self.window.inflow(jeeves, drone)
         self.window.focus_set()
@@ -505,7 +505,7 @@ class Application(Frame, suapp.jandw.Wooster):
             self.dataobject['name'] = 'SuApp'
         self._root().title(self.dataobject['name'])
         if 'tables' in self.dataobject:
-            logging.getLogger(__name__).debug(": Application[%r].inflow() : Setting tables." % (self))
+            logging.getLogger(self.__module__).debug(": Application[%r].inflow() : Setting tables." % (self))
             self.tables = self.dataobject['tables']
         self.jeeves = jeeves
         self.createWidgets() # Perhaps this needs to be in mainloop() so we can do a refresh?
@@ -590,18 +590,18 @@ class Configuration(suapp.jandw.Wooster):
                 self.window = None
         if not self.window:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(__name__).debug(": Configuration[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(": Configuration[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.window = ConfigurationWindow(drone.fromvertex)
             else:
-                logging.getLogger(__name__).debug(": Configuration[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(": Configuration[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()
         self.window.inflow(jeeves, drone)
         self.window.focus_set()
 
 
 if __name__ == "__main__":
-    logging.getLogger(__name__).setLevel(logging.DEBUG) # DEBUG/INFO
+    logging.getLogger(self.__module__).setLevel(logging.DEBUG) # DEBUG/INFO
     flow = Jeeves()
     flow.flow = {
         "": {

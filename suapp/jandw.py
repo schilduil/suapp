@@ -67,6 +67,7 @@ class Jeeves(object):
     def drone(self, fromvertex, name, mode, dataobject):
         # Find the drone
         fromname = ""
+        result = None
         if isinstance(fromvertex, Wooster):
             fromname = fromvertex.name
         else:
@@ -76,20 +77,22 @@ class Jeeves(object):
         drone.dataobject = dataobject
         drone.mode = mode
         # Depending on the mode
+        # Some targets depend on what is returned from inflow.
         if mode == self.MODE_MODAL:
             if isinstance(fromvertex, Wooster):
                 fromvertex.lock()
                 drone.fromvertex = fromvertex
-            drone.tovertex.inflow(self, drone)
+            result = drone.tovertex.inflow(self, drone)
             if isinstance(fromvertex, Wooster):
                 fromvertex.unlock()
         elif mode == self.MODE_REPLACE:
             drone.fromvertex = None
             fromvertex.close()
-            drone.tovertex.inflow(self, drone)
+            result = drone.tovertex.inflow(self, drone)
         elif mode == self.MODE_OPEN:
             drone.fromvertex = fromvertex
-            drone.tovertex.inflow(self, drone)
+            result = drone.tovertex.inflow(self, drone)
+        return result
 
     @loguse
     def start(self, dataobject = None):

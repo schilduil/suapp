@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import collections
 import hashlib
 import http.cookies
 import http.server
@@ -9,6 +10,7 @@ import json
 from threading import Thread
 import time
 import os.path
+import sys
 import urllib.parse
 import webbrowser
 
@@ -19,7 +21,10 @@ from logdecorator import *
 users = {"admin": "admin", "user": "user"}
 groups = {"administrators": ["admin"]}
 
-html_template = """<html>
+class HtmlTemplatingEngine():
+
+    html_template = """ <!DOCTYPE html>
+<html>
     <head>
         <title>%(title)s</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,6 +63,139 @@ html_template = """<html>
 #            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
 #            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
 
+    @loguse
+    def __init__(self, template = None):
+        if template:
+            self.html_template = str(template)
+        else:
+            self.html_template = HtmlTemplatingEngine.html_template
+
+    @loguse
+    def html(self, session, title, main, prefix = None, menu = None):
+        name = "SuApp"
+        if prefix == None:
+            prefix = ""
+        if menu == None:
+            # TODO: THIS NEXT LINE IS OBVIOUSLY WRONG - FOR TESTING TEMPORARILY. # DELME
+            file_menu = collections.OrderedDict()
+            file_menu["Quit"] = "EXIT"
+            help_menu = collections.OrderedDict()
+            help_menu["Configuration"] = "CONFIGURATION"
+            help_menu["About"] = "ABOUT"
+            menu = collections.OrderedDict()
+            menu["File"] = file_menu
+            menu["Help"] = help_menu
+        output = []
+        # output.append(prefix + '<!-- %s // -->' % (tables))
+        # output.append(prefix + '<!-- Entered with mode %s // -->' % (???))
+        output.append(prefix + '<!-- Fixed navbar // -->')
+        output.append(prefix + '<div class="navbar navbar-default navbar-fixed-top">')
+        output.append(prefix + '\t<div class="container">')
+        output.append(prefix + '\t\t<div class="navbar-header">')
+        output.append(prefix + '\t\t\t<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">')
+        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
+        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
+        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
+        output.append(prefix + '\t\t\t</button>')
+        output.append(prefix + '\t\t\t<a class="navbar-brand" href="/">%s</a>' % (name))
+        output.append(prefix + '\t\t</div>')
+        output.append(prefix + '\t\t<div class="navbar-collapse collapse">')
+        output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-left">')
+        output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % (name))
+        # TODO: for now this is only 2 deep, perhaps we should make this multilevel.
+        for menu_name,menu_sub in menu.items():
+            if type(menu_sub) == type(menu):
+                output.append(prefix + '\t\t\t\t<li class="dropdown">')
+                output.append(prefix + '\t\t\t\t\t<a href="/%s" class="dropdown-toggle" data-toggle="dropdown">%s <b class="caret"></b></a>' % (menu_name, menu_name))
+                output.append(prefix + '\t\t\t\t\t<ul class="dropdown-menu">')
+                for label,outmessage in menu_sub.items():
+                    output.append(prefix + '\t\t\t\t\t\t<li><a href="/?OUT=%s">%s</a></li>' % (outmessage, label))
+                output.append(prefix + '\t\t\t\t\t</ul>')
+                output.append(prefix + '\t\t\t\t</li>')
+            else:
+                output.append(prefix + '\t\t\t\t<li><a href="/?OUT=%s">Stefaan</a></li>' % (menu_sub))
+        output.append(prefix + '\t\t\t</ul>')
+
+        #output.append(prefix + '\t\t\t<form class="navbar-form navbar-left" action="/search.html" role="search">')
+        #output.append(prefix + '\t\t\t\t<div class="form-group">')
+        #output.append(prefix + '\t\t\t\t\t<input type="text" required name="q" id="tipue_search_input" class="form-control" placeholder="Search">')
+        #output.append(prefix + '\t\t\t\t</div>')
+        #output.append(prefix + '\t\t\t</form>')
+
+        #output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-right">')
+        #output.append(prefix + '\t\t\t\t<li><a href="/seealso.html">See also</a></li>')
+        #output.append(prefix + '\t\t\t</ul>')
+
+        output.append(prefix + '\t\t</div><!--/.nav-collapse -->')
+        output.append(prefix + '\t</div>')
+        output.append(prefix + '</div>')
+
+        output.append(prefix + '<div class="container">')
+        output.append(prefix + '\t<ol class="breadcrumb">')
+        #output.append(prefix + '\t\t<li><a href="/">Home</a></li>')
+        output.append(prefix + '\t\t<li class="active">Home</li>')
+        output.append(prefix + '\t</ol>')
+        output.append(prefix + '\t<div class="page-header">')
+        output.append(prefix + '\t\t<h1>%s</h1>' % (title))
+        output.append(prefix + '\t</div>')
+
+        output.append(prefix + '\t<div class="row">')
+        output.append(prefix + '\t\t<div class="content">')
+        output.append(prefix + '\t\t\t<div class="col-md-7" role="main">')
+        #output.append(prefix + '\t\t\t\t<ul class="pager">')
+        #output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
+        #output.append(prefix + '\t\t\t\t</ul>')
+
+        output.append(prefix + '\t\t\t\t<main>')
+        if main:
+            output.append(prefix + '\t\t\t\t\t%s' % (main))
+        # TODO
+        output.append(prefix + '\t\t\t\t</main>')
+
+        #output.append(prefix + '\t\t\t\t<ul class="pager">')
+        #output.append(prefix + '\t\t\t\t\t<li class="previous"><a href="/start.html">&larr; Partnership SBR</a></li>')
+        #output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
+        #output.append(prefix + '\t\t\t\t</ul>')
+
+        #output.append(prefix + '\t\t\t\t<div class="col-md-3" role="complementary">')
+        #output.append(prefix + '\t\t\t\t\t<nav class="hidden-print hidden-xs hidden-sm">')
+        #output.append(prefix + '\t\t\t\t\t\t<div class="sidebar" data-spy="affix" data-offset-top="80" data-offset-bottom="60">')
+        #output.append(prefix + '\t\t\t\t\t\t\t<div class="well">')
+
+        #output.append(prefix + '\t\t\t\t\t\t\t\t<a href="#"><strong>%s</strong></a>' % (name))
+        #output.append(prefix + '\t\t\t\t\t\t\t\t<div class="toc">')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t<ul>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#favourite-colours">Favourite colours</a><ul>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t<li><a href="#ino">Ino</a><ul>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#lutino">Lutino</a></li>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#albino">Albino</a></li>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t</ul></li>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t</ul></li>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#band-codes">Band codes</a></li>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t\t</ul>')
+        #output.append(prefix + '\t\t\t\t\t\t\t\t</div>')
+
+        #output.append(prefix + '\t\t\t\t\t\t\t</div>')
+        #output.append(prefix + '\t\t\t\t\t\t</div>')
+        #output.append(prefix + '\t\t\t\t\t</nav>')
+        #output.append(prefix + '\t\t\t\t</div>')
+
+        output.append(prefix + '\t\t\t</div>')
+        output.append(prefix + '\t\t</div>')
+        output.append(prefix + '\t</div>')
+
+        # Possibly have TOC here.
+
+        output.append(prefix + '\t<div class="footer">')
+        output.append(prefix + '\t\t<p>This website is powered by <a href="http://suapp.schilduil.com/" target="_blank">SuApp</a></p>')
+        output.append(prefix + '\t</div>')
+
+        output.append(prefix + '</div>')
+        return self.html_template % {
+            'title': title,
+            'body': "\n".join(output)
+        }
+
 
 class Session(dict):
     """
@@ -65,6 +203,7 @@ class Session(dict):
     
     There is also a id variable that contains the session id.
     """
+    @loguse
     def __init__(self, sessionid):
         self.id = sessionid
         
@@ -83,6 +222,7 @@ class SessionStore(dict):
     seconds) in the constructor:
         SessionStore(prefix = "SUAPP", timeout = 300)
     """
+    @loguse
     def __init__(self, prefix = None, timeout = None):
         """
         Constructs the session store.
@@ -97,15 +237,18 @@ class SessionStore(dict):
             timeout = 3600
         self.timeout = int(timeout)
          
-    def new(self):
+    @loguse
+    def new(self, **kwargs):
         """
         Call this method for creating a new session object in the store.
         
         It resturns the session object.
+        You can pass any keyword arguments to initialize the session.
         """
         sessionid = self.prefix + hashlib.sha1(time.time().hex().encode('utf-8')).hexdigest()
         now = time.time()
         session = Session(sessionid)
+        session.update(kwargs)
         session.update({"created": now, "last-used": now})
         super().__setitem__(sessionid, session)
         return session
@@ -141,13 +284,24 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     jeeves = None
     start = None
     sessions = SessionStore()
-    
+    html_template_engine = HtmlTemplatingEngine()
+
+    @loguse
+    def set_html_template_engine(self, html_template_engine):
+        self.html_template_engine = html_template_engine
+
+    @loguse
+    def html(self, session, title, body, **kwargs):
+        if not self.html_template_engine:
+            self.html_template_engine = LocalWebHandler.html_template_engine
+        return self.html_template_engine.html(session, title, body, **kwargs)
+
     @loguse
     def cookies(self):
         """
         Gets the cookie information.
         """
-        self.cookie=http.cookies.SimpleCookie()
+        self.cookie = http.cookies.SimpleCookie()
         #print("Headers: %s" % (self.headers)) # DELME
         if "Cookie" in self.headers:
             #print("Cookie: %s" % (self.headers["Cookie"])) # DELME
@@ -169,28 +323,19 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.expired_cookie = None
         session = None
         # Getting the session from the cookie.
-        #print("> session() %s" % (self.path)) # DELME
         if "sessionId" in self.cookie:
-            #print("> session() there is a sessionId cookie") # DELME
             sessionId = self.cookie["sessionId"].value
-            #print("> session() %s" % (sessionId)) # DELME
             try:
                 session = LocalWebHandler.sessions[sessionId]
-                #print("> session() from sessions: %s" % (session.id)) # DELME
             except KeyError:
                 # Not found or it is expired
                 # (which is more or less the same thing)
                 self.expired_cookie = sessionId
                 session = None
         # There was no session or the session expired. Create a new one.
-        #print("> session() checking for session %s" % (session)) # DELME
         if not session:
-            #print("> session() no session.") # DELME
-            session = LocalWebHandler.sessions.new()
-            #print("> session() new session %s" % (session.id)) # DELME
+            session = LocalWebHandler.sessions.new(jeeves = LocalWebHandler.jeeves)
             self.cookie["sessionId"] = session.id
-            #print("> session() put in cookie: %s" % (self.cookie["sessionId"])) # DELME
-        #print("> session() session returning: %s" % (session.id)) # DELME
         self.session_id = session.id
         return session
     
@@ -383,114 +528,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             return (200, "text/json; charset=utf-8", {})
 
     @loguse
-    def content_main(self, jeeves, drone, prefix = None, menu = None, main = None):
-        if prefix == None:
-            prefix = ""
-        if menu == None:
-            menu = {"File": {"Quit": "EXIT"}, "Help": {"About": "ABOUT", "Configuration": "CONFIGURATION"}}
-        dataobject = None
-        if drone:
-            if drone.dataobject:
-                dataobject = drone.dataobject
-        if not dataobject:
-            dataobject = {}
-        if not 'name' in dataobject:
-            dataobject['name'] = 'SuApp'
-        name = dataobject['name']
-        output = []
-        tables = None
-        if 'tables' in dataobject:
-            logging.getLogger(__name__).debug(": Application[%r].inflow() : Setting tables." % (self))
-            tables = dataobject['tables']
-        output.append(prefix + '<!-- %s // -->' % (tables))
-        if drone:
-            output.append(prefix + '<!-- Entered with mode %s // -->' % (drone.mode))
-        output.append(prefix + '<!-- Fixed navbar // -->')
-        output.append(prefix + '<div class="navbar navbar-default navbar-fixed-top">')
-        output.append(prefix + '\t<div class="container">')
-        output.append(prefix + '\t\t<div class="navbar-header">')
-        output.append(prefix + '\t\t\t<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">')
-        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
-        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
-        output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
-        output.append(prefix + '\t\t\t</button>')
-        output.append(prefix + '\t\t\t<a class="navbar-brand" href="/">%s</a>' % (name))
-        output.append(prefix + '\t\t</div>')
-        output.append(prefix + '\t\t<div class="navbar-collapse collapse">')
-        output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-left">')
-        output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % (name))
-        # TODO: for now this is only 2 deep, perhaps we should make this multilevel.
-        for menu_name,menu_sub in menu.items():
-            if type(menu_sub) == type(menu):
-                output.append(prefix + '\t\t\t\t<li class="dropdown">')
-                output.append(prefix + '\t\t\t\t\t<a href="/%s" class="dropdown-toggle" data-toggle="dropdown">%s <b class="caret"></b></a>' % (menu_name, menu_name))
-                output.append(prefix + '\t\t\t\t\t<ul class="dropdown-menu">')
-                for label,outmessage in menu_sub.items():
-                    output.append(prefix + '\t\t\t\t\t\t<li><a href="/?OUT=%s">%s</a></li>' % (outmessage, label))
-                output.append(prefix + '\t\t\t\t\t</ul>')
-                output.append(prefix + '\t\t\t\t</li>')
-            else:
-                output.append(prefix + '\t\t\t\t<li><a href="/?OUT=%s">Stefaan</a></li>' % (menu_sub))
-        output.append(prefix + '\t\t\t\t</li>')
-        output.append(prefix + '\t\t\t</ul>')
-
-        #output.append(prefix + '\t\t\t<form class="navbar-form navbar-left" action="/search.html" role="search">')
-        #output.append(prefix + '\t\t\t\t<div class="form-group">')
-        #output.append(prefix + '\t\t\t\t\t<input type="text" required name="q" id="tipue_search_input" class="form-control" placeholder="Search">')
-        #output.append(prefix + '\t\t\t\t</div>')
-        #output.append(prefix + '\t\t\t</form>')
-
-        #output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-right">')
-        #output.append(prefix + '\t\t\t\t<li><a href="/seealso.html">See also</a></li>')
-        #output.append(prefix + '\t\t\t</ul>')
-
-        output.append(prefix + '\t\t</div><!--/.nav-collapse -->')
-        output.append(prefix + '\t</div>')
-        output.append(prefix + '</div>')
-
-        output.append(prefix + '<div class="container">')
-        output.append(prefix + '\t<ol class="breadcrumb">')
-        #output.append(prefix + '\t\t<li><a href="/">Home</a></li>')
-        output.append(prefix + '\t\t<li class="active">Home</li>')
-        output.append(prefix + '\t</ol>')
-        output.append(prefix + '<div class="page-header">')
-        output.append(prefix + '\t<h1>%s</h1>' % (name))
-        output.append(prefix + '</div>')
-
-        output.append(prefix + '<div class="row">')
-        output.append(prefix + '\t<div class="content">')
-        output.append(prefix + '\t\t<div class="col-md-7" role="main">')
-        #output.append(prefix + '\t\t\t<ul class="pager">')
-        #output.append(prefix + '\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
-        #output.append(prefix + '\t\t\t</ul>')
-
-        output.append(prefix + '\t\t\t<main>')
-        output.append(prefix + '\t\t\t\t<p>')
-        if main:
-            output.append(prefix + '\t\t\t\t\t%s' % (main))
-        # TODO
-        output.append(prefix + '\t\t\t\t</p>')
-        output.append(prefix + '\t\t\t</main>')
-
-        #output.append(prefix + '\t\t\t<ul class="pager">')
-        #output.append(prefix + '\t\t\t\t<li class="previous"><a href="/start.html">&larr; Partnership SBR</a></li>')
-        #output.append(prefix + '\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
-        #output.append(prefix + '\t\t\t</ul>')
-
-        output.append(prefix + '\t\t</div>')
-        output.append(prefix + '\t</div>')
-
-        # Possibly have TOC here.
-
-        output.append(prefix + '\t<div class="footer">')
-        output.append(prefix + '\t\t<p>This website is powered by <a href="http://suapp.schilduil.com/" target="_blank">SuApp</a></p>')
-        output.append(prefix + '\t</div>')
-
-        output.append(prefix + '</div>')
-        return (name, "\n".join(output))
-
-
-    @loguse
     def do_dynamic_page(self, session, fields):
         """
         Returns a dynamic page.
@@ -500,18 +537,27 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         return_code = 200
         return_mime = 'text/html; charset=utf-8'
         return_message = ""
+        drone_title = "SuApp"
+        drone_result = ""
+        # Check for an OUT message.
+        if "OUT" in fields:
+            if fields['OUT'] == "EXIT":
+                # TODO: ignoring for the moment.
+                drone_result = "EXIT Not implemented yet."
+                pass
+            else:
+                # Mode in a web setting can only be MODAL?
+                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, "DATA")
         try:
-            (title, body) = self.content_main(LocalWebHandler.jeeves, LocalWebHandler.start, prefix = "        ")
-            # AOK
-            return_message = html_template % {
-                'title': title,
-                'body': body
-            }
-        except:
+            return_message = self.html(session, drone_title, drone_result, prefix = "        ")
+        except Exception as err:
+            ex_type, ex, tb = sys.exc_info()
+            import traceback
             # TODO: needs to splilt up between types of errors: 500 (real), 404 (not found)
+            # TODO: and do better error handling in general.
             return_code = 500
             return_mime = 'text/plain; charset=utf-8'
-            return_message = "%s" % (err)
+            return_message = "%s\n%s" % (err, "".join(traceback.format_exception(ex_type, ex, tb)))
 
         # The imporant stuff is the OUT message.
         #return (404, "text/plain; charset=utf-8", "Page not found.")
@@ -537,7 +583,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(return_message.encode('utf-8'))
 
     @loguse
-    def do_error_page(self, return_code, return_mime, return_message):
+    def do_error_page(self, session, return_code, return_mime, return_message):
         logging.getLogger(self.__module__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
         message = return_message
         if return_mime.startswith("text/plain"):
@@ -547,7 +593,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 if return_code == 403:
                     if return_message == "Not logged in.":
                         (title, body) = self.content_main(
-                            LocalWebHandler.jeeves, 
+                            session,
                             None, 
                             prefix = "        ", 
                             menu = {},
@@ -567,12 +613,12 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self._do(return_code, return_mime, message)
 
     @loguse
-    def do(self, return_code, return_mime, return_message):
+    def do(self, session, return_code, return_mime, return_message):
         """
         It will create and send the http output or the error page.
         """
         if return_code >= 400:
-            self.do_error_page(return_code, return_mime, return_message)
+            self.do_error_page(session, return_code, return_mime, return_message)
         else:
             self._do(return_code, return_mime, return_message)
 
@@ -628,7 +674,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         else:
             (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Not logged in.')
         # And make a http response from it all.
-        self.do(return_code, return_mime, return_message)
+        self.do(session, return_code, return_mime, return_message)
         
     @loguse
     def do_static(self, fields, mimetype):
@@ -663,13 +709,16 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     self.end_headers()
                     message = "File %s not found.\n%s" % (self.path, localfile)
                     self.wfile.write(message.encode('utf-8'))
+                except BrokenPipeError as err:
+                    logging.getLogger(self.__module__).info("Broken pipe: %s" % (err))
+                    pass
                 return
             else:
                 # 403: Not authorized
-                self.do(403,'text/plain; charset=utf-8','Not authorized.')
+                self.do(session, 403,'text/plain; charset=utf-8','Not authorized.')
         else:
             # 403: Not authorized
-            self.do(403,'text/plain; charset=utf-8','Not logged in.')
+            self.do(session, 403,'text/plain; charset=utf-8','Not logged in.')
 
     @loguse
     def do_POST(self):
@@ -834,21 +883,27 @@ class About(suapp.jandw.Wooster):
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
-        print("=====================")
-        print("About")
-        print("---------------------")
+        result = []
+        suffix = []
+        # Looking for html or txt file
+        file_name = self.jeeves.app.configuration["self"].rsplit(".", 1)[0]
+        if os.path.isfile(file_name + ".html"):
+            file_name += ".html"
+        else:
+            file_name += ".txt"
+            result.append("<tt>\n")
+            suffix.append("</tt>")
         try:
-            with open("%s" % (drone.dataobject)) as fh:
+            with open(file_name) as fh:
                 for line in fh:
-                    print(line, end="")
+                    result.append(line)
         except OSError as e:
-            logging.getLogger(__name__).warning("Could not open about text file %s.", drone.dataobject)
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
         except IOError as e:
-            logging.getLogger(__name__).warning("Could not open about text file %s.", drone.dataobject)
-        print()
-        print("---------------------")
-        answer = input("Choose option: ")
-        print()
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
+        if not result:
+            result = ["ERROR: Could not open file %s." % (file_name)]
+        return ("About", "".join(result) + "".join(suffix))
 
 
 class Configuration(suapp.jandw.Wooster):
@@ -856,11 +911,8 @@ class Configuration(suapp.jandw.Wooster):
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
-        print("=====================")
-        print("Configuration")
-        print("---------------------")
-        print(json.dumps(self.jeeves.app.configuration, indent = "\t"))
-        print("---------------------")
-        answer = input("Choose option: ")
-        print()
+        result = "<pre><code>\n"
+        result += json.dumps(self.jeeves.app.configuration, indent = "    ")
+        result += "\n</code></pre>"
+        return ("Configuration", result)
  
