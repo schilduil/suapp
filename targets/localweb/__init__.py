@@ -592,21 +592,12 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 body = ""
                 if return_code == 403:
                     if return_message == "Not logged in.":
-                        (title, body) = self.content_main(
-                            session,
-                            None, 
-                            prefix = "        ", 
-                            menu = {},
-                            main = 'Go to the logon page <a href="/public/logon">here</a>.')
-                        # '<h1>%s: %s</h1>\n<p>Go to the logon page <a href="/public/logon">here</a>.</p>' % (return_code, return_message)
+                        body = '<p>Go to the logon page <a href="/public/logon">here</a>.</p>'
                     else:
-                        body = "<h1>%s: %s</h1>\n<p>Sorry, you don't have access to this.</p>"
+                        body = "<p>Sorry, you don't have access to this.</p>"
                 else:
-                    body = "<h1>%s: %s</h1>\n<p>Oops, something went wrong.</p>" % (return_code, return_message)
-                message = html_template % {
-                    'title': "%s: %s" % (return_code, return_message),
-                    'body': body
-                }
+                    body = '<p>Oops, something went wrong.</p>'
+                message = self.html(session, "%s: %s" % (return_code, return_message), body, menu = {}, prefix = "        ")
                 return_mime = 'text/html; charset=utf-8'
             except:
                 pass
