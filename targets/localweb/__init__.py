@@ -286,6 +286,15 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     sessions = SessionStore()
     html_template_engine = HtmlTemplatingEngine()
 
+    def send_last_modified_header(self):
+        timestamp = time.time()
+        year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
+        s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
+                self.weekdayname[wd],
+                day, self.monthname[month], year,
+                hh, mm, ss)
+        self.send_header('Last-Modified', s)
+
     @loguse
     def set_html_template_engine(self, html_template_engine):
         self.html_template_engine = html_template_engine
@@ -573,6 +582,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         self.send_response(return_code)
         self.send_header('Content-type', return_mime)
+        self.send_last_modified_header()
         if self.expired_cookie:
             self.send_header('Set-Cookie', "sessionId=%s; Expires=Thu, 01 Jan 1970 00:00:00 GMT" % self.expired_cookie)
             self.expired_cookie = None
@@ -687,11 +697,20 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             auth_level = 4
         if auth_level != None:
             if (auth_level & 4):
+                # Save on work by sending a "304 Not Modified"
+                # If the request has a "If-Modified-Since" header.
+                if "If-Modified-Since" in self.headers:
+                    last_modified = self.headers['If-Modified-Since']
+                    self.send_response(304)
+                    self.send_header('Last-Modified', last_modified)
+                    # And we're done, no body to send.
+                    return
                 try:
                     localfile = os.path.join(os.path.dirname(__file__), self.path[1:])
                     with open(localfile, 'rb') as f:
                         self.send_response(200)
                         self.send_header('Content-type', mimetype)
+                        self.send_last_modified_header()
                         self.end_headers()
                         self.wfile.write(f.read())
                 except FileNotFoundError:
