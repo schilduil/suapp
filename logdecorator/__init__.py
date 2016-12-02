@@ -41,7 +41,7 @@ def loguse(param = None):
         ignore_parameters = [param]
     elif isinstance(param, int):
         ignore_parameters = [param]
-    elif isinstance(param, iterable):
+    elif hasattr(param, '__iter__'):
         ignore_parameters = param
     # Looking for the classname.
     classname = "?"
