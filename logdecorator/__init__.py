@@ -82,10 +82,16 @@ def loguse(param = None):
                     log.debug("> %s.%s(%r, %r)" % (classname, f.__name__, tuple(l_args), l_kwargs))
             result = f(*args, **kwargs)
             if log.isEnabledFor(logging.DEBUG):
-                if classname == "<module>":
-                    log.debug("< %s: %r" % (f.__name__, result))
+                if '@' in ignore_parameters:
+                    if classname == "<module>":
+                        log.debug("< %s" % (f.__name__))
+                    else:
+                        log.debug("< %s.%s" % (classname, f.__name__))
                 else:
-                    log.debug("< %s.%s: %r" % (classname, f.__name__, result))
+                    if classname == "<module>":
+                        log.debug("< %s: %r" % (f.__name__, result))
+                    else:
+                        log.debug("< %s.%s: %r" % (classname, f.__name__, result))
             return result
         return decorator
     if f:
