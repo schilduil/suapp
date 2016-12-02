@@ -8,12 +8,42 @@ import inspect
 from functools import wraps
 
 
-def loguse(f):
+def loguse(param = None):
     """When in debug it will log entering and exiting a function or object methods.
 
-    I don't know yet if it works on other callables.
+    WARNING: Some callables are broken when you use this (e.g. Thread.__init__)
+    Upon entering the callable it will also log all arguments.
+
+    You can specify arguments to this decorator: a string, an int or a list of 
+    string and/or integers. A string causes not log that name argument, an int 
+    causes not to log that positional argument.
+
+    Example:
+        @loguse             # will log all arguments.
+        @loguse('arg0')     # will log all but not a named argument named 'arg0'.
+        @loguse(0)          # will log all but the first positional argument.
+        @loguse(['arg0',0]) # will log all but the first pos. and 'arg0'.
     """
-    log = logging.getLogger(f.__module__)
+    # Checking the param
+    #   If it is a callable then just return what real_loguse(f) would return.
+    #   If it is a parameter (even if None) return the real_loguse function.
+    # Param:
+    #   It could be None => empty list
+    #   It could be a string => list with that string as element
+    #   It could be an iterable => ok
+    f = None
+    ignore_parameters = []
+    if param == None:
+        ignore_parameters = []
+    elif callable(param):
+        f = param
+    elif isinstance(param, str):
+        ignore_parameters = [param]
+    elif isinstance(param, int):
+        ignore_parameters = [param]
+    elif isinstance(param, iterable):
+        ignore_parameters = param
+    # Looking for the classname.
     classname = "?"
     try:
         # We don't want this weird stuff messing in the log decorator
@@ -24,32 +54,55 @@ def loguse(f):
         classname = inspect.getouterframes(inspect.currentframe())[1][3]
     except:
         pass
-    @wraps(f)
-    def decorator(*args, **kwargs):
-        if log.isEnabledFor(logging.DEBUG):
-            if classname == "<module>":
-                log.debug("> %s(%r, %r)" % (f.__name__, args, kwargs))
-            else:
-                log.debug("> %s.%s(%r, %r)" % (classname, f.__name__, args, kwargs))
-        result = f(*args, **kwargs)
-        if log.isEnabledFor(logging.DEBUG):
-            if classname == "<module>":
-                log.debug("< %s: %r" % (f.__name__, result))
-            else:
-                log.debug("< %s.%s: %r" % (classname, f.__name__, result))
-        return result
-    return decorator
+
+    def real_loguse(f):
+        log = logging.getLogger(f.__module__)
+        @wraps(f)
+        def decorator(*args, **kwargs):
+            l_args = list(args)
+            l_kwargs = dict(kwargs)
+            if log.isEnabledFor(logging.DEBUG):
+                ignore_parameters.sort(key = str, reverse = True)
+                if ignore_parameters:
+                    # Deleting any parameters so they are not logged.
+                    for param in ignore_parameters:
+                        if isinstance(param, int):
+                            try:
+                                l_args.pop(param)
+                            except:
+                                pass
+                        else:
+                            try:
+                                del l_kwargs[str(param)]
+                            except:
+                                pass
+                if classname == "<module>":
+                    log.debug("> %s(%r, %r)" % (f.__name__, tuple(l_args), l_kwargs))
+                else:
+                    log.debug("> %s.%s(%r, %r)" % (classname, f.__name__, tuple(l_args), l_kwargs))
+            result = f(*args, **kwargs)
+            if log.isEnabledFor(logging.DEBUG):
+                if classname == "<module>":
+                    log.debug("< %s: %r" % (f.__name__, result))
+                else:
+                    log.debug("< %s.%s: %r" % (classname, f.__name__, result))
+            return result
+        return decorator
+    if f:
+        return real_loguse(f)
+    else:
+        return real_loguse
 
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format = '%(asctime)s %(levelname)s %(name)s %(message)s', level = logging.DEBUG)
+    logging.basicConfig(format = '%(asctime)s %(levelname)s %(name)s %(message)s', level = logging.INFO)
 
     class TestClass():
         """Test class for the logdecorator"""
         name = "APP"
 
-        @loguse
+        @loguse(1) # Don't log the variable with index 1 (i.e. name)
         def __init__(self, name):
             """Initialize the name of the test class."""
             self.name = name
@@ -87,20 +140,30 @@ if __name__ == "__main__":
         logging.getLogger(__name__).warn("Starting %s" % (message))
         return SubTestClass(message)
 
+    @loguse(1) # Don't log the variable with index 1 (i.e. two)
+    def test2(one, two):
+        logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
+
+    @loguse('a') # Don't log the named argument 'a'
+    def test3(a, b, g):
+        logging.getLogger(__name__).warn("The provious line didn't log 'a', but did log 'b' and 'g'.")
+
+    print("========== INFO ==========")
     x = test1("Hello World!")
     x.lock()
     x.unlock()
     x.close()
-
     print("%s: %s" % (x.lock.__name__, x.lock.__doc__))
+    test2("First variable", "Second variable")
+    test3(a = "alpha", b = "beta", g = "gamma")
 
-    logging.getLogger(__name__).setLevel(logging.INFO)
-
+    print("========== DEBUG ==========")
+    logging.getLogger(__name__).setLevel(logging.DEBUG)
     x = test1("The end of the World is near!")
     x.lock()
     x.unlock()
     x.close()
-
     print("%s: %s" % (x.lock.__name__, x.lock.__doc__))
-
+    test2("First variable", "Second variable")
+    test3(a = "alpha", b = "beta", g = "gamma")
 
