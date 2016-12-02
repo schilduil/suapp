@@ -705,6 +705,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     last_modified = self.headers['If-Modified-Since']
                     self.send_response(304)
                     self.send_header('Last-Modified', last_modified)
+                    self.end_headers()
                     # And we're done, no body to send.
                     return
                 try:
