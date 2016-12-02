@@ -600,11 +600,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # template
             try:
                 body = ""
-                if return_code == 403:
-                    if return_message == "Not logged in.":
-                        body = '<p>Go to the logon page <a href="/public/logon">here</a>.</p>'
-                    else:
-                        body = "<p>Sorry, you don't have access to this.</p>"
+                if return_code == 401:
+                    # We don't want to return a 401 as that will trigger the browser to get Authorization credentials.
+                    # Instead we want to show a link to the login page.
+                    return_code = 403
+                    body = '<p>Go to the login page <a href="/public/logon">here</a>.</p>'
+                elif return_code == 403:
+                    body = "<p>Sorry, you don't have access to this.</p>"
                 else:
                     body = '<p>Oops, something went wrong.</p>'
                 message = self.html(session, "%s: %s" % (return_code, return_message), body, menu = {}, prefix = "        ")
@@ -671,9 +673,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 else:
                     (return_code, return_mime, return_message) = self.do_dynamic_page(session, fields)
             else:
-                (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Not authorized.')
+                (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Forbidden')
         else:
-            (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Not logged in.')
+            (return_code, return_mime, return_message) = (401,'text/plain; charset=utf-8','Unauthorized')
         # And make a http response from it all.
         self.do(session, return_code, return_mime, return_message)
         
