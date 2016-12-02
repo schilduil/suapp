@@ -779,7 +779,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         #print("Fields: %s" % (fields)) # DELME
         # Anything starting with /js/, /css/, /img/ is static content.
         if self.path == "/favicon.ico":
-            self.do_static(fields)
+            self.do_static(fields, "image/x-icon")
         elif self.path.startswith("/js/"):
             self.do_static(fields, "application/x-javascript")
         elif self.path.startswith("/img/"):
