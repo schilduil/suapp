@@ -63,7 +63,7 @@ class Jeeves(object):
                 sys.exit(100)
         return drone
 
-    @loguse
+    @loguse('@') # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject):
         # Find the drone
         fromname = ""

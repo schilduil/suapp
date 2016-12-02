@@ -70,7 +70,7 @@ class HtmlTemplatingEngine():
         else:
             self.html_template = HtmlTemplatingEngine.html_template
 
-    @loguse
+    @loguse([1,3,'@']) # Not logging session, main nor the return value.
     def html(self, session, title, main, prefix = None, menu = None):
         name = "SuApp"
         if prefix == None:
@@ -299,7 +299,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     def set_html_template_engine(self, html_template_engine):
         self.html_template_engine = html_template_engine
 
-    @loguse
+    @loguse([1,3,'@']) # Not logging session, body nor return value.
     def html(self, session, title, body, **kwargs):
         if not self.html_template_engine:
             self.html_template_engine = LocalWebHandler.html_template_engine
@@ -348,7 +348,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.session_id = session.id
         return session
     
-    @loguse
+    @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
     def do_service_logoff(self, session, fields, json_object = None, payload = None):
         """
         Service that logs out the user by deleting the session.
@@ -363,7 +363,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             pass
         return (200, "text/json; charset=utf-8", {"result": True})
         
-    @loguse
+    @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
     def do_service_public_logon(self, session, fields, json_object = None, payload = None):
         """
         Service that logs on the user in this session.
@@ -444,7 +444,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             pass
         return (200, "text/json; charset=utf-8", {"result": False, "message": "Incorrect credentials provided."})
 
-    @loguse
+    @loguse(1) # Not logging session.
     def authorized(self, session, fields):
         """
         Returns a number indicating the permissions.
@@ -489,14 +489,14 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         # This is not a logged in user: no authorization.
         return None
 
-    @loguse
+    @loguse([1, 3]) # Not logging session and json_object.
     def do_service_admin_sessions(self, session, fields, json_object):
         """
         Test service that just returns the sessions.
         """
         return (200, "text/json; charset=utf-8", {"result": True, "sessions": LocalWebHandler.sessions})
         
-    @loguse
+    @loguse([1, 3]) # Not logging session and json_object.
     def do_service_who(self, session, fields, json_object):
         """
         Test service that just returns the logged in user.
@@ -506,14 +506,14 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         except:
             return (200, "text/json; charset=utf-8", {"result": False, "message": "No user logged on."})
         
-    @loguse
+    @loguse([1, 3]) # Not logging session and json_object.
     def do_service_sessionid(self, session, fields, json_object):
         """
         Test service that just returns the sessionid.
         """
         return (200, "text/json; charset=utf-8", {"result": True, "sessionid": session.id})
         
-    @loguse
+    @loguse([1, 3]) # Not logging session and json_object.
     def do_service_sessionobject(self, session, fields, json_object):
         """
         DANGER: Test service that returns the content of a session.
@@ -536,7 +536,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Unknown session id:
             return (200, "text/json; charset=utf-8", {})
 
-    @loguse
+    @loguse([1,'@']) # Not logging session nor return value.
     def do_dynamic_page(self, session, fields):
         """
         Returns a dynamic page.
@@ -572,7 +572,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         #return (404, "text/plain; charset=utf-8", "Page not found.")
         return (return_code, return_mime, return_message)
 
-    @loguse
+    @loguse(3) # Not logging return_message.
     def _do(self, return_code, return_mime, return_message):
         """
         It will create and send the http output.
@@ -592,7 +592,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(return_message.encode('utf-8'))
 
-    @loguse
+    @loguse([1,4]) # Not logging session nor return_message.
     def do_error_page(self, session, return_code, return_mime, return_message):
         logging.getLogger(self.__module__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
         message = return_message
@@ -615,7 +615,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 pass
         self._do(return_code, return_mime, message)
 
-    @loguse
+    @loguse([1, 4]) # Not logging session nor return_message.
     def do(self, session, return_code, return_mime, return_message):
         """
         It will create and send the http output or the error page.
@@ -625,7 +625,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         else:
             self._do(return_code, return_mime, return_message)
 
-    @loguse
+    @loguse(['json_object', 'payload']) # Not logging the json_object nor payload.
     def do_dynamic(self, fields, json_object = None, payload = None):
         """
         This method will reply to a dynamic request.
@@ -855,7 +855,7 @@ class Application(suapp.jandw.Wooster):
         self.testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
         self.tables = {}
 
-    @loguse
+    @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
         # The port by default is ord(S)+10 + ord(U)
         self.port = 8385 # SU
@@ -893,7 +893,7 @@ class Application(suapp.jandw.Wooster):
 
 class About(suapp.jandw.Wooster):
 
-    @loguse
+    @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
         result = []
@@ -921,7 +921,7 @@ class About(suapp.jandw.Wooster):
 
 class Configuration(suapp.jandw.Wooster):
 
-    @loguse
+    @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
         result = "<pre><code>\n"
