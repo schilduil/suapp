@@ -752,7 +752,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         length = int(self.headers['Content-Length'])
         fields = {}
         try:
-            fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query, keep_blank_values=True)
         except:
             # We don't care if we can't get the GET parameters.
             pass
@@ -788,7 +788,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         self.command = 'GET'
         # TODO: this parsing does not work on keys without a variable.
-        fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query, keep_blank_values=True)
         #print("Fields: %s" % (fields)) # DELME
         # Anything starting with /js/, /css/, /img/ is static content.
         if self.path == "/favicon.ico":
