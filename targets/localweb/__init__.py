@@ -544,6 +544,47 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Unknown session id:
             return (200, "text/json; charset=utf-8", {})
 
+    @loguse # ('@')
+    def do_object(self, start_object, path):
+        """
+        Returns json of part of the start_object determined by path.
+
+        Example of paths:
+            key -> start_object['key'].name
+            key/subkey  -> start_object['key']['subkey'] - done recursively
+            key.var     -> start_object['key'].var
+        """
+        first_path = path
+        rest_path = ""
+        try:
+            (first_path, rest_path) = path.split("/", 1)
+        except:
+            pass
+        key = first_path
+        var = ""
+        try:
+            (key, var) = first_path.split(".")
+        except:
+            pass
+        if key in start_object:
+            if var:
+                try:
+                    return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
+                except:
+                    return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (key, var)})
+            elif rest_path:
+                (return_code, return_mime, return_message) = self.do_object(start_object[key], rest_path)
+                extended_message = return_message['result']
+                if return_message['result']:
+                    extended_message['object'] = return_message['object']
+                else:
+                    extended_message['message'] = key + "/" + return_message['message']
+                return (return_code, return_mime, extended_message)
+            else:
+                return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[key]})
+        else:
+            return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (key)})
+
     @loguse([1,'@']) # Not logging session nor return value.
     def do_dynamic_page(self, session, fields):
         """
@@ -663,7 +704,26 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             auth_level = 7
         if auth_level != None:
             if (auth_level & 4):
-                if self.path.startswith("/service/"):
+                if self.path.startswith("/service/session/"):
+                    # Getting something from the session.
+                    path_part = self.path[17:]
+                    try:
+                        (path_part, variables) = self.path[17:].rsplit("?", 1)
+                    except:
+                        pass
+                    (return_code, return_mime, return_message) = self.do_object(session, path_part)
+                    # The output should be json, so transforming it to json:
+                    try:
+                        if "pretty" in fields:
+                            return_message = json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                        else:
+                            return_message = json.dumps(return_message)
+                    except:
+                        if "pretty" in fields:
+                            return_message = json.dumps({'result': False, 'message': 'Object not convertible to json.'}, sort_keys=True, indent=4, separators=(',', ': '))
+                        else:
+                            return_message = json.dumps({'result': False, 'message': 'Object not convertible to json.'})
+                elif self.path.startswith("/service/"):
                     # Looking up if we have a do_service_{} method.
                     temp = self.path.split("?")
                     method_name = "do" + "_".join(temp[0].split("/"))
