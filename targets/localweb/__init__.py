@@ -354,7 +354,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
     @loguse
     def callback_drone(self, drone):
-        session['drone'] = drone
+        self.session()['drone'] = drone
     
     @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
     def do_service_logoff(self, session, fields, json_object = None, payload = None):
@@ -566,15 +566,26 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             (key, var) = first_path.split(".")
         except:
             pass
+        #print("%s.%s/%s" % (key,var,rest_path)) # DELME
         if key in start_object:
             if var:
                 try:
-                    return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
-                except:
-                    return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (key, var)})
+                    if rest_path:
+                        (return_code, return_mime, return_message) = self.do_object(getattr(start_object[key], var), rest_path)
+                        extended_message = {'result': return_message['result']}
+                        if return_message['result']:
+                            extended_message['object'] = return_message['object']
+                        else:
+                            extended_message['message'] = key + '.' + var + "/" + return_message['message']
+                        #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
+                        return (return_code, return_mime, extended_message)
+                    else:
+                        return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
+                except Exception as err:
+                    return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (key, var), 'error': str(err)})
             elif rest_path:
                 (return_code, return_mime, return_message) = self.do_object(start_object[key], rest_path)
-                extended_message = return_message['result']
+                extended_message = {'result': return_message['result']}
                 if return_message['result']:
                     extended_message['object'] = return_message['object']
                 else:
@@ -583,6 +594,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             else:
                 return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[key]})
         else:
+            #print("%s not in %s" % (key, start_object)) # DELME
             return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (key)})
 
     @loguse([1,'@']) # Not logging session nor return value.
