@@ -49,22 +49,22 @@ class Jeeves(object):
         self.app = app
 
     @loguse
-    def whichDrone(self, fromname, toname):
+    def whichDrone(self, fromname, outmessage, **kwargs):
         logging.getLogger(__name__).debug(": Jeeves[%r].whichDrone : Flow: %s" % (self, self.flow))
         drone = None
         try:
-            drone = self.flow[fromname][toname]
+            drone = self.flow[fromname][outmessage]
         except:
             try:
-                drone = self.flow[""][toname]
+                drone = self.flow[""][outmessage]
             except:
                 # TODO: do something else then bluntly exiting.
-                logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting." % (self, toname))
+                logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting." % (self, outmessage))
                 sys.exit(100)
         return drone
 
     @loguse('@') # Not logging the return value.
-    def drone(self, fromvertex, name, mode, dataobject):
+    def drone(self, fromvertex, name, mode, dataobject, **kwargs):
         # Find the drone
         fromname = ""
         result = None
@@ -72,10 +72,16 @@ class Jeeves(object):
             fromname = fromvertex.name
         else:
             fromname = str(fromvertex)
-        drone = self.whichDrone(fromname, name)
+        drone = self.whichDrone(fromname, name, **kwargs)
         # Setting the dataobject
         drone.dataobject = dataobject
         drone.mode = mode
+        # If there is a callback, call it.
+        if 'callback_drone' in kwargs:
+            try:
+                kwargs['callback_drone'](drone)
+            except:
+                pass
         # Depending on the mode
         # Some targets depend on what is returned from inflow.
         if mode == self.MODE_MODAL:

@@ -21,6 +21,7 @@ from logdecorator import *
 users = {"admin": "admin", "user": "user"}
 groups = {"administrators": ["admin"]}
 
+
 class HtmlTemplatingEngine():
 
     html_template = """ <!DOCTYPE html>
@@ -79,11 +80,14 @@ class HtmlTemplatingEngine():
             # TODO: THIS NEXT LINE IS OBVIOUSLY WRONG - FOR TESTING TEMPORARILY. # DELME
             file_menu = collections.OrderedDict()
             file_menu["Quit"] = "EXIT"
+            test_menu = collections.OrderedDict()
+            test_menu["Table"] = "TABLE"
             help_menu = collections.OrderedDict()
             help_menu["Configuration"] = "CONFIGURATION"
             help_menu["About"] = "ABOUT"
             menu = collections.OrderedDict()
             menu["File"] = file_menu
+            menu["Test"] = test_menu
             menu["Help"] = help_menu
         output = []
         # output.append(prefix + '<!-- %s // -->' % (tables))
@@ -347,6 +351,10 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             self.cookie["sessionId"] = session.id
         self.session_id = session.id
         return session
+
+    @loguse
+    def callback_drone(self, drone):
+        session['drone'] = drone
     
     @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
     def do_service_logoff(self, session, fields, json_object = None, payload = None):
@@ -556,7 +564,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 pass
             else:
                 # Mode in a web setting can only be MODAL?
-                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, "DATA")
+                # DELME: creating a testing data object
+                data = {'tables': {'test': {}}, 'table_name': 'test'}
+                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, {}, callback_drone = self.callback_drone)
         try:
             return_message = self.html(session, drone_title, drone_result, prefix = "        ")
         except Exception as err:
@@ -738,6 +748,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         Entry point for an http POST request.
         """
+        self.command = 'POST'
         length = int(self.headers['Content-Length'])
         fields = {}
         try:
@@ -760,6 +771,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         Entry point for an http PUT request.
         """
+        self.command = 'PUT'
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
         try:
@@ -774,6 +786,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         Entry point for an http GET request.
         """
+        self.command = 'GET'
         # TODO: this parsing does not work on keys without a variable.
         fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         #print("Fields: %s" % (fields)) # DELME
@@ -928,4 +941,46 @@ class Configuration(suapp.jandw.Wooster):
         result += json.dumps(self.jeeves.app.configuration, indent = "    ")
         result += "\n</code></pre>"
         return ("Configuration", result)
- 
+
+
+class Table(suapp.jandw.Wooster):
+
+    name = "TABLE"
+    raw = True
+
+    # http://api.jquery.com/jquery.getjson/
+    raw_js = """<script>
+(function() {
+    var suappAPI = "/service/session/drone.dataobject/tables/%(table_name)s";
+    $.getJSON( suappAPI, function( data ) {
+      var items = [];
+      items.push( "<th>Key</th><th>Value</th>" )
+      $.each( data, function( key, val ) {
+        items.push( "<td>" + key + "</td><td>" + val + "</td>" );
+      });
+      $( "<tr/>", {
+        "class": "my-new-list",
+        html: items.join( " " )
+      }).appendTo("#tableview");
+    });
+})();
+</script>
+"""
+
+    def inflow(self, jeeves, drone):
+        # TODO put the dataobject in the session...
+        params = {"table_name": {}}
+        if drone.dataobject:
+            if not 'table' in drone.dataobject:
+                # DELME: for testing creating something.
+                drone.dataobject['table'] = 'test'
+            params = {"table_name": drone.dataobject['table']}
+        result = []
+        if Table.raw:
+            result.append('<table id="tableview">')
+            # Here the results will end up (see raw_js)
+            result.append('</table>')
+            return ("Table", Table.raw_js % (params) + "\n".join(result))
+        else:
+            return ("Table", "TODO: nice output.")
+
