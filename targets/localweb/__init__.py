@@ -567,35 +567,72 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         except:
             pass
         #print("%s.%s/%s" % (key,var,rest_path)) # DELME
-        if key in start_object:
-            if var:
-                try:
-                    if rest_path:
-                        (return_code, return_mime, return_message) = self.do_object(getattr(start_object[key], var), rest_path)
-                        extended_message = {'result': return_message['result']}
-                        if return_message['result']:
-                            extended_message['object'] = return_message['object']
+        if isinstance(start_object, list) or isinstance(start_object, tuple):
+            index = 0
+            try:
+                index = int(key)
+            except:
+                return (200, "text/json; charset=utf-8", {'result': False, 'message': "Index %s is not an integer." % (key)})
+            try:
+                if var:
+                    try:
+                        if rest_path:
+                            (return_code, return_mime, return_message) = self.do_object(getattr(start_object[index], var), rest_path)
+                            extended_message = {'result': return_message['result']}
+                            if return_message['result']:
+                                extended_message['object'] = return_message['object']
+                            else:
+                                extended_message['message'] = key + '.' + var + "/" + return_message['message']
+                            #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
+                            return (return_code, return_mime, extended_message)
                         else:
-                            extended_message['message'] = key + '.' + var + "/" + return_message['message']
-                        #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
-                        return (return_code, return_mime, extended_message)
+                            return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[index], var)})
+                    except Exception as err:
+                        return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (index, var), 'error': str(err)})
+                elif rest_path:
+                    (return_code, return_mime, return_message) = self.do_object(start_object[index], rest_path)
+                    extended_message = {'result': return_message['result']}
+                    if return_message['result']:
+                        extended_message['object'] = return_message['object']
                     else:
-                        return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
-                except Exception as err:
-                    return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (key, var), 'error': str(err)})
-            elif rest_path:
-                (return_code, return_mime, return_message) = self.do_object(start_object[key], rest_path)
-                extended_message = {'result': return_message['result']}
-                if return_message['result']:
-                    extended_message['object'] = return_message['object']
+                        extended_message['message'] = str(index) + "/" + return_message['message']
+                    return (return_code, return_mime, extended_message)
                 else:
-                    extended_message['message'] = key + "/" + return_message['message']
-                return (return_code, return_mime, extended_message)
+                    return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[index]})
+            except:
+                return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (index)})
+        elif isinstance(start_object, dict):
+            if key in start_object:
+                if var:
+                    try:
+                        if rest_path:
+                            (return_code, return_mime, return_message) = self.do_object(getattr(start_object[key], var), rest_path)
+                            extended_message = {'result': return_message['result']}
+                            if return_message['result']:
+                                extended_message['object'] = return_message['object']
+                            else:
+                                extended_message['message'] = key + '.' + var + "/" + return_message['message']
+                            #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
+                            return (return_code, return_mime, extended_message)
+                        else:
+                            return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
+                    except Exception as err:
+                        return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s.%s not found." % (key, var), 'error': str(err)})
+                elif rest_path:
+                    (return_code, return_mime, return_message) = self.do_object(start_object[key], rest_path)
+                    extended_message = {'result': return_message['result']}
+                    if return_message['result']:
+                        extended_message['object'] = return_message['object']
+                    else:
+                        extended_message['message'] = key + "/" + return_message['message']
+                    return (return_code, return_mime, extended_message)
+                else:
+                    return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[key]})
             else:
-                return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[key]})
+                #print("%s not in %s" % (key, start_object)) # DELME
+                return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (key)})
         else:
-            #print("%s not in %s" % (key, start_object)) # DELME
-            return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (key)})
+            return (200, "text/json; charset=utf-8", {'result': False, 'message': "Object is not a dict, list or tuple."})
 
     @loguse([1,'@']) # Not logging session nor return value.
     def do_dynamic_page(self, session, fields):
