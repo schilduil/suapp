@@ -1058,13 +1058,14 @@ class Table(suapp.jandw.Wooster):
     raw = True
 
     # http://api.jquery.com/jquery.getjson/
+    # Is more complicated, check on 'result' and next 'object'.
     raw_js = """<script>
 (function() {
     var suappAPI = "/service/session/drone.dataobject/tables/%(table_name)s";
     $.getJSON( suappAPI, function( data ) {
       var items = [];
       items.push( "<th>Key</th><th>Value</th>" )
-      $.each( data, function( key, val ) {
+      $.each( data["object"], function( key, val ) {
         items.push( "<td>" + key + "</td><td>" + val + "</td>" );
       });
       $( "<tr/>", {
@@ -1078,7 +1079,7 @@ class Table(suapp.jandw.Wooster):
 
     def inflow(self, jeeves, drone):
         # TODO put the dataobject in the session...
-        params = {"table_name": {}}
+        params = {"table_name": 'test'}
         if drone.dataobject:
             if not 'table' in drone.dataobject:
                 # DELME: for testing creating something.
