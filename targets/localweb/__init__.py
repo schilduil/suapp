@@ -1064,7 +1064,7 @@ class Table(suapp.jandw.Wooster):
     $.getJSON( suappAPI, function( data ) {
       var items = [];
       items.push( "<th>Key</th><th>Value</th>" )
-      $.each( data, function( key, val ) {
+      $.each( data["object"], function( key, val ) {
         items.push( "<td>" + key + "</td><td>" + val + "</td>" );
       });
       $( "<tr/>", {
