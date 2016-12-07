@@ -46,11 +46,12 @@ class HtmlTemplatingEngine():
     </head>
     <body>
 
-%(body)s
-
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <!-- <script src="https://code.jquery.com/jquery.js"></script> -->
         <script src="/js/jquery/2.1.4/jquery.min.js"></script>
+
+%(body)s
+
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="/js/bootstrap/3.3.5/bootstrap.min.js"></script>
 
@@ -655,8 +656,8 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             else:
                 # Mode in a web setting can only be MODAL?
                 # DELME: creating a testing data object
-                data = {'tables': {'test': {}}, 'table_name': 'test'}
-                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, {}, callback_drone = self.callback_drone)
+                data = {'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test'}
+                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone = self.callback_drone)
         try:
             return_message = self.html(session, drone_title, drone_result, prefix = "        ")
         except Exception as err:
@@ -1063,12 +1064,18 @@ class Table(suapp.jandw.Wooster):
 (function() {
     var suappAPI = "/service/session/drone.dataobject/tables/%(table_name)s";
     $.getJSON( suappAPI, function( data ) {
+      console.log("Got json.")
+      console.log(data)
       var items = [];
-      items.push( "<th>Key</th><th>Value</th>" )
+      console.log("Items (empty)")
+      console.log(items)
+      items.push( "<tr><th>Key</th><th>Value</th></tr>" )
+      console.log("Items key/value")
+      console.log(items)
       $.each( data["object"], function( key, val ) {
-        items.push( "<td>" + key + "</td><td>" + val + "</td>" );
+        items.push( "<tr><td>" + key + "</td><td>" + val + "</td></tr>" );
       });
-      $( "<tr/>", {
+      $( "<tbody/>", {
         "class": "my-new-list",
         html: items.join( " " )
       }).appendTo("#tableview");
@@ -1084,6 +1091,7 @@ class Table(suapp.jandw.Wooster):
             if not 'table' in drone.dataobject:
                 # DELME: for testing creating something.
                 drone.dataobject['table'] = 'test'
+                drone.dataobject['tables'] = {'test': {'ID': 'testid'}}
             params = {"table_name": drone.dataobject['table']}
         result = []
         if Table.raw:
