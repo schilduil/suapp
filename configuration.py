@@ -19,7 +19,7 @@ It supports different source types:
 It supports different file types:
     json (based on the json module)
     xml (using xmltodict by Martin Blech)
-    yaml (TODO)
+    yaml (using pyyaml by pyyaml.org)
     cfg (based on the configparser module)
 """
 
@@ -216,6 +216,17 @@ class JsonConfigurationParser(ConfigurationParser):
             json.dump(configuration, data_file, sort_keys=True, indent=4, separators=(',', ': '))
 
 
+class YamlConfigurationParser(ConfigurationParser):
+
+    def load_into_dict(self, configuration):
+        import yaml
+        configuration.update(yaml.load(open(self.location, 'rb')))
+
+    def save_from_dict(self, configuration):
+        import yaml
+        yaml.dump(dict(configuration), open(self.location, 'w', encoding = 'utf-8'))
+        
+
 class XmlConfigurationParser(ConfigurationParser):
 
     def load_into_dict(self, configuration):
@@ -321,8 +332,8 @@ def get_configuration_parser(location, file_type):
         return CfgConfigurationParser(location)
     elif file_type == 'xml':
         return XmlConfigurationParser(location)
-    #elif file_type == 'yaml':
-    #    return YamlConfigurationParser(location)
+    elif file_type == 'yaml':
+        return YamlConfigurationParser(location)
     else:
         raise NotImplementedError("Unknown file type to parse: %s." % (file_type))
 
@@ -555,6 +566,34 @@ if __name__ == "__main__":
 
     # TEST 10: xml file/url (file exists)
     print("TEST 10: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
+    with get_configuration([file_name, url]) as test:
+        print("\t%s\n" % (test))
+
+    print("=== START FILE CONTENT ===")
+    for line in open(file_name, 'r', encoding = 'utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
+
+    os.remove(file_name)
+
+    # TEST 11: yaml
+    # Creating a temporary file for the configuration.
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".yaml")
+    os.close(os_level_handle)
+    os.remove(file_name)
+    print("TEST 11: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
+    with get_configuration([file_name, url]) as test:
+        print("\t%s\n" % (test))
+
+    print("=== START FILE CONTENT ===")
+    for line in open(file_name, 'r', encoding = 'utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
+
+    # TEST 12: xml file/url (file exists)
+    print("TEST 12: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
     with get_configuration([file_name, url]) as test:
         print("\t%s\n" % (test))
