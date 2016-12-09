@@ -99,7 +99,6 @@ class SplitConfiguration(Configuration):
             self.backup = backup[0]
         else:
             self.backup = SplitConfiguration(backup)
-        #print("%s / %s" % (type(self.main), type(self.backup))) # DELME
                 
     def load(self):
         try:
@@ -123,6 +122,51 @@ class SplitConfiguration(Configuration):
         self.load()
         # Once the initial load is done, only the main configuration matters.
         return self.main
+
+    def __getitem__(self, key):
+        return self.main.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        return self.main.__setitem__(key, value)
+
+    def __delitem__(self, key):
+        return self.main.__del__(key)
+
+    def __len__(self):
+        return self.main.__len__()
+
+    def __repr__(self):
+        return self.main.__repr__()
+
+    def clear(self):
+        return self.main.clear()
+
+    def has_key(self, key):
+        return self.main.has_key(key)
+
+    def pop(self, key, d = None):
+        return self.main.pop(key, d)
+
+    def update(self, *args, **kwargs):
+        return self.main.update(*args, **kwargs)
+
+    def keys(self):
+        return self.main.keys()
+
+    def values(self):
+        return self.main.values()
+
+    def items(self):
+        return self.main.items()
+
+    def pop(self, *args):
+        return self.main.pop(*args)
+
+    def __contains__(self, item):
+        return self.main.__contains__(item)
+
+    def __iter__(self):
+        return self.main.__iter__()
 
 
 class ConfigurationParser():
@@ -195,7 +239,6 @@ class CfgConfigurationParser(ConfigurationParser):
                 config_flat.update(self.configuration_to_flat_dict(value, prefix = new_prefix))
             else:
                 config_flat['.'.join(new_prefix)] = value
-        #print("%s: %s - %s" % (prefix, configuration, config_flat)) # DELME
         return config_flat
 
 
@@ -303,7 +346,6 @@ class FileConfiguration(Configuration):
         """
         Have the parser read in the configuration.
         """
-        #print("Loading using parser %s." % (self.parser)) # DELME
         self.parser.load_into_dict(self)
 
     def save(self):
@@ -336,7 +378,6 @@ class WebConfiguration(FileConfiguration):
             # Download the file from `url` and save it locally under `file_name`:
             (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".%s" % (file_type))
             os.close(os_level_handle)
-            #print(file_name) # DELME
             with urllib.request.urlopen(self.url) as response, open(file_name, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             # Using FileConfiguration on the temporary file to do the real stuff.

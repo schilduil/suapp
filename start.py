@@ -32,100 +32,7 @@ import os.path
 import sys
 
 import suapp
-
-
-def configuration_to_flat_dict(configuration, prefix = None):
-    """
-    Flattens the configuration from multiple levels to one.
-    
-    From:
-        {"a": {"b": "c": "value"}}}
-    To:
-        {"a.b.c": "value"}
-    """
-    if not prefix:
-        prefix = []
-    config_flat = dict()
-    for key,value in configuration.items():
-        new_prefix = list(prefix)
-        new_prefix.append(key)
-        if type(value) == type(config_flat):
-            new_prefix = list(prefix)
-            new_prefix.append(key)
-            config_flat.update(configuration_to_flat_dict(value, prefix = new_prefix))
-        else:
-            config_flat['.'.join(new_prefix)] = value
-    #print("%s: %s - %s" % (prefix, configuration, config_flat)) # DELME
-    return config_flat
-
-
-def configuration_to_configparser(configuration):
-    """
-    Converts the configuration to a configuration for configparser.
-    
-    From:
-        {"a": {"b": "c": "value"}}}
-    To:
-        [a.b]
-        c = value
-    """
-    import configparser
-    config_parser = configparser.RawConfigParser()
-    config_flat = configuration_to_flat_dict(configuration)
-    for fullkey,value in config_flat.items():
-        try:
-            (section,key) = fullkey.rsplit('.',1)
-        except ValueError:
-            section = ""
-            key = fullkey
-        #print("[%s] %s: %s - %s" % (section, key, value, fullkey))
-        try:
-            if section != "":
-                config_parser.add_section(section)
-        except configparser.DuplicateSectionError:
-            # Ignore
-            pass
-        config_parser.set(section, key, value)
-    return config_parser
-
-
-def read_conf_json(jsonfilename):
-    """
-    Reads and parses the json configuration file.
-    """
-    import json
-    try:
-        with open(jsonfilename) as data_file:    
-            return json.load(data_file)
-    except IOError as e:
-        print()
-        print("Could not load the configuration: %s." % (e))
-        exit(1)
-    except ValueError as e:
-        print()
-        print("Could not parse the configuration: %s." % (e))
-        exit(1)
-
-
-def read_conf(filename):
-    """
-    Read the configuration from a file.
-    
-    For now only a json configuration file is supported.
-    It will also write out {/tmp}/suapp.cfg with configparser as a test.
-    """
-    if filename.endswith(".json"):
-        configuration = read_conf_json(filename)
-        try:
-            import os.path
-            import tempfile
-            config_parser = configuration_to_configparser(configuration)
-            with open(os.path.join(tempfile.gettempdir(),'suapp.cfg'), 'w') as config_parser_file_handle:
-                config_parser.write(config_parser_file_handle)
-        except:
-            # Ignore if this fails, just for debugging.
-            pass
-        return configuration
+import configuration
 
 
 def update_conf(configuration, option_string):
@@ -170,6 +77,7 @@ if __name__ == "__main__":
     print("Options: %s"% (args.options))
 
     jsonfilename = 'suapp.json'
+    json_backup = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
     if args.configuration:
         if os.path.isdir(args.configuration):
             # An existing directory is passed.
@@ -186,15 +94,17 @@ if __name__ == "__main__":
         jsonfilename = os.path.realpath(jsonfilename)
 
     print("Effective configuration file: %s" % (jsonfilename))
+    print("Backup initial configuration: %s" % (json_backup))
     
-    configuration = read_conf(jsonfilename)
-    configuration["self"] = jsonfilename
-    update_conf(configuration, args.options)
+    config = configuration.get_configuration([jsonfilename, json_backup])
+    config.load()
+    config["self"] = jsonfilename
+    update_conf(config, args.options)
     if args.target:
-        configuration["target"] = args.target
+        config["target"] = args.target
     
     try:    
-        app = suapp.SuApp(configuration)
+        app = suapp.SuApp(config)
         app.start()
         print("Bye.")
     except Exception as e:
