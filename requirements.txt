@@ -1,1 +1,1 @@
-xmltodict=0.10.2
+xmltodict >= 0.10.2     # Tested with verion 0.10.2

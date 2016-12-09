@@ -18,7 +18,7 @@ It supports different source types:
     
 It supports different file types:
     json (based on the json module)
-    xml (TODO)
+    xml (using xmltodict by Martin Blech)
     yaml (TODO)
     cfg (based on the configparser module)
 """
