@@ -215,6 +215,17 @@ class JsonConfigurationParser(ConfigurationParser):
         with open(self.location, 'w', encoding = 'utf-8') as data_file:    
             json.dump(configuration, data_file, sort_keys=True, indent=4, separators=(',', ': '))
 
+
+class XmlConfigurationParser(ConfigurationParser):
+
+    def load_into_dict(self, configuration):
+        import xmltodict
+        configuration.update(xmltodict.parse(open(self.location,'rb'))['suapp'])
+    
+    def save_from_dict(self, configuration):
+        import xmltodict
+        xmltodict.unparse({'suapp': configuration}, open(self.location, 'wb'))
+
             
 class CfgConfigurationParser(ConfigurationParser):
 
@@ -308,8 +319,8 @@ def get_configuration_parser(location, file_type):
         return JsonConfigurationParser(location)
     elif file_type == 'cfg':
         return CfgConfigurationParser(location)
-    #elif file_type == 'xml':
-    #    return XmlConfigurationParser(location)
+    elif file_type == 'xml':
+        return XmlConfigurationParser(location)
     #elif file_type == 'yaml':
     #    return YamlConfigurationParser(location)
     else:
@@ -390,7 +401,7 @@ class WebConfiguration(FileConfiguration):
         finally:
             try:
                 # Always try to delete the temporary file.
-                pass #os.remove(file_name)
+                os.remove(file_name)
             except:
                 pass
 
@@ -461,7 +472,7 @@ if __name__ == "__main__":
     with get_configuration(url) as test:
         print("\t%s\n" % (test))
 
-    # TEST 3: file/url (file does not exist)
+    # TEST 3: json file/url (file does not exist)
     # Creating a temporary file for the configuration.
     (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".json")
     os.close(os_level_handle)
@@ -491,11 +502,13 @@ if __name__ == "__main__":
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
-    # TEST 6: file/url (file exists)
+    # TEST 6: json file/url (file exists)
     print("TEST 6: passing a json file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
     with get_configuration([file_name, url]) as test:
         print("\t%s\n" % (test))
+
+    os.remove(file_name)
 
     # TEST 7: cfg
     # Creating a temporary file for the configuration.
@@ -522,4 +535,34 @@ if __name__ == "__main__":
     for line in open(file_name, 'r', encoding = 'utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
+
+    os.remove(file_name)
+
+    # TEST 9: xml
+    # Creating a temporary file for the configuration.
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".xml")
+    os.close(os_level_handle)
+    os.remove(file_name)
+    print("TEST 9: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
+    with get_configuration([file_name, url]) as test:
+        print("\t%s\n" % (test))
+
+    print("=== START FILE CONTENT ===")
+    for line in open(file_name, 'r', encoding = 'utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
+
+    # TEST 10: xml file/url (file exists)
+    print("TEST 10: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
+    with get_configuration([file_name, url]) as test:
+        print("\t%s\n" % (test))
+
+    print("=== START FILE CONTENT ===")
+    for line in open(file_name, 'r', encoding = 'utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
+
+    os.remove(file_name)
 
