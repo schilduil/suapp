@@ -5,6 +5,7 @@ __pycache__/
 # Project specific stuff
 comments.txt
 susm*
+modules/*
 
 # Makefile
 Makefile
@@ -12,4 +13,3 @@ Makefile
 # Javascript and CSS files
 targets/localwab/css/*/*/*.js
 targets/localweb/css/*/*/*.css
-
