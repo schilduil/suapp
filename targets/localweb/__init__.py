@@ -1048,7 +1048,7 @@ class Configuration(suapp.jandw.Wooster):
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
         result = "<pre><code>\n"
-        result += json.dumps(self.jeeves.app.configuration, indent = "    ")
+        result += json.dumps(dict(self.jeeves.app.configuration), indent = "    ")
         result += "\n</code></pre>"
         return ("Configuration", result)
 
