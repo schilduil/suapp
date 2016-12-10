@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
+from collections import MutableMapping
+
+
 """
 Module for reading and writing the configuration.
 
@@ -24,10 +27,37 @@ It supports different file types:
 """
 
            
-class Configuration(dict):
+class Configuration(MutableMapping):
 
-    def __init__(self, **kwargs):
-        self.update(kwargs)
+    def __init__(self, *args, **kwargs):
+        self.store = dict()
+        if args or kwargs:
+            self.update(dict(*args, **kwargs))
+
+    def __getitem__(self, key):
+        return self.store[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        self.store[self.__keytransform__(key)] = value
+
+    def __delitem__(self, key):
+        del self.store[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
+
+    def __keytransform__(self, key):
+        return key
+
+    # -- We want it to output like a dict --
+
+    def __repr__(self):
+        return self.store.__repr__()
+
+    # -- Configuration specific methods: load, save & close. --
 
     def load(self):
         """
@@ -55,6 +85,8 @@ class Configuration(dict):
         after itself.
         """
         pass
+
+    # -- Contect manager --
 
     def __enter__(self):
         """
@@ -85,6 +117,7 @@ class SplitConfiguration(Configuration):
     """
 
     def __init__(self, configurations):
+        super().__init__()
         self.main = None
         backup = []
         for config in configurations:
@@ -99,20 +132,28 @@ class SplitConfiguration(Configuration):
             self.backup = backup[0]
         else:
             self.backup = SplitConfiguration(backup)
+        #print("Main: %s" % (type(self.main))) # DELME
+        #print("Backup: %s" % (type(self.backup))) # DELME
                 
     def load(self):
         try:
             # Try to load the main configuration.
             self.main.load()
+            #print("Loaded main: %s (%s) in %s" % (self.main, type(self.main), type(self))) # DELME
         except:
             # That didn't work, so trying the backup.
             if self.backup != None:
                 # Loading from the backup and saving it to the main configuration.
+                #print("Loading from backup %s in %s..." % (type(self.backup), type(self))) # DELME
                 self.backup.load()
+                #print("Updating main with %s in %s..." % (self.backup, type(self))) # DELME
                 self.main.update(self.backup)
+                #print("Saving main %s in %s..." % (self.main, type(self))) # DELME
                 self.main.save()
+                #print("Saved %s in %s" % (type(self.main), type(self))) # DELME
             else:
                 # No backup, re-raising the original exception.
+                #print("No backup in %s" % (type(self))) # DELME
                 raise
             
     def save(self):
@@ -141,6 +182,9 @@ class SplitConfiguration(Configuration):
     def clear(self):
         return self.main.clear()
 
+    def copy(self):
+        return self.main.copy()
+
     def has_key(self, key):
         return self.main.has_key(key)
 
@@ -162,11 +206,17 @@ class SplitConfiguration(Configuration):
     def pop(self, *args):
         return self.main.pop(*args)
 
+    def __cmp__(self, item):
+        return self.main.__cmp__(item)
+
     def __contains__(self, item):
         return self.main.__contains__(item)
 
     def __iter__(self):
         return self.main.__iter__()
+
+    def __unicode__(self):
+        return self.main.__unicode__()
 
 
 class ConfigurationParser():
@@ -213,7 +263,7 @@ class JsonConfigurationParser(ConfigurationParser):
         """
         import json
         with open(self.location, 'w', encoding = 'utf-8') as data_file:    
-            json.dump(configuration, data_file, sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(dict(configuration), data_file, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 class YamlConfigurationParser(ConfigurationParser):
@@ -235,7 +285,7 @@ class XmlConfigurationParser(ConfigurationParser):
     
     def save_from_dict(self, configuration):
         import xmltodict
-        xmltodict.unparse({'suapp': configuration}, open(self.location, 'wb'))
+        xmltodict.unparse({'suapp': dict(configuration)}, open(self.location, 'wb'))
 
             
 class CfgConfigurationParser(ConfigurationParser):
@@ -347,6 +397,7 @@ class FileConfiguration(Configuration):
         """
         Initializing the parser depending on the file type.
         """
+        super().__init__()
         # Trying to infer the file type if not given.
         if not file_type:
             if location.lower().endswith('.json'):
@@ -377,12 +428,13 @@ class FileConfiguration(Configuration):
         self.parser.save_from_dict(self)
 
         
-class WebConfiguration(FileConfiguration):
+class WebConfiguration(Configuration):
     """
     Loads the configuration from the web.
     """
     
     def __init__(self, url):
+        super().__init__()
         self.url = url
         
     def load(self):
@@ -469,7 +521,33 @@ if __name__ == "__main__":
     import os.path
     import tempfile 
 
-    sample = {"a": {"one": 1, "two": {"alpha", "omega"}}, "b": "hello", "c": "world"}
+    sample = {
+        "name": "SU Demo Application",
+        "shortname": "suapp",
+        "log": {
+            "filename": "~/.suapp/log/suapp.log",
+            "filemode": "w",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+            "level": "INFO",
+            "modules": {
+                "base": {
+                    "level": "INFO"
+                },
+                "httpd": {
+                    "level": "DEBUG",
+                    "filename": "~/.suapp/log/httpd.accces_log"
+                }
+            }
+        },
+        "datasource": {
+            "type": "Plank",
+            "location": "~/.susm/data/"
+        },
+        "modules": {
+            "base": {}
+        }
+    }
+
     print("SAMPLE: %s\n" % (sample))
     
     # TEST 1: dictionary
@@ -477,20 +555,23 @@ if __name__ == "__main__":
     with get_configuration(sample) as test:
         print("\t%s\n" % (test))
 
-    # TEST 2: url
+    # TEST 2: url (might fail if no network)
     url = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
-    print("TEST 2: passing a URL: %s" % (url))
-    with get_configuration(url) as test:
-        print("\t%s\n" % (test))
+    print("TEST 2: passing a URL (will fail if no network): %s" % (url))
+    try:
+        with get_configuration(url) as test:
+            print("\t%s\n" % (test))
+    except:
+        print("Failed (probably no network).")
 
-    # TEST 3: json file/url (file does not exist)
+    # TEST 3: json file/url/sample (file does not exist)
     # Creating a temporary file for the configuration.
     (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".json")
     os.close(os_level_handle)
     os.remove(file_name)
     print("TEST 3: passing a json file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
@@ -513,10 +594,10 @@ if __name__ == "__main__":
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
-    # TEST 6: json file/url (file exists)
-    print("TEST 6: passing a json file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    # TEST 6: json file/url/sample (file exists)
+    print("TEST 6: passing a json file and a backup URL where the file exists: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     os.remove(file_name)
@@ -528,7 +609,7 @@ if __name__ == "__main__":
     os.remove(file_name)
     print("TEST 7: passing a cfg file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
         
     print("=== START FILE CONTENT ===")
@@ -536,10 +617,10 @@ if __name__ == "__main__":
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
-    # TEST 8: cfg file/url (file exists)
-    print("TEST 8: passing a cfg file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    # TEST 8: cfg file/url/sample (file exists)
+    print("TEST 8: passing a cfg file and a backup URL where the file exists: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
         
     print("=== START FILE CONTENT ===")
@@ -556,7 +637,7 @@ if __name__ == "__main__":
     os.remove(file_name)
     print("TEST 9: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
@@ -564,10 +645,10 @@ if __name__ == "__main__":
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
-    # TEST 10: xml file/url (file exists)
-    print("TEST 10: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    # TEST 10: xml file/url/sample (file exists)
+    print("TEST 10: passing a xml file and a backup URL where the file exists: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
@@ -584,7 +665,7 @@ if __name__ == "__main__":
     os.remove(file_name)
     print("TEST 11: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
@@ -592,10 +673,10 @@ if __name__ == "__main__":
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
-    # TEST 12: xml file/url (file exists)
-    print("TEST 12: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
+    # TEST 12: xml file/url/sample (file exists)
+    print("TEST 12: passing a yaml file and a backup URL where the file exists: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url]) as test:
+    with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
@@ -604,4 +685,5 @@ if __name__ == "__main__":
     print("=== END FILE CONTENT ===\n")
 
     os.remove(file_name)
+
 
