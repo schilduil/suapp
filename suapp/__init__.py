@@ -108,7 +108,7 @@ class SuApp(object):
         try:
             if not "log" in self.configuration:
                 self.configuration["log"] = {}
-            filename = "~/.%s/log/suapp.log" % (self.configuration["shortname"])
+            filename = "~/.%s/log/suapp.log" % (self.configuration["shortname"].lower())
             filemode = "w"
             level = "INFO"
             format = '%(asctime)s %(levelname)s %(name)s %(message)s'
@@ -220,7 +220,7 @@ class SuApp(object):
     def configure_flow(self):
         if not "shortname" in self.configuration:
             self.configuration["shortname"] = "suapp"
-        self.flow.flow[""] = self.read_flow("%s.flow" % self.configuration["shortname"])
+        self.flow.flow[""] = self.read_flow("%s.flow" % self.configuration["shortname"].lower())
         if len(self.flow.flow[""]) == 0:
             raise ConfigurationError("Could not load correct flow configuration.")
         if "modules" in self.configuration:
