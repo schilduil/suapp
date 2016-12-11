@@ -73,8 +73,9 @@ class HtmlTemplatingEngine():
             self.html_template = HtmlTemplatingEngine.html_template
 
     @loguse([1,3,'@']) # Not logging session, main nor the return value.
-    def html(self, session, title, main, prefix = None, menu = None):
-        name = "SuApp"
+    def html(self, session, title, main, prefix = None, menu = None, shortname = None):
+        if not shortname:
+            shortname = "SuApp"
         if prefix == None:
             prefix = ""
         if menu == None:
@@ -103,11 +104,11 @@ class HtmlTemplatingEngine():
         output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
         output.append(prefix + '\t\t\t\t<span class="icon-bar"></span>')
         output.append(prefix + '\t\t\t</button>')
-        output.append(prefix + '\t\t\t<a class="navbar-brand" href="/">%s</a>' % (name))
+        output.append(prefix + '\t\t\t<a class="navbar-brand" href="/">%s</a>' % (shortname))
         output.append(prefix + '\t\t</div>')
         output.append(prefix + '\t\t<div class="navbar-collapse collapse">')
         output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-left">')
-        output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % (name))
+        output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % ("Start"))
         # TODO: for now this is only 2 deep, perhaps we should make this multilevel.
         for menu_name,menu_sub in menu.items():
             if type(menu_sub) == type(menu):
@@ -646,7 +647,16 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         return_code = 200
         return_mime = 'text/html; charset=utf-8'
         return_message = ""
-        drone_title = "SuApp"
+        shortname = "SuApp"
+        try:
+            shortname = session['jeeves'].app.configuration['shortname']
+        except:
+            pass
+        drone_title = shortname
+        try:
+            drone_title = session['jeeves'].app.configuration['name']
+        except:
+            pass
         drone_result = ""
         # Check for an OUT message.
         if "OUT" in fields:
@@ -660,7 +670,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 data = {'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test', 'table': 'organism', 'object': {'ID': '(GOVAYF)62', 'father': 'GOc', 'mother': 'VAYF'}}
                 (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone = self.callback_drone)
         try:
-            return_message = self.html(session, drone_title, drone_result, prefix = "        ")
+            shortname = session['jeeves'].app.configuration['shortname']
+        except:
+            pass
+        try:
+            return_message = self.html(session, drone_title, drone_result, prefix = "        ", shortname = shortname)
         except Exception as err:
             ex_type, ex, tb = sys.exc_info()
             import traceback
