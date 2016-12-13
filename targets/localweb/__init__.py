@@ -10,6 +10,7 @@ import json
 from threading import Thread
 import time
 import os.path
+import string
 import sys
 import urllib.parse
 import webbrowser
@@ -18,7 +19,10 @@ import suapp.jandw
 from logdecorator import *
 
 
-users = {"admin": "admin", "user": "user"}
+users = {
+    "admin": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32)),
+    "user": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32))
+}
 groups = {"administrators": ["admin"]}
 
 
@@ -980,7 +984,8 @@ class BrowserThread(Thread):
         import time
         # Waiting for x seconds to be sure the http server is up.
         time.sleep(0)
-        webbrowser.open("http://%s:%s/?username=user&password=user" % (self.ip, self.port))
+        webbrowser.open("http://%s:%s/?username=user&password=%s" % (self.ip, self.port, users['user']))
+        print("Admin credentials: admin/%s" % (users['admin']))
 
 
 class Application(suapp.jandw.Wooster):
