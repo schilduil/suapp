@@ -1,11 +1,18 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod~]
+*.pz~
+
+# vi swp files
+*.swp
+
+# Anything starting with test
+test*
 
 # Project specific stuff
 comments.txt
 susm*
-modules/*
+modlib/*
 
 # Makefile
 Makefile

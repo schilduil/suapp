@@ -1,2 +1,3 @@
 xmltodict >= 0.10.2     # Tested with version 0.10.2
 pyyaml >= 3.12          # Tested with version 3.12
+pony >= 0.7             # Tested with version 0.7
