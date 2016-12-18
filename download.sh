@@ -5,6 +5,12 @@ cd targets/localweb/css/bootstrap/3.3.5/
 wget http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css
 cd ../../../../../
 
+# bootstrap
+mkdir -p targets/localweb/js/bootstrap/3.3.5
+cd targets/localweb/js/bootstrap/3.3.5/
+wget http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.js
+cd ../../../../../
+
 # html5shiv
 mkdir -p targets/localweb/js/html5shiv/3.7.0
 cd targets/localweb/js/html5shiv/3.7.0

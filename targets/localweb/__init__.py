@@ -29,7 +29,9 @@ groups = {"administrators": ["admin"]}
 
 class HtmlTemplatingEngine():
 
-    html_template = """ <!DOCTYPE html>
+    @staticmethod
+    def html_template():
+        html_template = """ <!DOCTYPE html>
 <html>
     <head>
         <title>%(title)s</title>
@@ -37,45 +39,82 @@ class HtmlTemplatingEngine():
         <meta charset="utf-8">
 
         <!-- Bootstrap -->
-        <link href="/css/bootstrap/3.3.5/bootstrap.min.css" rel="stylesheet" media="screen">
-        <link href="/css/site.css" rel="stylesheet" media="screen">
+"""
+        print(os.path.dirname(__file__))
+        print(os.path.join(os.path.dirname(__file__), "css/bootstrap/3.3.5/bootstrap.min.css"))
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "css/bootstrap/3.3.5/bootstrap.min.css")):
+            # Use the local resource (so localweb does not require internet access)
+            html_template += """        <link href="/css/bootstrap/3.3.5/bootstrap.min.css" rel="stylesheet" media="screen">
+"""
+        else:
+            # Fall back to a public URL
+            html_template += """        <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" media="screen">
+"""
+
+        html_template += """        <link href="/css/site.css" rel="stylesheet" media="screen">
         <link href="/css/syntax.css" rel="stylesheet" media="screen">
 
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
-            <script src="/js/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="/js/respond.js/1.3.0/respond.min.js"></script>
-        <![endif]-->
+"""
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "js/html5shiv/3.7.0/html5shiv.js")):
+            # Use the local resource (so localweb does not require internet access)
+            html_template += """            <script src="/js/html5shiv/3.7.0/html5shiv.js"></script>
+"""
+        else:
+            # Fall back to a public URL
+            html_template += """            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+"""
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "js/respond.js/1.3.0/respond.min.js")):
+            # Use the local resource (so localweb does not require internet access)
+            html_template += """            <script src="/js/respond.js/1.3.0/respond.min.js"></script>
+"""
+        else:
+            # Fall back to a public URL
+            html_template += """            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+"""
+        html_template += """        <![endif]-->
 
     </head>
     <body>
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <!-- <script src="https://code.jquery.com/jquery.js"></script> -->
-        <script src="/js/jquery/2.1.4/jquery.min.js"></script>
+"""
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "js/jquery/2.1.4/jquery.min.js")):
+            # Use the local resource (so localweb does not require internet access)
+            html_template += """        <script src="/js/jquery/2.1.4/jquery.min.js"></script>
+"""
+        else:
+            # Fall back to a public URL.
+            html_template += """        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+"""
+        html_template += """
 
 %(body)s
 
         <!-- Include all compiled plugins (below), or include individual files as needed -->
-        <script src="/js/bootstrap/3.3.5/bootstrap.min.js"></script>
-
+"""
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), "js/bootstrap/3.3.5/bootstrap.min.js")):
+            # Use the local resource (so localweb does not require internet access)
+            html_template += """        <script src="/js/bootstrap/3.3.5/bootstrap.min.js"></script>
+"""
+        else:
+            # Fall back to a public URL.
+            html_template += """        <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.js"></script>
+"""
+        html_template += """
     </body>
 </html>"""
-
-
-#            <script src="/js/html5shiv/3.7.0/html5shiv.js"></script>
-#            <script src="/js/respond.js/1.3.0/respond.min.js"></script>
-
-#            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-#            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        return html_template
 
     @loguse
     def __init__(self, template = None):
         if template:
             self.html_template = str(template)
         else:
-            self.html_template = HtmlTemplatingEngine.html_template
+            self.html_template = HtmlTemplatingEngine.html_template()
 
     @loguse([1,3,'@']) # Not logging session, main nor the return value.
     def html(self, session, title, main, prefix = None, menu = None, shortname = None):
