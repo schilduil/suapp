@@ -12,6 +12,7 @@ test*
 # Project specific stuff
 comments.txt
 susm*
+modlib
 modlib/*
 
 # Makefile

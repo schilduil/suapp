@@ -40,7 +40,7 @@ class ModuleLoadingException(ModuleException):
 
 def import_data_module(app_name, module_name, scope):
     # Importing the module in Python.
-    module_entity = importlib.import_module("modlib.%s.datamodel" % (module_name))
+    module_entity = importlib.import_module("modlib.%s" % (module_name))
     #module_entity = importlib.import_module("modlib.%s" % (module_name))
     my_module_full = 'modlib.%s' % (module_name)
     # Checking if the app matches in the module.
