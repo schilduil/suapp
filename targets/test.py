@@ -22,15 +22,11 @@ class Application(suapp.jandw.Wooster):
             self.dataobject = drone.dataobject
         if not self.dataobject:
             self.dataobject = {}
-        if not 'name' in self.dataobject:
-            self.dataobject['name'] = 'SuApp'
-        self.name = self.dataobject['name']
+        self.name = self.dataobject.get('name', 'SuApp')
         print("=====================")
         print(self.name)
         print("---------------------")
-        if 'tables' in self.dataobject:
-            logging.getLogger(self.__module__).debug(": Application[%r].inflow() : Setting tables." % (self))
-            self.tables = self.dataobject['tables']
+        self.tables = self.dataobject('tables', {})
         print(self.tables)
         self.jeeves = jeeves
         print("Entered with mode %s. " % (drone.mode))

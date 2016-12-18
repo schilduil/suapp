@@ -324,12 +324,8 @@ class RecordWindow(ToplevelWooster):
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
-        if 'table' in drone.dataobject:
-            self.table = drone.dataobject['table']
-            if 'object' in drone.dataobject:
-                self.data = drone.dataobject['object']
-            elif 'key' in drone.dataobject:
-                self.data = self.table[drone.dataobject['key']]
+        self.table = drone.dataobject.get('table', None)
+        self.data = drone.dataobject.get('object', drone.dataobject.get('key', None))
         self.createWidgets()
 
 

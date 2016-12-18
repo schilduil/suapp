@@ -1043,14 +1043,10 @@ class Application(suapp.jandw.Wooster):
         # The port by default is ord(S)+10 + ord(U)
         self.port = 8385 # SU
         self.ip = "127.0.0.1"
-        if "httpd" in jeeves.app.configuration:
-            if "port" in jeeves.app.configuration:
-                self.port = jeeves.app.configuration['httpd']['port']
-            else:
-                jeeves.app.configuration['httpd']['port'] = self.port
-                jeeves.app.configuration['httpd']['ip'] = self.ip
-        else:
-            jeeves.app.configuration['httpd'] = {'ip': self.ip, 'port': self.port}
+        httpd_conf = jeeves.app.configuration.get('httpd', {'ip': self.ip, 'port': self.port})
+        httpd_conf['port'] = httpd_conf.get('port', self.port)
+        httpd_conf['ip'] = httpd_conf.get('ip', self.ip)
+        jeeves.app.configuration['httpd'] = httpd_conf
         LocalWebHandler.jeeves = jeeves
         LocalWebHandler.drone = drone
         self.server = http.server.HTTPServer((self.ip, self.port), LocalWebHandler)
