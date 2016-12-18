@@ -1,3 +1,7 @@
+# Run this in the directory it is installed in order to have all css/js
+# resources local. Doing this will make it possible for the localweb
+# target to use the local css/js always so it can run on a machine
+# without internet access.
 
 # bootstrap
 mkdir -p targets/localweb/css/bootstrap/3.3.5
