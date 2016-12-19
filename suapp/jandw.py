@@ -11,12 +11,14 @@ from suapp.logdecorator import *
 
 
 class Wooster(object):
-    '''
+    """
+    A Wooster represents a UI window/page.
+
     GENERALLY THESE THINGS ARE REUSED SO YOU NEED TO BE VERY CAREFUL ABOUT SIDE EFFECTS.
     In case you have something that cannot be reused do something like:
         1/ Create a new class instance of a subclass of Wooster
         2/ Call inflow on that
-    '''
+    """
     def lock(self):
         pass
 
@@ -34,23 +36,37 @@ class Wooster(object):
 
 
 class Drone(object):
+    """
+    A drone is the connection between two vertices.
+    """
     def __init__(self, name, tovertex):
         self.name = name
         self.tovertex = tovertex
 
 
 class Jeeves(object):
+    """
+    Jeeves is the controller that determins the flow.
+
+    It uses Drones to go from Wooster to Wooster.
+    """
     MODE_OPEN = 3
     MODE_REPLACE = 2
     MODE_MODAL = 1
 
     @loguse
     def __init__(self, app = None):
+        """
+        Initializes the Jeeves with an empty flow and app name.
+        """
         self.flow = {"": {}}
         self.app = app
 
     @loguse
     def whichDrone(self, fromname, outmessage, **kwargs):
+        """
+        Finding the drone matching the outmessage.
+        """
         logging.getLogger(__name__).debug(": Jeeves[%r].whichDrone : Flow: %s" % (self, self.flow))
         drone = None
         try:
@@ -66,6 +82,9 @@ class Jeeves(object):
 
     @loguse('@') # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
+        """
+        Find the drone and execute it.
+        """
         # Find the drone
         fromname = ""
         result = None
@@ -103,6 +122,9 @@ class Jeeves(object):
 
     @loguse
     def start(self, dataobject = None):
+        """
+        Start the Jeeves flow.
+        """
         self.drone("", "START", self.MODE_MODAL, dataobject)
 
 
