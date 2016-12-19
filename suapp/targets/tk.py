@@ -12,89 +12,93 @@ from suapp.logdecorator import *
 #Extra widgets
 class MultiListbox(Frame):
     def __init__(self, master, lists):
-    	Frame.__init__(self, master)
-    	self.lists = []
-    	for l,w in lists:
-    	    frame = Frame(self); frame.pack(side=LEFT, expand=YES, fill=BOTH)
-    	    Label(frame, text=l, borderwidth=1, relief=RAISED).pack(fill=X)
-    	    lb = Listbox(frame, width=w, borderwidth=0, selectborderwidth=0,
-    			 relief=FLAT, exportselection=FALSE)
-    	    lb.pack(expand=YES, fill=BOTH)
-    	    self.lists.append(lb)
-    	    lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
-    	    lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
-    	    lb.bind('<Leave>', lambda e: 'break')
-    	    lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
-    	    lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
-    	frame = Frame(self); frame.pack(side=LEFT, fill=Y)
-    	Label(frame, borderwidth=1, relief=RAISED).pack(fill=X)
-    	sb = Scrollbar(frame, orient=VERTICAL, command=self._scroll)
-    	sb.pack(expand=YES, fill=Y)
-    	self.lists[0]['yscrollcommand']=sb.set
+        Frame.__init__(self, master)
+        self.lists = []
+        for l, w in lists:
+            frame = Frame(self)
+            frame.pack(side=LEFT, expand=YES, fill=BOTH)
+            Label(frame, text=l, borderwidth=1, relief=RAISED).pack(fill=X)
+            lb = Listbox(frame, width=w, borderwidth=0, selectborderwidth=0, relief=FLAT, exportselection=FALSE)
+            lb.pack(expand=YES, fill=BOTH)
+            self.lists.append(lb)
+            lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
+            lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
+            lb.bind('<Leave>', lambda e: 'break')
+            lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
+            lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
+        frame = Frame(self)
+        frame.pack(side=LEFT, fill=Y)
+        Label(frame, borderwidth=1, relief=RAISED).pack(fill=X)
+        sb = Scrollbar(frame, orient=VERTICAL, command=self._scroll)
+        sb.pack(expand=YES, fill=Y)
+        self.lists[0]['yscrollcommand'] = sb.set
 
     def _select(self, y):
-    	row = self.lists[0].nearest(y)
-    	self.selection_clear(0, END)
-    	self.selection_set(row)
-    	return 'break'
+        row = self.lists[0].nearest(y)
+        self.selection_clear(0, END)
+        self.selection_set(row)
+        return 'break'
 
     def _button2(self, x, y):
-    	for l in self.lists: l.scan_mark(x, y)
-    	return 'break'
+        for l in self.lists:
+            l.scan_mark(x, y)
+        return 'break'
 
     def _b2motion(self, x, y):
-    	for l in self.lists: l.scan_dragto(x, y)
-    	return 'break'
+        for l in self.lists:
+            l.scan_dragto(x, y)
+        return 'break'
 
     def _scroll(self, *args):
-    	for l in self.lists:
-    	    apply(l.yview, args)
+        for l in self.lists:
+            apply(l.yview, args)
 
     def curselection(self):
-    	return self.lists[0].curselection()
+        return self.lists[0].curselection()
 
     def delete(self, first, last=None):
-    	for l in self.lists:
-	        l.delete(first, last)
+        for l in self.lists:
+            l.delete(first, last)
 
     def get(self, first, last=None):
-    	result = []
-    	for l in self.lists:
-    	    result.append(l.get(first,last))
-    	if last: return apply(map, [None] + result)
-    	return result
+        result = []
+        for l in self.lists:
+            result.append(l.get(first, last))
+        if last:
+            return apply(map, [None] + result)
+        return result
 
     def index(self, index):
-    	self.lists[0].index(index)
+        self.lists[0].index(index)
 
     def insert(self, index, *elements):
-    	for e in elements:
-    	    i = 0
-    	    for l in self.lists:
-        		l.insert(index, e[i])
-        		i = i + 1
+        for e in elements:
+            i = 0
+            for l in self.lists:
+                l.insert(index, e[i])
+                i = i + 1
 
     def size(self):
-    	return self.lists[0].size()
+        return self.lists[0].size()
 
     def see(self, index):
-    	for l in self.lists:
-    	    l.see(index)
+        for l in self.lists:
+            l.see(index)
 
     def selection_anchor(self, index):
-    	for l in self.lists:
-    	    l.selection_anchor(index)
+        for l in self.lists:
+            l.selection_anchor(index)
 
     def selection_clear(self, first, last=None):
-    	for l in self.lists:
-    	    l.selection_clear(first, last)
+        for l in self.lists:
+            l.selection_clear(first, last)
 
     def selection_includes(self, index):
-    	return self.lists[0].selection_includes(index)
+        return self.lists[0].selection_includes(index)
 
     def selection_set(self, first, last=None):
-    	for l in self.lists:
-    	    l.selection_set(first, last)
+        for l in self.lists:
+            l.selection_set(first, last)
 #END of extra widgets
 
 
@@ -145,7 +149,7 @@ class TableWindow(ToplevelWooster):
         self.data = table
         self.title("Table %s" % ('TODO'))
         # Don't make it smaller then this
-        self.minsize(200,100)
+        self.minsize(200, 100)
         # So it doesn't get in the task bar as a separate window but as a child of the master/parent
         self.transient(master)
         self.grid()
@@ -165,7 +169,7 @@ class TableWindow(ToplevelWooster):
     def createWidgets(self):
         row = 0
         #if type(self.data) == type({}):
-        self.listbox = MultiListbox(self, [["ID", 20], ["Represantation", 50]]) # Listbox(self)
+        self.listbox = MultiListbox(self, [["ID", 20], ["Represantation", 50]])  # Listbox(self)
         try:
             for key in self.data:
                 # TODO: build in a maximum so we take maximum advantage of iterators
@@ -262,7 +266,7 @@ class RecordWindow(ToplevelWooster):
         Toplevel.__init__(self, master, class_="About")
         self.title("Record")
         # Don't make it smaller than this.
-        self.minsize(50,50)
+        self.minsize(50, 50)
         # So it doesn't get in the task bar as a separate window but as a child of the master/parent.
         self.transient(master)
         self.grid()
@@ -301,7 +305,7 @@ class RecordWindow(ToplevelWooster):
                         continue
                 label = Label(self, text="%s: " % (key))
                 label.grid(column=0, row=row, sticky=E)
-                text = Entry(self) #, textvariable=self.data[key])
+                text = Entry(self)  #, textvariable=self.data[key])
                 if key in self.data:
                     if 'toVisual' in self.table.configuration['fields'][key]:
                         text.insert(0, "%s" % self.table.configuration['fields'][key]['toVisual'](self.data[key]))
@@ -309,16 +313,16 @@ class RecordWindow(ToplevelWooster):
                         text.insert(0, "%s" % (self.data[key]))
                 text.config(state=DISABLED)
                 text.grid(column=1, row=row, sticky=E+W)
-                button = Button(self, text="\u2026", width=2, command=self.__editFunction(key)) # Black pointing left index finger: \u261a ; Triangle: \u2023 ; Tripple bullet: \u2026
+                button = Button(self, text="\u2026", width=2, command=self.__editFunction(key))  # Black pointing left index finger: \u261a ; Triangle: \u2023 ; Tripple bullet: \u2026
                 button.grid(column=2, row=row, sticky=E)
                 self.columnconfigure(2, weight=0)
                 row += 1
         except Exception as err:
             logging.getLogger(self.__module__).error(": RecordWindow[%r].createWidgets : Not iterable? %s" % (self, err))
             raise
-        self.buttonS = Button(self, text="Save", command=self.close) # u25b6
+        self.buttonS = Button(self, text="Save", command=self.close)  # u25b6
         self.buttonS.grid(column=0, row=row)
-        self.buttonC = Button(self, text="Cancel", command=self.__style) # u25b6
+        self.buttonC = Button(self, text="Cancel", command=self.__style)  # u25b6
         self.buttonC.grid(column=1, row=row, sticky=W)
         self.update()
 
@@ -386,7 +390,7 @@ class AboutWindow(ToplevelWooster):
         Toplevel.__init__(self, master, class_="About")
         self.title("About")
         # Don't make it smaller then this
-        self.minsize(300,200)
+        self.minsize(300, 200)
         # So it doesn't get in the task bar as a separate window but as a child of the master/parent
         self.transient(master)
         self.grid()
@@ -444,7 +448,7 @@ class Application(Frame, suapp.jandw.Wooster):
         Frame.__init__(self, master, class_="Application")
         # Default title, could be overriden in inflow
         self._root().title("SuApp")
-        self._root().minsize(400,300)
+        self._root().minsize(400, 300)
         self.grid()
         # Moved to inflow self.createWidgets()
 
@@ -505,7 +509,7 @@ class Application(Frame, suapp.jandw.Wooster):
             logging.getLogger(self.__module__).debug(": Application[%r].inflow() : Setting tables." % (self))
             self.tables = self.dataobject['tables']
         self.jeeves = jeeves
-        self.createWidgets() # Perhaps this needs to be in mainloop() so we can do a refresh?
+        self.createWidgets()  # Perhaps this needs to be in mainloop() so we can do a refresh?
         self.mainloop()
 
     @loguse
@@ -536,6 +540,7 @@ class Application(Frame, suapp.jandw.Wooster):
         self.destroy()
         self.quit()
 
+
 class ConfigurationWindow(ToplevelWooster):
 
     @loguse
@@ -543,7 +548,7 @@ class ConfigurationWindow(ToplevelWooster):
         Toplevel.__init__(self, master, class_="Configuration")
         self.title("Configuration")
         # Don't make it smaller then this
-        self.minsize(300,200)
+        self.minsize(300, 200)
         # So it doesn't get in the task bar as a separate window but as a child of the master/parent
         self.transient(master)
         self.grid()
@@ -564,7 +569,7 @@ class ConfigurationWindow(ToplevelWooster):
         import json
         self.text.config(state=NORMAL)
         self.text.delete(1.0, END)
-        self.text.insert(END, "Configuration of the Application:\n\n%s" % (json.dumps(jeeves.app.configuration, indent = "\t")))
+        self.text.insert(END, "Configuration of the Application:\n\n%s" % (json.dumps(jeeves.app.configuration, indent="\t")))
         self.text.config(state=DISABLED)
         self.update()
 
@@ -598,14 +603,14 @@ class Configuration(suapp.jandw.Wooster):
 
 
 if __name__ == "__main__":
-    logging.getLogger(self.__module__).setLevel(logging.DEBUG) # DEBUG/INFO
+    logging.getLogger(self.__module__).setLevel(logging.DEBUG)  # DEBUG/INFO
     flow = Jeeves()
     flow.flow = {
         "": {
             "START": Drone("START", Application()),
             "RECORD": Drone("RECORD", UniqueRecordFactory())
         },
-        "APP" : {
+        "APP": {
             "ABOUT": Drone("ABOUT", AboutFactory()),
             "TABLE": Drone("TABLE", TableFactory())
         }

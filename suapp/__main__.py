@@ -12,7 +12,7 @@ Optional parameters:
     -t <target>: tk [DEFAULT], test, localweb, ...
     Other config parameters you want to overwrite in the form of
     "a.b.c=VALUE,a.d.e.f=1".
-    
+
 This
     - Reads in the configuration,
     - Sets the logging,
@@ -38,10 +38,10 @@ import suapp.configuration
 def update_conf(configuration, option_string):
     """
     Updates the configuration with different options.
-    
+
     The option_string is a comma separate list of configuration key=value pairs.
     Dots in the key reflect the depth in the configuration.
-    
+
     From:
         a.b.c=value
     To:
@@ -51,7 +51,7 @@ def update_conf(configuration, option_string):
         return
     options = option_string.split(",")
     for option in options:
-        (key,value) = option.split("=",1)
+        (key, value) = option.split("=", 1)
         context = key.split(".")
         subconfig = configuration
         while len(context) > 1 and (context[0]) in subconfig:
@@ -59,11 +59,11 @@ def update_conf(configuration, option_string):
             context.pop(0)
         subconfig[context[0]] = value
 
-        
+
 if __name__ == "__main__":
     # By default the json configuration file is in the local directory and is
     # called suapp.json.
-    # But this can be overwritten by passing a -c parameter passing the 
+    # But this can be overwritten by passing a -c parameter passing the
     # filename, path or the full json file location.
 
     parser = argparse.ArgumentParser(description='Start a SuApp application.')
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     print("Configuration file: %s" % (args.configuration))
     print("User interface target: %s" % (args.target))
-    print("Options: %s"% (args.options))
+    print("Options: %s" % (args.options))
 
     jsonfilename = 'suapp.json'
     json_backup = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
@@ -95,15 +95,15 @@ if __name__ == "__main__":
 
     print("Effective configuration file: %s" % (jsonfilename))
     print("Backup initial configuration: %s" % (json_backup))
-    
+
     config = suapp.configuration.get_configuration([jsonfilename, json_backup])
     config.load()
     config["self"] = jsonfilename
     update_conf(config, args.options)
     if args.target:
         config["target"] = args.target
-    
-    try:    
+
+    try:
         app = suapp.SuApp(config)
         app.start()
         print("Bye.")
@@ -113,6 +113,5 @@ if __name__ == "__main__":
         finally:
             print("Unexpected end of SuApp!")
             import traceback
-            exc_type, exc_value, exc_traceback = sys.exc_info() 
+            exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-

@@ -86,11 +86,11 @@ if __name__ == '__main__':
     if len(sys.argv) > 2:
         for mod in sys.argv[2:]:
             modules_to_import.append(mod)
-   
-    # If no modules, at least do base. 
+
+    # If no modules, at least do base.
     if not modules_to_import:
         modules_to_import = ['base']
-  
+
     scope = {}
     for mod in modules_to_import:
         import_modlib(app_name, mod, scope)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     print("Modules: %s" % (modules))
 
     db.bind("sqlite", ":memory:")
-    db.generate_mapping(create_tables = True)
+    db.generate_mapping(create_tables=True)
 
     with db_session():
         try:

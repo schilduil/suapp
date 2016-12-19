@@ -18,7 +18,7 @@ USAGE:
 It supports different source types:
     file: local file.
     web: file on the web (e.g. http)
-    
+
 It supports different file types:
     json (based on the json module)
     xml (using xmltodict by Martin Blech)
@@ -26,7 +26,7 @@ It supports different file types:
     cfg (based on the configparser module)
 """
 
-           
+
 class Configuration(MutableMapping):
     """
     Dict like class containing the configuration.
@@ -89,26 +89,26 @@ class Configuration(MutableMapping):
     def load(self):
         """
         Reloads the configuration - does nothing in Configuration.
-        
+
         Normally only called once, usually by __enter__ if you're using the with statement.
         """
         pass
-        
+
     def save(self):
         """
         Call this when wanting to do an explicit save of the configuration.
-        
+
         It can be called multiple times in the live time of the object.
         It must raise a NotImplementedError if this is not supported for your
         type of configuration.
         """
         raise NotImplementedError("Save is not implemented on ")
-        
+
     def close(self):
         """
         Always call this after you've done with a configuration.
-        
-        Here it is just a place holder for subclasses that need to clean up 
+
+        Here it is just a place holder for subclasses that need to clean up
         after itself.
         """
         pass
@@ -121,23 +121,23 @@ class Configuration(MutableMapping):
         """
         self.load()
         return self
-        
+
     def __exit__(self, *args):
         """
         Implementing it as a context manager: call close.
         """
         self.close()
-        
+
 
 class SplitConfiguration(Configuration):
     """
     Receives a list of Configuration instances where the extra ones are backups.
-    
+
     The first configuration instance in the list is the main one and the only
     one that is used for writing the configuration. If it can't be loaded the
     first backup will be loaded (and so on) and that configuration is
     immediately saved to the main configuration.
-    
+
     After the initial load this behaves just like there is only the main
     configuration instance. Actually, if the main configuration is good the
     backups are never used.
@@ -152,7 +152,7 @@ class SplitConfiguration(Configuration):
         backup = []
         for config in configurations:
             # First one is the main one.
-            if self.main == None:
+            if self.main is None:
                 self.main = config
             else:
                 backup.append(config)
@@ -164,7 +164,7 @@ class SplitConfiguration(Configuration):
             self.backup = SplitConfiguration(backup)
         #print("Main: %s" % (type(self.main))) # DELME
         #print("Backup: %s" % (type(self.backup))) # DELME
-                
+
     def load(self):
         """
         Load the configuration: first try the main.
@@ -175,7 +175,7 @@ class SplitConfiguration(Configuration):
             #print("Loaded main: %s (%s) in %s" % (self.main, type(self.main), type(self))) # DELME
         except:
             # That didn't work, so trying the backup.
-            if self.backup != None:
+            if self.backup is not None:
                 # Loading from the backup and saving it to the main configuration.
                 #print("Loading from backup %s in %s..." % (type(self.backup), type(self))) # DELME
                 self.backup.load()
@@ -188,7 +188,7 @@ class SplitConfiguration(Configuration):
                 # No backup, re-raising the original exception.
                 #print("No backup in %s" % (type(self))) # DELME
                 raise
-            
+
     def save(self):
         """
         Save the configuration: always to the main.
@@ -248,7 +248,7 @@ class SplitConfiguration(Configuration):
     def has_key(self, key):
         return self.main.has_key(key)
 
-    def pop(self, key, d = None):
+    def pop(self, key, d=None):
         return self.main.pop(key, d)
 
     def update(self, *args, **kwargs):
@@ -287,8 +287,8 @@ class ConfigurationParser():
         """
         Initialize with a location.
         """
-        self.location  = location
-    
+        self.location = location
+
     def load_into_dict(self, configuration):
         """
         Must be overwritten in the subclass.
@@ -297,7 +297,7 @@ class ConfigurationParser():
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Load is not implemented in %s." % (self.__class__.__name__))
-        
+
     def save_from_dict(self, configuration):
         """
         Must be overwritten in the subclass.
@@ -306,7 +306,7 @@ class ConfigurationParser():
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Save is not implemented in %s." % (self.__class__.__name__))
-            
+
     def __str__(self):
         """
         String representation of the parser.
@@ -318,14 +318,14 @@ class JsonConfigurationParser(ConfigurationParser):
     """
     Parses a json file.
     """
-    
+
     def load_into_dict(self, configuration):
         """
         Parsing a json file and updating the configuration.
         """
         import json
         json_conf = None
-        with open(self.location) as data_file:    
+        with open(self.location) as data_file:
             json_conf = json.load(data_file)
         configuration.update(json_conf)
 
@@ -334,7 +334,7 @@ class JsonConfigurationParser(ConfigurationParser):
         Saving the configuration again.
         """
         import json
-        with open(self.location, 'w', encoding = 'utf-8') as data_file:    
+        with open(self.location, 'w', encoding='utf-8') as data_file:
             json.dump(dict(configuration), data_file, sort_keys=True, indent=4, separators=(',', ': '))
 
 
@@ -355,8 +355,8 @@ class YamlConfigurationParser(ConfigurationParser):
         Saving the configuration again to the yaml.
         """
         import yaml
-        yaml.dump(dict(configuration), open(self.location, 'w', encoding = 'utf-8'))
-        
+        yaml.dump(dict(configuration), open(self.location, 'w', encoding='utf-8'))
+
 
 class XmlConfigurationParser(ConfigurationParser):
     """
@@ -368,8 +368,8 @@ class XmlConfigurationParser(ConfigurationParser):
         Parsing an xml file and updating the configuration.
         """
         import xmltodict
-        configuration.update(xmltodict.parse(open(self.location,'rb'))['suapp'])
-    
+        configuration.update(xmltodict.parse(open(self.location, 'rb'))['suapp'])
+
     def save_from_dict(self, configuration):
         """
         Saving the configuration again to xml.
@@ -377,16 +377,16 @@ class XmlConfigurationParser(ConfigurationParser):
         import xmltodict
         xmltodict.unparse({'suapp': dict(configuration)}, open(self.location, 'wb'))
 
-            
+
 class CfgConfigurationParser(ConfigurationParser):
     """
     Parses a configuration in the configparser format.
     """
 
-    def configuration_to_flat_dict(self, configuration, prefix = None):
+    def configuration_to_flat_dict(self, configuration, prefix=None):
         """
         Flattens the configuration from multiple levels to one.
-        
+
         From:
             {"a": {"b": "c": "value"}}}
         To:
@@ -395,22 +395,21 @@ class CfgConfigurationParser(ConfigurationParser):
         if not prefix:
             prefix = []
         config_flat = dict()
-        for key,value in configuration.items():
+        for key, value in configuration.items():
             new_prefix = list(prefix)
             new_prefix.append(key)
             if type(value) == type(config_flat):
                 new_prefix = list(prefix)
                 new_prefix.append(key)
-                config_flat.update(self.configuration_to_flat_dict(value, prefix = new_prefix))
+                config_flat.update(self.configuration_to_flat_dict(value, prefix=new_prefix))
             else:
                 config_flat['.'.join(new_prefix)] = value
         return config_flat
 
-
     def configuration_to_configparser(self, configuration):
         """
         Converts the configuration to a configuration for configparser.
-        
+
         From:
             {"a": {"b": "c": "value"}}}
         To:
@@ -420,9 +419,9 @@ class CfgConfigurationParser(ConfigurationParser):
         import configparser
         config_parser = configparser.RawConfigParser()
         config_flat = self.configuration_to_flat_dict(configuration)
-        for fullkey,value in config_flat.items():
+        for fullkey, value in config_flat.items():
             try:
-                (section,key) = fullkey.rsplit('.',1)
+                (section, key) = fullkey.rsplit('.', 1)
             except ValueError:
                 section = ""
                 key = fullkey
@@ -452,19 +451,18 @@ class CfgConfigurationParser(ConfigurationParser):
                     current = current[step]
             for key in config[section]:
                 current[key] = config[section][key]
-            
 
     def save_from_dict(self, configuration):
         """
         Saves the configuration to a config file.
-        
+
         It uses the write function on the configparser that needs the file handle.
         """
         config_parser = self.configuration_to_configparser(configuration)
         with open(self.location, 'w') as config_parser_file_handle:
             config_parser.write(config_parser_file_handle)
 
-            
+
 def get_configuration_parser(location, file_type):
     """
     Returns the parser based on the file type.
@@ -480,13 +478,13 @@ def get_configuration_parser(location, file_type):
     else:
         raise NotImplementedError("Unknown file type to parse: %s." % (file_type))
 
-    
+
 class FileConfiguration(Configuration):
     """
     Loads and saves the configuration from the file system.
     """
-    
-    def __init__(self, location, file_type = None):
+
+    def __init__(self, location, file_type=None):
         """
         Initializing the parser depending on the file type.
         """
@@ -507,7 +505,7 @@ class FileConfiguration(Configuration):
                 file_type = '???'
         # Based on the file type.
         self.parser = get_configuration_parser(location, file_type)
-        
+
     def load(self):
         """
         Have the parser read in the configuration.
@@ -520,19 +518,19 @@ class FileConfiguration(Configuration):
         """
         self.parser.save_from_dict(self)
 
-        
+
 class WebConfiguration(Configuration):
     """
     Loads the configuration from the web.
     """
-    
+
     def __init__(self, url):
         """
         Initializes with an url
         """
         super().__init__()
         self.url = url
-        
+
     def load(self):
         """
         Downloading the web resource to a temporary file and reading it in.
@@ -542,13 +540,13 @@ class WebConfiguration(Configuration):
         import tempfile
         import urllib.request
         file_type = None
-        file_type = self.url.rsplit('.',1)[1]
+        file_type = self.url.rsplit('.', 1)[1]
         if "/" in file_type:
             # The URL doesn't seem to contain file at the end so this was wrong.
             file_type = None
         try:
             # Download the file from `url` and save it locally under `file_name`:
-            (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".%s" % (file_type))
+            (os_level_handle, file_name) = tempfile.mkstemp(suffix=".%s" % (file_type))
             os.close(os_level_handle)
             with urllib.request.urlopen(self.url) as response, open(file_name, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
@@ -569,19 +567,19 @@ class WebConfiguration(Configuration):
     def save(self):
         """
         Saving of the configuration on a WebCOnfiguration is not supported.
-        
+
         TODO EXTRA: we could try to do a HTTP PUT or stuff similar.
         """
         raise NotImplementedError("Save is not implemented on WebConfiguration.")
 
-        
-def get_configuration(location = None, source_type = None, file_type = None, **kwargs):
+
+def get_configuration(location=None, source_type=None, file_type=None, **kwargs):
     """
     Returns the configuration object for the location.
-    
+
     Possible source types are: http, file. If not specified it tries
     to infer the type if it is 'http' and else defaults to 'file'.
-    
+
     The file type is only used when the source type is 'file'.
     """
     # Inferring source type if not given.
@@ -596,7 +594,7 @@ def get_configuration(location = None, source_type = None, file_type = None, **k
                 if isinstance(sub_location, Configuration):
                     configuration_list.append(sub_location)
                 else:
-                    configuration_list.append(get_configuration(location = sub_location, **kwargs))
+                    configuration_list.append(get_configuration(location=sub_location, **kwargs))
             return SplitConfiguration(configuration_list)
         elif location.lower().startswith('http://'):
             source_type = 'http'
@@ -608,7 +606,7 @@ def get_configuration(location = None, source_type = None, file_type = None, **k
     if source_type == 'http':
         return WebConfiguration(location)
     elif source_type == 'file':
-        return FileConfiguration(location, file_type = file_type)
+        return FileConfiguration(location, file_type=file_type)
     else:
         raise IOError("Unknown source type %s." % (source_type))
 
@@ -617,7 +615,7 @@ if __name__ == "__main__":
 
     import os
     import os.path
-    import tempfile 
+    import tempfile
 
     sample = {
         "name": "SU Demo Application",
@@ -647,7 +645,7 @@ if __name__ == "__main__":
     }
 
     print("SAMPLE: %s\n" % (sample))
-    
+
     # TEST 1: dictionary
     print("TEST 1: passing a dictionary.")
     with get_configuration(sample) as test:
@@ -664,7 +662,7 @@ if __name__ == "__main__":
 
     # TEST 3: json file/url/sample (file does not exist)
     # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".json")
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".json")
     os.close(os_level_handle)
     os.remove(file_name)
     print("TEST 3: passing a json file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
@@ -673,10 +671,10 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-        
+
     # TEST 4: file
     print("TEST 4: passing a json file: %s" % (file_name))
     with get_configuration(file_name) as test:
@@ -688,7 +686,7 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -702,16 +700,16 @@ if __name__ == "__main__":
 
     # TEST 7: cfg
     # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".cfg")
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".cfg")
     os.close(os_level_handle)
     os.remove(file_name)
     print("TEST 7: passing a cfg file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
     print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
     with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
-        
+
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -720,9 +718,9 @@ if __name__ == "__main__":
     print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
     with get_configuration([file_name, url, sample]) as test:
         print("\t%s\n" % (test))
-        
+
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -730,7 +728,7 @@ if __name__ == "__main__":
 
     # TEST 9: xml
     # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".xml")
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".xml")
     os.close(os_level_handle)
     os.remove(file_name)
     print("TEST 9: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
@@ -739,7 +737,7 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -750,7 +748,7 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -758,7 +756,7 @@ if __name__ == "__main__":
 
     # TEST 11: yaml
     # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix = ".yaml")
+    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".yaml")
     os.close(os_level_handle)
     os.remove(file_name)
     print("TEST 11: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
@@ -767,7 +765,7 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 
@@ -778,7 +776,7 @@ if __name__ == "__main__":
         print("\t%s\n" % (test))
 
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding = 'utf-8'):
+    for line in open(file_name, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
 

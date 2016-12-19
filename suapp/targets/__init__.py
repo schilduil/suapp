@@ -6,4 +6,4 @@
 #   tk:   Tkinter GUI target.
 
 # This is the default target.
-default='tk'
+default = 'tk'

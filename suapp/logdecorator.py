@@ -8,14 +8,14 @@ import inspect
 from functools import wraps
 
 
-def loguse(param = None):
+def loguse(param=None):
     """When in debug it will log entering and exiting a function or object methods.
 
     WARNING: Some callables are broken when you use this (e.g. Thread.__init__)
     Upon entering the callable it will also log all arguments.
 
-    You can specify arguments to this decorator: a string, an int or a list of 
-    string and/or integers. A string causes not log that name argument, an int 
+    You can specify arguments to this decorator: a string, an int or a list of
+    string and/or integers. A string causes not log that name argument, an int
     causes not to log that positional argument.
 
     Example:
@@ -33,7 +33,7 @@ def loguse(param = None):
     #   It could be an iterable => ok
     f = None
     ignore_parameters = []
-    if param == None:
+    if param is None:
         ignore_parameters = []
     elif callable(param):
         f = param
@@ -57,12 +57,13 @@ def loguse(param = None):
 
     def real_loguse(f):
         log = logging.getLogger(f.__module__)
+
         @wraps(f)
         def decorator(*args, **kwargs):
             l_args = list(args)
             l_kwargs = dict(kwargs)
             if log.isEnabledFor(logging.DEBUG):
-                ignore_parameters.sort(key = str, reverse = True)
+                ignore_parameters.sort(key=str, reverse=True)
                 if ignore_parameters:
                     # Deleting any parameters so they are not logged.
                     for param in ignore_parameters:
@@ -102,13 +103,13 @@ def loguse(param = None):
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format = '%(asctime)s %(levelname)s %(name)s %(message)s', level = logging.INFO)
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.INFO)
 
     class TestClass():
         """Test class for the logdecorator"""
         name = "APP"
 
-        @loguse(1) # Don't log the variable with index 1 (i.e. name)
+        @loguse(1)  # Don't log the variable with index 1 (i.e. name)
         def __init__(self, name):
             """Initialize the name of the test class."""
             self.name = name
@@ -128,7 +129,6 @@ if __name__ == "__main__":
             """Closes the test class."""
             logging.getLogger(__name__).info("Closing %s" % (self.name))
 
-
     class SubTestClass(TestClass):
 
         @loguse
@@ -146,11 +146,11 @@ if __name__ == "__main__":
         logging.getLogger(__name__).warn("Starting %s" % (message))
         return SubTestClass(message)
 
-    @loguse(1) # Don't log the variable with index 1 (i.e. two)
+    @loguse(1)  # Don't log the variable with index 1 (i.e. two)
     def test2(one, two):
         logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
 
-    @loguse('a') # Don't log the named argument 'a'
+    @loguse('a')  # Don't log the named argument 'a'
     def test3(a, b, g):
         logging.getLogger(__name__).warn("The provious line didn't log 'a', but did log 'b' and 'g'.")
 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     x.close()
     print("%s: %s" % (x.lock.__name__, x.lock.__doc__))
     test2("First variable", "Second variable")
-    test3(a = "alpha", b = "beta", g = "gamma")
+    test3(a="alpha", b="beta", g="gamma")
 
     print("========== DEBUG ==========")
     logging.getLogger(__name__).setLevel(logging.DEBUG)
@@ -171,5 +171,4 @@ if __name__ == "__main__":
     x.close()
     print("%s: %s" % (x.lock.__name__, x.lock.__doc__))
     test2("First variable", "Second variable")
-    test3(a = "alpha", b = "beta", g = "gamma")
-
+    test3(a="alpha", b="beta", g="gamma")

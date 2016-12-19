@@ -55,7 +55,7 @@ class Jeeves(object):
     MODE_MODAL = 1
 
     @loguse
-    def __init__(self, app = None):
+    def __init__(self, app=None):
         """
         Initializes the Jeeves with an empty flow and app name.
         """
@@ -80,7 +80,7 @@ class Jeeves(object):
                 sys.exit(100)
         return drone
 
-    @loguse('@') # Not logging the return value.
+    @loguse('@')  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
         """
         Find the drone and execute it.
@@ -121,7 +121,7 @@ class Jeeves(object):
         return result
 
     @loguse
-    def start(self, dataobject = None):
+    def start(self, dataobject=None):
         """
         Start the Jeeves flow.
         """
@@ -130,7 +130,7 @@ class Jeeves(object):
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format = '%(asctime)s %(levelname)s %(name)s %(message)s', level = logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.DEBUG)
     logging.getLogger("__main__").setLevel(logging.DEBUG)
     modulename = "__main__"
     print("__main__: %s (%s)" % (modulename, logging.getLevelName(logging.getLogger(modulename).getEffectiveLevel())))

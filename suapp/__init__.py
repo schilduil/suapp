@@ -11,7 +11,7 @@ from suapp.jandw import *
 from suapp.logdecorator import *
 
 
-__author__  = "Bert Raeymaekers <bert.raeymaekers@schilduil.org>"
+__author__ = "Bert Raeymaekers <bert.raeymaekers@schilduil.org>"
 __version__ = "1.0.0.0"
 
 
@@ -26,17 +26,17 @@ class ModuleError(SuAppError):
 class ConfigurationError(SuAppError):
     pass
 
-    
+
 class Config(object):
     pass
 
-    
+
 def convert_to_log_level(txt):
     """
     Converts text to the actual log level.
     """
     # If it is already an int, return it.
-    if type(txt) == type(10):
+    if isinstance(txt, int):
         return txt
     # Does it represent an int? If so return it.
     try:
@@ -69,12 +69,12 @@ def convert_to_log_level(txt):
             raise ConfigurationException("Log level is not a number: %s" % (txt))
     raise ConfigurationException("Unknow log level: %s" % (txt))
 
- 
+
 class SuApp(object):
     """
     The SuApp class represents a running application.
     """
- 
+
     def __init__(self, configuration):
         """
         Initializing the application.
@@ -104,7 +104,7 @@ class SuApp(object):
         log = logging.getLogger(self.__module__)
         # Logging not configured yet, so postponing log.debug(">configure_log()")
         try:
-            if not "log" in self.configuration:
+            if "log" not in self.configuration:
                 self.configuration["log"] = {}
             filename = "~/.%s/log/suapp.log" % (self.configuration["shortname"].lower())
             filemode = "w"
@@ -117,20 +117,20 @@ class SuApp(object):
             if "filemode" in self.configuration["log"]:
                 filemode = self.configuration["log"]["filemode"]
             else:
-                self.configuration["log"]["filemode"] = filemode         
+                self.configuration["log"]["filemode"] = filemode
             if "format" in self.configuration["log"]:
                 format = self.configuration["log"]["format"]
             else:
-                self.configuration["log"]["format"] = format         
+                self.configuration["log"]["format"] = format
             if "level" in self.configuration["log"]:
                 level = self.configuration["log"]["level"]
             else:
                 self.configuration["log"]["level"] = level
-            
+
             # Making sure the directory exists.
             os.makedirs(os.path.dirname(os.path.expanduser(filename)), exist_ok=True)
             # Starting the logging.
-            logging.basicConfig(filename = os.path.expanduser(filename), filemode = filemode, format = format, level = convert_to_log_level(level))
+            logging.basicConfig(filename=os.path.expanduser(filename), filemode=filemode, format=format, level=convert_to_log_level(level))
             # Putting out the delayed debug statement.
             log.debug(">configure_log() [DELAYED]")
             print("Logging to %s." % (os.path.expanduser(filename)))
@@ -153,20 +153,20 @@ class SuApp(object):
             log.error("!SuApp.configure_log: Error in <log> tag (%s: %s)." % (type(err), err))
             raise ConfigurationError("Error in <log> tag (%s: %s)!" % (type(err), err))
         log.debug("<configure_log() %s" % (self.configuration["log"]))
-    
+
     @loguse
     def import_target(self):
         """
         Import the UI target as ui.
         """
-        if not "target" in self.configuration:
+        if "target" not in self.configuration:
             targets = importlib.import_module("suapp.targets")
             # The default target is in targets/__init__ as default.
             self.configuration["target"] = targets.default
         self.target_module = "suapp.targets.%s" % (self.configuration["target"])
         globals()["ui"] = importlib.import_module(self.target_module)
         logging.getLogger(self.__module__).info("Target module: %s %s", self.target_module, ui)
-        
+
     @loguse
     def parse_flow_line(self, line):
         """
@@ -185,7 +185,7 @@ class SuApp(object):
             logging.getLogger(self.__module__).debug("Flow element: %s: %s.%s (%s)", out, target, intag, comment)
             return (out, intag, target)
         return (None, None, None)
-        
+
     @loguse
     def read_flow(self, flowfile):
         """
@@ -219,16 +219,15 @@ class SuApp(object):
                 logging.getLogger(self.__module__).debug(e)
             except OSError as e:
                 logging.getLogger(self.__module__).debug(e)
-        simpletestingflow = { "START": Drone("START", ui.Application()) }
+        simpletestingflow = {"START": Drone("START", ui.Application())}
         return flow
-        
-        
+
     @loguse
     def configure_flow(self):
         """
         Configures the flow.
         """
-        if not "shortname" in self.configuration:
+        if "shortname" not in self.configuration:
             self.configuration["shortname"] = "SuApp"
         self.flow.flow[""] = self.read_flow("%s.flow" % self.configuration["shortname"].lower())
         if len(self.flow.flow[""]) == 0:
@@ -245,7 +244,7 @@ class SuApp(object):
         """
         self.flow.start()
 
-   
+
 #
 # MAIN: The root of all evil
 #

@@ -118,7 +118,7 @@ class HtmlTemplatingEngine():
         return html_template
 
     @loguse
-    def __init__(self, template = None):
+    def __init__(self, template=None):
         """
         Initializing the template.
         """
@@ -127,16 +127,16 @@ class HtmlTemplatingEngine():
         else:
             self.html_template = HtmlTemplatingEngine.html_template()
 
-    @loguse([1,3,'@']) # Not logging session, main nor the return value.
-    def html(self, session, title, main, prefix = None, menu = None, shortname = None):
+    @loguse([1, 3, '@'])  # Not logging session, main nor the return value.
+    def html(self, session, title, main, prefix=None, menu=None, shortname=None):
         """
         Returns the html code.
         """
         if not shortname:
             shortname = "SuApp"
-        if prefix == None:
+        if prefix is None:
             prefix = ""
-        if menu == None:
+        if menu is None:
             # TODO: THIS NEXT LINE IS OBVIOUSLY WRONG - FOR TESTING TEMPORARILY. # DELME
             file_menu = collections.OrderedDict()
             file_menu["Quit"] = "EXIT"
@@ -168,12 +168,12 @@ class HtmlTemplatingEngine():
         output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-left">')
         output.append(prefix + '\t\t\t\t<li><a href="/">%s</a></li>' % ("Start"))
         # TODO: for now this is only 2 deep, perhaps we should make this multilevel.
-        for menu_name,menu_sub in menu.items():
+        for menu_name, menu_sub in menu.items():
             if type(menu_sub) == type(menu):
                 output.append(prefix + '\t\t\t\t<li class="dropdown">')
                 output.append(prefix + '\t\t\t\t\t<a href="/%s" class="dropdown-toggle" data-toggle="dropdown">%s <b class="caret"></b></a>' % (menu_name, menu_name))
                 output.append(prefix + '\t\t\t\t\t<ul class="dropdown-menu">')
-                for label,outmessage in menu_sub.items():
+                for label, outmessage in menu_sub.items():
                     output.append(prefix + '\t\t\t\t\t\t<li><a href="/?OUT=%s">%s</a></li>' % (outmessage, label))
                 output.append(prefix + '\t\t\t\t\t</ul>')
                 output.append(prefix + '\t\t\t\t</li>')
@@ -265,7 +265,7 @@ class HtmlTemplatingEngine():
 class Session(dict):
     """
     Session is a dictionary that contains all session relevant objects.
-    
+
     There is also a id variable that contains the session id.
     """
     @loguse
@@ -274,28 +274,28 @@ class Session(dict):
         Initializing the session with an id.
         """
         self.id = sessionid
-        
-            
+
+
 class SessionStore(dict):
     """
     The SessionStore is a dictionary specifically for all the session objects in
-    use. 
-    
+    use.
+
     You however cannot just add a session to it. You must use the new() method
-    to create a new session object in the store. It will return the new session 
+    to create a new session object in the store. It will return the new session
     object.
     The generated session id is based on the timestamp in HEX preceded with a
-    prefix. Unused sessions will be removed from the session store. By default 
+    prefix. Unused sessions will be removed from the session store. By default
     the timeout is 3600 seconds. You can set both the prefix and timeout (in
     seconds) in the constructor:
         SessionStore(prefix = "SUAPP", timeout = 300)
     """
     @loguse
-    def __init__(self, prefix = None, timeout = None):
+    def __init__(self, prefix=None, timeout=None):
         """
         Constructs the session store.
-        
-        By default the session id previx is SUAPP and 
+
+        By default the session id previx is SUAPP and
         the timeout is 3600 seconds (1 hour).
         """
         if not prefix:
@@ -304,12 +304,12 @@ class SessionStore(dict):
         if not timeout:
             timeout = 3600
         self.timeout = int(timeout)
-         
+
     @loguse
     def new(self, **kwargs):
         """
         Call this method for creating a new session object in the store.
-        
+
         It resturns the session object.
         You can pass any keyword arguments to initialize the session.
         """
@@ -326,7 +326,7 @@ class SessionStore(dict):
         Overridden to block adding a session to the store.
         """
         raise NotImplementedError("You can't just add objects to the SessionStore. Use new to create a new Session object.")
-    
+
     def __getitem__(self, sessionid):
         """
         Overridden to check if the session isn't stale.
@@ -339,7 +339,7 @@ class SessionStore(dict):
             raise KeyError("The session %s has expired." % sessionid)
         session["last-used"] = now
         return session
-        
+
     def __str__(self):
         """
         Returns all session, comma separated.
@@ -349,7 +349,7 @@ class SessionStore(dict):
             result.append(session.id)
         return ",".join(result)
 
-        
+
 class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     """
     Handles the web requests.
@@ -379,7 +379,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         """
         self.html_template_engine = html_template_engine
 
-    @loguse([1,3,'@']) # Not logging session, body nor return value.
+    @loguse([1, 3, '@'])  # Not logging session, body nor return value.
     def html(self, session, title, body, **kwargs):
         """
         Returns the html code.
@@ -400,13 +400,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Not sure why I need .split(";",1)[0], but otherwise it takes the last on on the line.
             # It seems the SimpleCookie only takes the last in case of multiples.
             # Not sure this is the solution: does the browser always put the new one in front?
-            self.cookie = http.cookies.SimpleCookie(self.headers["Cookie"].split(";",1)[0])
-    
+            self.cookie = http.cookies.SimpleCookie(self.headers["Cookie"].split(";", 1)[0])
+
     @loguse
     def session(self):
         """
         Session management
-        
+
         If the client has sent a cookie named sessionId, that is used.
         It returns the corresponding session object from the session store.
         If there is no sessionId or it can't find it in the session store it
@@ -426,7 +426,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 session = None
         # There was no session or the session expired. Create a new one.
         if not session:
-            session = LocalWebHandler.sessions.new(jeeves = LocalWebHandler.jeeves)
+            session = LocalWebHandler.sessions.new(jeeves=LocalWebHandler.jeeves)
             self.cookie["sessionId"] = session.id
         self.session_id = session.id
         return session
@@ -437,9 +437,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         Callback function that gets called from the drone.
         """
         self.session()['drone'] = drone
-    
-    @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
-    def do_service_logoff(self, session, fields, json_object = None, payload = None):
+
+    @loguse([1, 'json_object', 'payload'])  # Not logging session, json_object nor payload.
+    def do_service_logoff(self, session, fields, json_object=None, payload=None):
         """
         Service that logs out the user by deleting the session.
         """
@@ -452,12 +452,12 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         except:
             pass
         return (200, "text/json; charset=utf-8", {"result": True})
-        
-    @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
-    def do_service_public_logon(self, session, fields, json_object = None, payload = None):
+
+    @loguse([1, 'json_object', 'payload'])  # Not logging session, json_object nor payload.
+    def do_service_public_logon(self, session, fields, json_object=None, payload=None):
         """
         Service that logs on the user in this session.
-        
+
         It tries to get the credentials from these sources, in this order:
             * json body
             * POST / GET parameters (depending on the http method used)
@@ -513,18 +513,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 # Get the header "Authorization" and base64 decode it and extract username:password.
                 # base64.b64encode("username:password".encode('utf-8'))
                 import base64
-                auth_header = self.headers["Authorization"] # b'dGVzdDp0ZXN0'
-                #print("Authorization: %s" % (auth_header[6:])) # DELME
+                auth_header = self.headers["Authorization"]
                 if auth_header.startswith("Basic "):
-                    #print("Authorization: %s" % (base64.b63decode(auth_header[6:]))) # DELME
                     (username, password) = base64.b64decode(auth_header[6:]).decode('utf-8').split(":", 1)
-                    #print("Basic %s:%s" % (username, password)) # DELME
             except:
                 pass
         # Authenticate.
         # TODO: Connect to a real repository.
-        #print("%s:%s" % (username, password)) # DELME
-        #print("LOGON: session: %s" % (session.id)) # DELME
         try:
             if password == users[username]:
                 session["userid"] = username
@@ -534,11 +529,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             pass
         return (200, "text/json; charset=utf-8", {"result": False, "message": "Incorrect credentials provided."})
 
-    @loguse(1) # Not logging session.
+    @loguse(1)  # Not logging session.
     def authorized(self, session, fields):
         """
         Returns a number indicating the permissions.
-        
+
         TODO: group based authorization: now it's just Y/N an everything.
         Using UNIX filesystem permission rwx
              4: read
@@ -579,14 +574,14 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         # This is not a logged in user: no authorization.
         return None
 
-    @loguse([1, 3]) # Not logging session and json_object.
+    @loguse([1, 3])  # Not logging session and json_object.
     def do_service_admin_sessions(self, session, fields, json_object):
         """
         Test service that just returns the sessions.
         """
         return (200, "text/json; charset=utf-8", {"result": True, "sessions": LocalWebHandler.sessions})
-        
-    @loguse([1, 3]) # Not logging session and json_object.
+
+    @loguse([1, 3])  # Not logging session and json_object.
     def do_service_who(self, session, fields, json_object):
         """
         Test service that just returns the logged in user.
@@ -595,19 +590,19 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             return (200, "text/json; charset=utf-8", {"result": True, "userid": session["userid"]})
         except:
             return (200, "text/json; charset=utf-8", {"result": False, "message": "No user logged on."})
-        
-    @loguse([1, 3]) # Not logging session and json_object.
+
+    @loguse([1, 3])  # Not logging session and json_object.
     def do_service_sessionid(self, session, fields, json_object):
         """
         Test service that just returns the sessionid.
         """
         return (200, "text/json; charset=utf-8", {"result": True, "sessionid": session.id})
-        
-    @loguse([1, 3]) # Not logging session and json_object.
+
+    @loguse([1, 3])  # Not logging session and json_object.
     def do_service_sessionobject(self, session, fields, json_object):
         """
         DANGER: Test service that returns the content of a session.
-        
+
         Possibly very dangerous because of information leakage.
         By default it will return the session content for the current session
         but you can pass a specific "sessionid" in the json body.
@@ -618,7 +613,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             session_id = json_object["sessionid"]
         except:
             pass
-        
         try:
             out_object = LocalWebHandler.sessions[session_id]
             return (200, "text/json; charset=utf-8", out_object)
@@ -626,7 +620,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Unknown session id:
             return (200, "text/json; charset=utf-8", {})
 
-    @loguse # ('@')
+    @loguse  # ('@')
     def do_object(self, start_object, path):
         """
         Returns json of part of the start_object determined by path.
@@ -716,11 +710,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         else:
             return (200, "text/json; charset=utf-8", {'result': False, 'message': "Object is not a dict, list or tuple."})
 
-    @loguse([1,'@']) # Not logging session nor return value.
+    @loguse([1, '@'])  # Not logging session nor return value.
     def do_dynamic_page(self, session, fields):
         """
         Returns a dynamic page.
-        
+
         Unimplemented, so returns a 404 Page not found.
         """
         return_code = 200
@@ -747,13 +741,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 # Mode in a web setting can only be MODAL?
                 # DELME: creating a testing data object
                 data = {'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test', 'table': 'organism', 'object': {'ID': '(GOVAYF)62', 'father': 'GOc', 'mother': 'VAYF'}}
-                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone = self.callback_drone)
+                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone=self.callback_drone)
         try:
             shortname = session['jeeves'].app.configuration['shortname']
         except:
             pass
         try:
-            return_message = self.html(session, drone_title, drone_result, prefix = "        ", shortname = shortname)
+            return_message = self.html(session, drone_title, drone_result, prefix="        ", shortname=shortname)
         except Exception as err:
             ex_type, ex, tb = sys.exc_info()
             import traceback
@@ -767,11 +761,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         #return (404, "text/plain; charset=utf-8", "Page not found.")
         return (return_code, return_mime, return_message)
 
-    @loguse(3) # Not logging return_message.
+    @loguse(3)  # Not logging return_message.
     def _do(self, return_code, return_mime, return_message):
         """
         It will create and send the http output.
-        
+
         It does this, including headers, based on the  return_code, return_mime
         and return_message.
         """
@@ -787,7 +781,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(return_message.encode('utf-8'))
 
-    @loguse([1,4]) # Not logging session nor return_message.
+    @loguse([1, 4])  # Not logging session nor return_message.
     def do_error_page(self, session, return_code, return_mime, return_message):
         logging.getLogger(self.__module__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
         message = return_message
@@ -804,13 +798,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     body = "<p>Sorry, you don't have access to this.</p>"
                 else:
                     body = '<p>Oops, something went wrong.</p>'
-                message = self.html(session, "%s: %s" % (return_code, return_message), body, menu = {}, prefix = "        ")
+                message = self.html(session, "%s: %s" % (return_code, return_message), body, menu={}, prefix="        ")
                 return_mime = 'text/html; charset=utf-8'
             except:
                 pass
         self._do(return_code, return_mime, message)
 
-    @loguse([1, 4]) # Not logging session nor return_message.
+    @loguse([1, 4])  # Not logging session nor return_message.
     def do(self, session, return_code, return_mime, return_message):
         """
         It will create and send the http output or the error page.
@@ -820,20 +814,20 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         else:
             self._do(return_code, return_mime, return_message)
 
-    @loguse(['json_object', 'payload']) # Not logging the json_object nor payload.
-    def do_dynamic(self, fields, json_object = None, payload = None):
+    @loguse(['json_object', 'payload'])  # Not logging the json_object nor payload.
+    def do_dynamic(self, fields, json_object=None, payload=None):
         """
         This method will reply to a dynamic request.
-        
+
         If json is found in the body this is decoded and can be found in
         json_object. Otherwise the body of the request is in payload.
-        
+
         If the request path looks like "/service/*" it looks for the
         self.do_service_*() method to handle it for it. If that doesn't exist it
         returns with a 404. For a service that returns json, you can add the
-        "pretty" GET/POST variable to return a nicely formatted answer instead 
+        "pretty" GET/POST variable to return a nicely formatted answer instead
         of the default one line short json.
-        
+
         If it isn't a service it passes handling the request to
         do_dynamic_page().
         """
@@ -846,7 +840,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         auth_level = self.authorized(session, fields)
         if self.path.startswith('/public/'):
             auth_level = 7
-        if auth_level != None:
+        if auth_level is not None:
             if (auth_level & 4):
                 if self.path.startswith("/service/session/"):
                     # Getting something from the session.
@@ -887,12 +881,12 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 else:
                     (return_code, return_mime, return_message) = self.do_dynamic_page(session, fields)
             else:
-                (return_code, return_mime, return_message) = (403,'text/plain; charset=utf-8','Forbidden')
+                (return_code, return_mime, return_message) = (403, 'text/plain; charset=utf-8', 'Forbidden')
         else:
-            (return_code, return_mime, return_message) = (401,'text/plain; charset=utf-8','Unauthorized')
+            (return_code, return_mime, return_message) = (401, 'text/plain; charset=utf-8', 'Unauthorized')
         # And make a http response from it all.
         self.do(session, return_code, return_mime, return_message)
-        
+
     @loguse
     def do_static(self, fields, mimetype):
         """
@@ -911,7 +905,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             auth_level = 4
         elif mimetype.startswith("application/x-javascript"):
             auth_level = 4
-        if auth_level != None:
+        if auth_level is not None:
             if (auth_level & 4):
                 # Save on work by sending a "304 Not Modified"
                 # If the request has a "If-Modified-Since" header.
@@ -942,10 +936,10 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 return
             else:
                 # 403: Not authorized
-                self.do(session, 403,'text/plain; charset=utf-8','Not authorized.')
+                self.do(session, 403, 'text/plain; charset=utf-8', 'Not authorized.')
         else:
             # 403: Not authorized
-            self.do(session, 403,'text/plain; charset=utf-8','Not logged in.')
+            self.do(session, 403, 'text/plain; charset=utf-8', 'Not logged in.')
 
     @loguse
     def do_POST(self):
@@ -965,11 +959,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         #     application/x-www-form-urlencoded # parameters
         #     text/json                         # json
         #     multipart/form-data               # upload
-        
+
         # Fields from the POST body get precedence over those from GET.
         fields.update(urllib.parse.parse_qs(field_data))
         do_dynamic(fields)
-    
+
     @loguse
     def do_PUT(self):
         """
@@ -981,10 +975,10 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         try:
             # See if it is json
             json_object = json.loads(field_data.decode('utf-8'))
-            self.do_dynamic(fields, json_object = json_object)
+            self.do_dynamic(fields, json_object=json_object)
         except:
-            self.do_dynamic(fields, payload = field_data)
-    
+            self.do_dynamic(fields, payload=field_data)
+
     @loguse
     def do_GET(self):
         """
@@ -993,14 +987,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         self.command = 'GET'
         # TODO: this parsing does not work on keys without a variable.
         fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query, keep_blank_values=True)
-        #print("Fields: %s" % (fields)) # DELME
         # Anything starting with /js/, /css/, /img/ is static content.
         if self.path == "/favicon.ico":
             self.do_static(fields, "image/x-icon")
         elif self.path.startswith("/js/"):
             self.do_static(fields, "application/x-javascript")
         elif self.path.startswith("/img/"):
-            file_name = self.path.split("?",1)[0]
+            file_name = self.path.split("?", 1)[0]
             if file_name.endswith(".png"):
                 self.do_static(fields, "image/png")
             elif file_name.endswith(".ico"):
@@ -1020,7 +1013,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         """
         Logging to modules.httpd logger.
-        
+
         It is recommended to have a special entry in the configuration for this:
         ...
               "modules": {
@@ -1037,7 +1030,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             session_id = self.session_id
         except:
             pass
-        logging.getLogger("modules.httpd").debug("%s %s %s - - [%s] %s" % (hex(hash(self))[-8:], session_id[-8:], self.address_string(),self.log_date_time_string(),format%args))
+        logging.getLogger("modules.httpd").debug("%s %s %s - - [%s] %s" % (hex(hash(self))[-8:],
+                                                                           session_id[-8:],
+                                                                           self.address_string(),
+                                                                           self.log_date_time_string(),
+                                                                           format%args))
 
 
 class BrowserThread(Thread):
@@ -1080,13 +1077,13 @@ class Application(suapp.jandw.Wooster):
         self.testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
         self.tables = {}
 
-    @loguse('@') # Not logging the return value.
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the home page.
         """
         # The port by default is ord(S)+10 + ord(U)
-        self.port = 8385 # SU
+        self.port = 8385  # SU
         self.ip = "127.0.0.1"
         httpd_conf = jeeves.app.configuration.get('httpd', {'ip': self.ip, 'port': self.port})
         httpd_conf['port'] = httpd_conf.get('port', self.port)
@@ -1124,7 +1121,7 @@ class About(suapp.jandw.Wooster):
     shown.
     """
 
-    @loguse('@') # Not logging the return value.
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the about page.
@@ -1156,18 +1153,18 @@ class About(suapp.jandw.Wooster):
 class Configuration(suapp.jandw.Wooster):
     """
     Configuration page.
-    
+
     It just outputs the configuration in json format.
     """
 
-    @loguse('@') # Not logging the return value.
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for configuration page.
         """
         self.jeeves = jeeves
         result = "<pre><code>\n"
-        result += json.dumps(dict(self.jeeves.app.configuration), indent = "    ")
+        result += json.dumps(dict(self.jeeves.app.configuration), indent="    ")
         result += "\n</code></pre>"
         return ("Configuration", result)
 
@@ -1213,7 +1210,7 @@ class Table(suapp.jandw.Wooster):
         # TODO put the dataobject in the session...
         params = {"table_name": 'test'}
         if drone.dataobject:
-            if not 'table_name' in drone.dataobject:
+            if 'table_name' not in drone.dataobject:
                 # DELME: for testing creating something.
                 drone.dataobject['table_name'] = 'test'
                 drone.dataobject['tables'] = {'test': {'ID': 'testid'}}

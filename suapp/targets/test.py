@@ -15,7 +15,7 @@ class Application(suapp.jandw.Wooster):
         self.dataobject = None
         self.testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
         self.tables = {}
-    
+
     @loguse
     def inflow(self, jeeves, drone):
         if drone.dataobject:
@@ -60,7 +60,7 @@ class Application(suapp.jandw.Wooster):
         '''
         pass
 
-        
+
 class About(suapp.jandw.Wooster):
 
     @loguse
@@ -82,7 +82,7 @@ class About(suapp.jandw.Wooster):
         answer = input("Choose option: ")
         print()
 
-        
+
 class Configuration(suapp.jandw.Wooster):
 
     @loguse
@@ -92,8 +92,7 @@ class Configuration(suapp.jandw.Wooster):
         print("=====================")
         print("Configuration")
         print("---------------------")
-        print(json.dumps(self.jeeves.app.configuration, indent = "\t"))
+        print(json.dumps(self.jeeves.app.configuration, indent="\t"))
         print("---------------------")
         answer = input("Choose option: ")
         print()
-
