@@ -28,33 +28,60 @@ It supports different file types:
 
            
 class Configuration(MutableMapping):
+    """
+    Dict like class containing the configuration.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the dictionary the same as a real dict.
+        """
         self.store = dict()
         if args or kwargs:
             self.update(dict(*args, **kwargs))
 
     def __getitem__(self, key):
+        """
+        Get an item form the configuration dict.
+        """
         return self.store[self.__keytransform__(key)]
 
     def __setitem__(self, key, value):
+        """
+        Set an item in the configuration dict.
+        """
         self.store[self.__keytransform__(key)] = value
 
     def __delitem__(self, key):
+        """
+        Remove an item from the configuration dict.
+        """
         del self.store[self.__keytransform__(key)]
 
     def __iter__(self):
+        """
+        Return the iterator of the dictonary.
+        """
         return iter(self.store)
 
     def __len__(self):
+        """
+        Return the lenght of the dictionary.
+        """
         return len(self.store)
 
     def __keytransform__(self, key):
+        """
+        Transforms the key.
+        """
         return key
 
     # -- We want it to output like a dict --
 
     def __repr__(self):
+        """
+        Represent itself as a dict.
+        """
         return self.store.__repr__()
 
     # -- Configuration specific methods: load, save & close. --
@@ -117,6 +144,9 @@ class SplitConfiguration(Configuration):
     """
 
     def __init__(self, configurations):
+        """
+        Initializes a split configuration from different configurations.
+        """
         super().__init__()
         self.main = None
         backup = []
@@ -136,6 +166,9 @@ class SplitConfiguration(Configuration):
         #print("Backup: %s" % (type(self.backup))) # DELME
                 
     def load(self):
+        """
+        Load the configuration: first try the main.
+        """
         try:
             # Try to load the main configuration.
             self.main.load()
@@ -157,32 +190,59 @@ class SplitConfiguration(Configuration):
                 raise
             
     def save(self):
+        """
+        Save the configuration: always to the main.
+        """
         self.main.save()
 
     def __enter__(self):
+        """
+        Return the context manager of the main.
+        """
         self.load()
         # Once the initial load is done, only the main configuration matters.
         return self.main
 
     def __getitem__(self, key):
+        """
+        Get the item.
+        """
         return self.main.__getitem__(key)
 
     def __setitem__(self, key, value):
+        """
+        Set the item.
+        """
         return self.main.__setitem__(key, value)
 
     def __delitem__(self, key):
+        """
+        Remove the item.
+        """
         return self.main.__del__(key)
 
     def __len__(self):
+        """
+        Return the lenght.
+        """
         return self.main.__len__()
 
     def __repr__(self):
+        """
+        Represent as the main.
+        """
         return self.main.__repr__()
 
     def clear(self):
+        """
+        Clear the main.
+        """
         return self.main.clear()
 
     def copy(self):
+        """
+        Returns a copy
+        """
         return self.main.copy()
 
     def has_key(self, key):
@@ -224,21 +284,33 @@ class ConfigurationParser():
     Dummy root of all configuration parser classes.
     """
     def __init__(self, location):
+        """
+        Initialize with a location.
+        """
         self.location  = location
     
     def load_into_dict(self, configuration):
+        """
+        Must be overwritten in the subclass.
+        """
         if self.__class__.__name__ == 'ConfigurationParser':
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Load is not implemented in %s." % (self.__class__.__name__))
         
     def save_from_dict(self, configuration):
+        """
+        Must be overwritten in the subclass.
+        """
         if self.__class__.__name__ == 'ConfigurationParser':
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Save is not implemented in %s." % (self.__class__.__name__))
             
     def __str__(self):
+        """
+        String representation of the parser.
+        """
         return super().__str__() + " on location %s" % (self.location)
 
 
@@ -267,28 +339,49 @@ class JsonConfigurationParser(ConfigurationParser):
 
 
 class YamlConfigurationParser(ConfigurationParser):
+    """
+    Parses a yaml file.
+    """
 
     def load_into_dict(self, configuration):
+        """
+        Parsing a yaml file and updating the configuration.
+        """
         import yaml
         configuration.update(yaml.load(open(self.location, 'rb')))
 
     def save_from_dict(self, configuration):
+        """
+        Saving the configuration again to the yaml.
+        """
         import yaml
         yaml.dump(dict(configuration), open(self.location, 'w', encoding = 'utf-8'))
         
 
 class XmlConfigurationParser(ConfigurationParser):
+    """
+    Parses an XML file.
+    """
 
     def load_into_dict(self, configuration):
+        """
+        Parsing an xml file and updating the configuration.
+        """
         import xmltodict
         configuration.update(xmltodict.parse(open(self.location,'rb'))['suapp'])
     
     def save_from_dict(self, configuration):
+        """
+        Saving the configuration again to xml.
+        """
         import xmltodict
         xmltodict.unparse({'suapp': dict(configuration)}, open(self.location, 'wb'))
 
             
 class CfgConfigurationParser(ConfigurationParser):
+    """
+    Parses a configuration in the configparser format.
+    """
 
     def configuration_to_flat_dict(self, configuration, prefix = None):
         """
@@ -434,11 +527,16 @@ class WebConfiguration(Configuration):
     """
     
     def __init__(self, url):
+        """
+        Initializes with an url
+        """
         super().__init__()
         self.url = url
         
     def load(self):
-        # Downloading the web resource to a local file and reading it in.
+        """
+        Downloading the web resource to a temporary file and reading it in.
+        """
         import os
         import shutil
         import tempfile
@@ -685,5 +783,3 @@ if __name__ == "__main__":
     print("=== END FILE CONTENT ===\n")
 
     os.remove(file_name)
-
-
