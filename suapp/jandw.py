@@ -6,7 +6,8 @@
 Copyright (C), 2013, The Schilduil Team. All rights reserved.
 """
 import sys
-from logdecorator import *
+
+from suapp.logdecorator import *
 
 
 class Wooster(object):

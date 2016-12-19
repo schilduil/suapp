@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-import suapp.jandw
 from tkinter import *
 from tkinter.ttk import *
-from logdecorator import *
+
+import suapp.jandw
+from suapp.logdecorator import *
 
 
 #Extra widgets

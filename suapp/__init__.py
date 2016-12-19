@@ -8,7 +8,7 @@ import platform
 import sys
 
 from suapp.jandw import *
-from logdecorator import *
+from suapp.logdecorator import *
 
 
 __author__  = "Bert Raeymaekers <bert.raeymaekers@schilduil.org>"
@@ -159,10 +159,10 @@ class SuApp(object):
     @loguse
     def import_target(self):
         if not "target" in self.configuration:
-            targets = importlib.import_module("targets")
+            targets = importlib.import_module("suapp.targets")
             # The default target is in targets/__init__ as default.
             self.configuration["target"] = targets.default
-        self.target_module = "targets.%s" % (self.configuration["target"])
+        self.target_module = "suapp.targets.%s" % (self.configuration["target"])
         globals()["ui"] = importlib.import_module(self.target_module)
         logging.getLogger(self.__module__).info("Target module: %s %s", self.target_module, ui)
         

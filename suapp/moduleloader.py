@@ -41,8 +41,6 @@ class ModuleLoadingException(ModuleException):
 def import_data_module(app_name, module_name, scope):
     # Importing the module in Python.
     module_entity = importlib.import_module("modlib.%s" % (module_name))
-    #module_entity = importlib.import_module("modlib.%s" % (module_name))
-    my_module_full = 'modlib.%s' % (module_name)
     # Checking if the app matches in the module.
     if app_name:
         if app_name != module_entity.app_name:
@@ -66,7 +64,7 @@ def import_data_module(app_name, module_name, scope):
         scope['modlib'] = sys.modules['modlib']
         globals().update({'modlib': sys.modules['modlib']})
     for name, value in classes_dict.items():
-        setattr(sys.modules[my_module_full], name, value)
+        setattr(sys.modules[value.__module__], name, value)
     # Adding to the list of imported modules.
     modules.append(module_name)
     logging.getLogger(__name__).info("Loaded %s." % (module_name))
@@ -102,10 +100,12 @@ if __name__ == '__main__':
 
     with db_session():
         try:
+            print(modlib.base.Individual.mro())
             vayf = modlib.base.Individual(code="VAYF")
             goc = modlib.base.Individual(code="GOc")
             print(vayf)
             print(goc)
+            print(modlib.kinship.Kinship.mro())
             k_goc_vayf = modlib.kinship.Kinship(first=goc, second=vayf, kinship=0.0)
             print(k_goc_vayf)
         except:

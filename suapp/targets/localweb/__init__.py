@@ -17,7 +17,7 @@ import urllib.parse
 import webbrowser
 
 import suapp.jandw
-from logdecorator import *
+from suapp.logdecorator import *
 
 
 users = {

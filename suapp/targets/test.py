@@ -3,7 +3,7 @@
 
 
 import suapp.jandw
-from logdecorator import *
+from suapp.logdecorator import *
 
 
 class Application(suapp.jandw.Wooster):
