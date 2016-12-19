@@ -28,9 +28,17 @@ groups = {"administrators": ["admin"]}
 
 
 class HtmlTemplatingEngine():
+    """
+    Templating engine for the html.
+    """
 
     @staticmethod
     def html_template():
+        """
+        Returns the html template.
+
+        It will check availability of local css/js and if not use web links to them.
+        """
         html_template = """ <!DOCTYPE html>
 <html>
     <head>
@@ -111,6 +119,9 @@ class HtmlTemplatingEngine():
 
     @loguse
     def __init__(self, template = None):
+        """
+        Initializing the template.
+        """
         if template:
             self.html_template = str(template)
         else:
@@ -118,6 +129,9 @@ class HtmlTemplatingEngine():
 
     @loguse([1,3,'@']) # Not logging session, main nor the return value.
     def html(self, session, title, main, prefix = None, menu = None, shortname = None):
+        """
+        Returns the html code.
+        """
         if not shortname:
             shortname = "SuApp"
         if prefix == None:
@@ -256,6 +270,9 @@ class Session(dict):
     """
     @loguse
     def __init__(self, sessionid):
+        """
+        Initializing the session with an id.
+        """
         self.id = sessionid
         
             
@@ -324,6 +341,9 @@ class SessionStore(dict):
         return session
         
     def __str__(self):
+        """
+        Returns all session, comma separated.
+        """
         result = []
         for session in super():
             result.append(session.id)
@@ -331,6 +351,9 @@ class SessionStore(dict):
 
         
 class LocalWebHandler(http.server.BaseHTTPRequestHandler):
+    """
+    Handles the web requests.
+    """
 
     jeeves = None
     start = None
@@ -338,6 +361,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
     html_template_engine = HtmlTemplatingEngine()
 
     def send_last_modified_header(self):
+        """
+        Sets the Last-Modified header.
+        """
         timestamp = time.time()
         year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
         s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
@@ -348,10 +374,16 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
     @loguse
     def set_html_template_engine(self, html_template_engine):
+        """
+        Sets the templating engine.
+        """
         self.html_template_engine = html_template_engine
 
     @loguse([1,3,'@']) # Not logging session, body nor return value.
     def html(self, session, title, body, **kwargs):
+        """
+        Returns the html code.
+        """
         if not self.html_template_engine:
             self.html_template_engine = LocalWebHandler.html_template_engine
         return self.html_template_engine.html(session, title, body, **kwargs)
@@ -401,6 +433,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
     @loguse
     def callback_drone(self, drone):
+        """
+        Callback function that gets called from the drone.
+        """
         self.session()['drone'] = drone
     
     @loguse([1, 'json_object', 'payload']) # Not logging session, json_object nor payload.
@@ -1029,17 +1064,27 @@ class BrowserThread(Thread):
 
 
 class Application(suapp.jandw.Wooster):
+    """
+    Application home page.
+    """
 
     @loguse
     def __init__(self, master=None):
+        """
+        Initialize the page.
+        """
         self.name = "Application"
         self.jeeves = None
         self.dataobject = None
+        # FOR TESTING ONLY # DELME
         self.testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
         self.tables = {}
 
     @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
+        """
+        Entry point for the home page.
+        """
         # The port by default is ord(S)+10 + ord(U)
         self.port = 8385 # SU
         self.ip = "127.0.0.1"
@@ -1064,16 +1109,26 @@ class Application(suapp.jandw.Wooster):
 
     @loguse
     def close(self):
-        '''
+        """
         Close as Wooster
-        '''
+        """
         pass
 
 
 class About(suapp.jandw.Wooster):
+    """
+    About page with content from a file.
+
+    It first tries to find the <shortname>.html. If that is not found it
+    looks for <shortname>.txt. If not even a .txt then an empty page is
+    shown.
+    """
 
     @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
+        """
+        Entry point for the about page.
+        """
         self.jeeves = jeeves
         result = []
         suffix = []
@@ -1099,9 +1154,17 @@ class About(suapp.jandw.Wooster):
 
 
 class Configuration(suapp.jandw.Wooster):
+    """
+    Configuration page.
+    
+    It just outputs the configuration in json format.
+    """
 
     @loguse('@') # Not logging the return value.
     def inflow(self, jeeves, drone):
+        """
+        Entry point for configuration page.
+        """
         self.jeeves = jeeves
         result = "<pre><code>\n"
         result += json.dumps(dict(self.jeeves.app.configuration), indent = "    ")
@@ -1110,6 +1173,9 @@ class Configuration(suapp.jandw.Wooster):
 
 
 class Table(suapp.jandw.Wooster):
+    """
+    Table page showing the table columns with types.
+    """
 
     name = "TABLE"
     raw = True
@@ -1141,6 +1207,9 @@ class Table(suapp.jandw.Wooster):
 """
 
     def inflow(self, jeeves, drone):
+        """
+        Entry point for the table page.
+        """
         # TODO put the dataobject in the session...
         params = {"table_name": 'test'}
         if drone.dataobject:
@@ -1160,6 +1229,9 @@ class Table(suapp.jandw.Wooster):
 
 
 class Record(suapp.jandw.Wooster):
+    """
+    Record page showing a record.
+    """
 
     name = "RECORD"
     raw = True
@@ -1191,6 +1263,9 @@ class Record(suapp.jandw.Wooster):
 """
 
     def inflow(self, jeeves, drone):
+        """
+        Entry point for the record page
+        """
         self.jeeves = jeeves
         params = {'object': None}
         if drone.dataobject:
@@ -1209,4 +1284,3 @@ class Record(suapp.jandw.Wooster):
             return ("Record", Record.raw_js % (params) + "\n".join(result))
         else:
             return ("Record", "TODO: nice output.")
-
