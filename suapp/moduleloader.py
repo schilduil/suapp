@@ -38,7 +38,10 @@ class ModuleLoadingException(ModuleException):
     pass
 
 
-def import_data_module(app_name, module_name, scope):
+def import_modlib(app_name, module_name, scope):
+    """
+    Importing the modlib module and al dependencies.
+    """
     # Importing the module in Python.
     module_entity = importlib.import_module("modlib.%s" % (module_name))
     # Checking if the app matches in the module.
@@ -55,7 +58,7 @@ def import_data_module(app_name, module_name, scope):
         # Checking if we've already done the required module.
         if requirement_name not in modules:
             # Trying to import
-            if not import_data_module(app_name, requirement_name, scope):
+            if not import_modlib(app_name, requirement_name, scope):
                 # Import of the requirement failed.
                 raise ModuleLoadingException("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
     # Loading all the PonyORM classes into the global scope.
@@ -90,8 +93,7 @@ if __name__ == '__main__':
   
     scope = {}
     for mod in modules_to_import:
-        import_data_module(app_name, mod, scope)
-    #globals().update(scope)
+        import_modlib(app_name, mod, scope)
 
     print("Modules: %s" % (modules))
 
