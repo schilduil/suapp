@@ -31,29 +31,10 @@ class Config(object):
     pass
 
     
-@loguse
-def setFlow_depr(flow, appconfig):
-    log = logging.getLogger(self.__module__)
-    try:
-        for (context, name, intag, objecttype) in appconfig.flowpoints:
-            log.debug(":setFlow: Adding flow(%s) %s: Drone(%s, %s())" % (context, name, intag, objecttype))
-            if context not in flow.flow:
-                flow.flow[context] = {}
-            if name in flow.flow[context]:
-                log.warn("Duplicate flowpoint name %s in context %s, using the latest one!" % (name, context))
-            # TODO: Forsee targets other than tkapp
-            try:
-                flow.flow[context][name] = jandw.Drone(intag, getattr(tkapp, objecttype)())
-            except Exception as err:
-                logging.getLogger(__name__).error(": setFlow : Unknown object type %s in tkapp (%s: %s)." % (objecttype, type(err), err))
-                raise ConfigurationError("Unknown object type %s in tkapp (%s: %s)!" % (objecttype, type(err), err))
-    except Exception as err:
-        logging.getLogger(__name__).error(": setFlow : Error in <flow> tag (%s: %s)." % (type(err), err))
-        raise ConfigurationError("Error in <flow> tag (%s: %s)!" % (type(err), err))
-    return (appconfig.appname, appconfig.appshortname)
-
-    
 def convert_to_log_level(txt):
+    """
+    Converts text to the actual log level.
+    """
     # If it is already an int, return it.
     if type(txt) == type(10):
         return txt
@@ -90,8 +71,20 @@ def convert_to_log_level(txt):
 
  
 class SuApp(object):
+    """
+    The SuApp class represents a running application.
+    """
  
     def __init__(self, configuration):
+        """
+        Initializing the application.
+
+        Setting the configuration recieved.
+        Configure the logging.
+        Loading the UI target.
+        Creating the Jeeves flow.
+        Configure the flow.
+        """
         self.target_module = None
         self.configuration = configuration
         # First thing to do is setup the logging.
@@ -103,6 +96,11 @@ class SuApp(object):
         self.configure_flow()
 
     def configure_log(self):
+        """
+        Configuring the logging.
+
+        The main logging but also all the module specific logging.
+        """
         log = logging.getLogger(self.__module__)
         # Logging not configured yet, so postponing log.debug(">configure_log()")
         try:
@@ -158,6 +156,9 @@ class SuApp(object):
     
     @loguse
     def import_target(self):
+        """
+        Import the UI target as ui.
+        """
         if not "target" in self.configuration:
             targets = importlib.import_module("suapp.targets")
             # The default target is in targets/__init__ as default.
@@ -168,6 +169,9 @@ class SuApp(object):
         
     @loguse
     def parse_flow_line(self, line):
+        """
+        Parse one flow line.
+        """
         comment = ""
         line = line.split("#", 1)
         content = line[0].strip()
@@ -184,6 +188,9 @@ class SuApp(object):
         
     @loguse
     def read_flow(self, flowfile):
+        """
+        Reading the flow file.
+        """
         flow = {}
         # 1. Look starting from the install location.
         installpath = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -218,8 +225,11 @@ class SuApp(object):
         
     @loguse
     def configure_flow(self):
+        """
+        Configures the flow.
+        """
         if not "shortname" in self.configuration:
-            self.configuration["shortname"] = "suapp"
+            self.configuration["shortname"] = "SuApp"
         self.flow.flow[""] = self.read_flow("%s.flow" % self.configuration["shortname"].lower())
         if len(self.flow.flow[""]) == 0:
             raise ConfigurationError("Could not load correct flow configuration.")
@@ -230,6 +240,9 @@ class SuApp(object):
 
     @loguse
     def start(self):
+        """
+        Start the application.
+        """
         self.flow.start()
 
    
@@ -237,7 +250,9 @@ class SuApp(object):
 # MAIN: The root of all evil
 #
 if __name__ == "__main__":
-
+    #
+    # This was some test code, but I'm not sure it still works.
+    #
 
     log = logging.getLogger(__name__)
 
@@ -311,4 +326,3 @@ if __name__ == "__main__":
             tables[gen].__exit__(None, None, None)
 
     print("Bye.")
-
