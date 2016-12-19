@@ -32,7 +32,7 @@ import os.path
 import sys
 
 import suapp
-import configuration
+import suapp.configuration
 
 
 def update_conf(configuration, option_string):
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     print("Effective configuration file: %s" % (jsonfilename))
     print("Backup initial configuration: %s" % (json_backup))
     
-    config = configuration.get_configuration([jsonfilename, json_backup])
+    config = suapp.configuration.get_configuration([jsonfilename, json_backup])
     config.load()
     config["self"] = jsonfilename
     update_conf(config, args.options)
