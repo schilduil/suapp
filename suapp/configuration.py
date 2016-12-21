@@ -162,8 +162,6 @@ class SplitConfiguration(Configuration):
             self.backup = backup[0]
         else:
             self.backup = SplitConfiguration(backup)
-        #print("Main: %s" % (type(self.main))) # DELME
-        #print("Backup: %s" % (type(self.backup))) # DELME
 
     def load(self):
         """

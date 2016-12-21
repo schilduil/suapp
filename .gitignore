@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod~]
 *.pz~
 
+# gettext pot files
+*.pot
+
 # vi swp files
 *.swp
 

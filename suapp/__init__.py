@@ -52,11 +52,9 @@ def do_locale(languages=None, domain=None, localedir=None):
         languages = [languages]
     if not localedir:
         localedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'locale')
-    print("Path: %s" % (localedir))
     logging.getLogger(__name__).debug("Locale %s: %s" % (languages, gettext.find(domain, localedir=localedir, languages=languages, all=True)))
     try:
         trans = gettext.translation(domain, localedir=localedir, languages=languages)
-        print(trans)
         # This somehow doesn't work
         # trans.install()
         # So we have this alternative
@@ -180,7 +178,7 @@ class SuApp(object):
             logging.basicConfig(filename=os.path.expanduser(filename), filemode=filemode, format=format, level=convert_to_log_level(level))
             # Putting out the delayed debug statement.
             log.debug(">configure_log() [DELAYED]")
-            print("Logging to %s." % (os.path.expanduser(filename)))
+            print(_("Logging to %s.") % (os.path.expanduser(filename)))
 
             # Configuring the further modules logging settings.
             if "modules" in self.configuration["log"]:

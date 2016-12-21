@@ -20,13 +20,9 @@ This
     - Calls START to start the application.
 """
 
-# TARGET:
-#       test: very basic text based UI
-#       localweb: run a HTTPServer and open a browser to it.
-#       tk: run a local TK app.
-# Idea: get the config from a specific web page (might be usefull for an initial install).
 
 import argparse
+import locale
 import logging
 import os.path
 import sys
@@ -66,15 +62,26 @@ if __name__ == "__main__":
     # But this can be overwritten by passing a -c parameter passing the
     # filename, path or the full json file location.
 
-    parser = argparse.ArgumentParser(description='Start a SuApp application.')
-    parser.add_argument('-o', '--options', help="[key=value]* overrides to the configuration")
-    parser.add_argument('-c', '--configuration', help="path or filename of the configuration file (json)", default="suapp.json")
-    parser.add_argument('-t', '--target', help="target user interface")
+    languages = set([locale.getlocale()[0], locale.getlocale()[0].split('_')[0]])
+    suapp.do_locale(languages)
+
+    parser = argparse.ArgumentParser(description=suapp._('Start a SuApp application.'))
+    parser.add_argument('-l', '--lang', help=suapp._("language, use 'none' if you don't want a language setting. If not set it infers the language from the environment setting."), default=locale.getlocale()[0])
+    parser.add_argument('-o', '--options', help=suapp._("[key=value]* overrides to the configuration"))
+    parser.add_argument('-c', '--configuration', help=suapp._("path or filename of the configuration file (json)"), default="suapp.json")
+    parser.add_argument('-t', '--target', help=suapp._("target user interface"))
     args = parser.parse_args()
 
-    print("Configuration file: %s" % (args.configuration))
-    print("User interface target: %s" % (args.target))
-    print("Options: %s" % (args.options))
+    if args.lang.lower() == 'none':
+        suapp.do_locale()
+    else:
+        languages = set([args.lang, args.lang.split('_')[0]])
+        suapp.do_locale(languages)
+
+    print(suapp._("Taal: %s") % (args.lang))
+    print(suapp._("Configuration file: %s") % (args.configuration))
+    print(suapp._("User interface target: %s") % (args.target))
+    print(suapp._("Options: %s") % (args.options))
 
     jsonfilename = 'suapp.json'
     json_backup = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
@@ -93,8 +100,8 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
         jsonfilename = os.path.realpath(jsonfilename)
 
-    print("Effective configuration file: %s" % (jsonfilename))
-    print("Backup initial configuration: %s" % (json_backup))
+    print(suapp._("Effective configuration file: %s") % (jsonfilename))
+    print(suapp._("Backup initial configuration: %s") % (json_backup))
 
     config = suapp.configuration.get_configuration([jsonfilename, json_backup])
     config.load()
@@ -106,12 +113,12 @@ if __name__ == "__main__":
     try:
         app = suapp.SuApp(config)
         app.start()
-        print("Bye.")
+        print(suapp._("Bye."))
     except Exception as e:
         try:
-            logging.getLogger(__name__).fatal("Unexpected end of SuApp: %s" % (e))
+            logging.getLogger(__name__).fatal(suapp._("Unexpected end of SuApp: %s") % (e))
         finally:
-            print("Unexpected end of SuApp!")
+            print(suapp._("Unexpected end of SuApp!"))
             import traceback
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
