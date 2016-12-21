@@ -11,10 +11,6 @@ from suapp.jandw import *
 from suapp.logdecorator import *
 
 
-__author__ = "Bert Raeymaekers <bert.raeymaekers@schilduil.org>"
-__version__ = "1.0.0.0"
-
-
 class SuAppError(Exception):
     pass
 
@@ -29,6 +25,57 @@ class ConfigurationError(SuAppError):
 
 class Config(object):
     pass
+
+
+# Prepare for gettext
+_ = lambda s: s
+
+
+def do_locale(languages=None, domain=None, localedir=None):
+    """
+    Initializing gettext with the correct language.
+
+    Returns false if it couldn't find anything. In that case it falls back to
+    no translation.
+    """
+    import gettext
+    import logging
+    import os.path
+    global _
+    if not domain:
+        domain = "suapp"
+    if not languages:
+        # Disable the translations.
+        _ = lambda s: s
+        return True
+    if isinstance(languages, str):
+        languages = [languages]
+    if not localedir:
+        localedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'locale')
+    print("Path: %s" % (localedir))
+    logging.getLogger(__name__).debug("Locale %s: %s" % (languages, gettext.find(domain, localedir=localedir, languages=languages, all=True)))
+    try:
+        trans = gettext.translation(domain, localedir=localedir, languages=languages)
+        print(trans)
+        # This somehow doesn't work
+        # trans.install()
+        # So we have this alternative
+        _ = trans.gettext
+    except:
+        logging.getLogger(__name__).warn("Locale for domain %s in languages %s not found. Falling back to default." % (domain, languages))
+        _ = lambda s: s
+        return False
+    # Report our success.
+    # We could use an Exception to signal failure but I prefer not to need a
+    # try clause around a call to this function.
+    return True
+
+
+def do_all_locale(modules, languages=None):
+    result = do_locale(language=languages)
+    # TODO stuff for the modules.
+    # result &= <module>.do_locale(language=languages)
+    return result
 
 
 def convert_to_log_level(txt):
@@ -91,7 +138,7 @@ class SuApp(object):
         self.configure_log()
         # Next import the UI target.
         self.import_target()
-        ### JEEVES needs a self.flow! and and __init__(self, configuration = None) ###
+        # JEEVES needs a self.flow! and and __init__(self, configuration = None)
         self.flow = Jeeves(self)
         self.configure_flow()
 
@@ -275,10 +322,6 @@ if __name__ == "__main__":
         print("%s" % (err))
         sys.exit(1)
 
-    ## FOR TESTING NEW CONFIG BREAK EARLY
-    #print("TEMPORARY END FOR CONFIG TEST")
-    #sys.exit(0)
-
     # A poor man's nested context manager, which in this case isn't too
     # bad since we sys.exit(2) anyway so no lingering resources anyway.
     # Nevertheless it should behave nicely on error.
@@ -292,7 +335,7 @@ if __name__ == "__main__":
             print("\nGoing to open %s (%s)" % (gen, tables[gen]))
             tables[gen].__enter__()
 
-        ### START TEMPORARY TEST CODE ###
+        # == START TEMPORARY TEST CODE == #
         indtable = tables['organism']
         perstable = tables['person']
         indtable.setFor('GOc', dict(gender=1, bandcode=dict(breeder='FS2', year='06', sequence=654), breeder='Frank Silva', status=-128))
@@ -311,7 +354,7 @@ if __name__ == "__main__":
         print("\nGetting GOc: %s %r %s" % (id(goc), goc, goc))
         goc = indtable['GOc']
         print("\nGetting GOc: %s %r %s" % (id(goc), goc, goc))
-        ### END TEST ###
+        # == END TEST == #
 
         # Pass the application configuration
         flow.start({'config': appconfig, 'name': name, 'shortname': shortname, 'tables': tables})
