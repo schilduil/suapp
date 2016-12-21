@@ -130,15 +130,14 @@ if __name__ == '__main__':
             print("Parents (GOVAYF)62: %s" % (govayf62.parents.page(1, pagesize=2)))
 
             # Start calculation inbreeding
-            i = ac110280
+            i = modlib.base.UiIndividual(orm=ac110280)
             print("")
-            ks = modlib.kinship.UiKinship(first=i, second=i)
-            print("Calculated kinships:")
+            #ks = modlib.kinship.UiKinship(first=i, second=i)
+            junk = i.ui_inbreeding
             for kinship in select(c for c in modlib.kinship.Kinship):
-                print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, ((kinship.kinship*2.0)-1.0)*100.00))
+                print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship))
             print("")
-            print("Inbreeding in %s is: %2.2f%%" % (i.code, ((ks.kinship*2.0)-1.0)*100.00))
+            print("Inbreeding in %s is: %2.2f%%" % (i.code, (i.ui_inbreeding)*100.00))
             print("")
         except:
-            #raise
             pass
