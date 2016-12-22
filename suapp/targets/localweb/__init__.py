@@ -369,9 +369,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         timestamp = time.time()
         year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
         s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
-                self.weekdayname[wd],
-                day, self.monthname[month], year,
-                hh, mm, ss)
+            self.weekdayname[wd],
+            day, self.monthname[month], year,
+            hh, mm, ss)
         self.send_header('Last-Modified', s)
 
     @loguse

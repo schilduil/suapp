@@ -149,11 +149,11 @@ if __name__ == '__main__':
             print("Calculated kinships:")
             for kinship in select(c for c in modlib.kinship.Kinship):
                 if kinship.pc_kinship:
-                    print("\t%s, %s: %2.2f%% (%2.2f%%)" % (kinship.first.code, kinship.second.code, kinship.kinship*100.00, kinship.pc_kinship*100.00))
+                    print("\t%s, %s: %2.2f%% (%2.2f%%)" % (kinship.first.code, kinship.second.code, kinship.kinship * 100.00, kinship.pc_kinship * 100.00))
                 else:
-                    print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship*100.00))
+                    print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship * 100.00))
             print("")
-            print("Inbreeding in %s is: %2.2f%%" % (i.code, (i.ui_inbreeding)*100.00))
+            print("Inbreeding in %s is: %2.2f%%" % (i.code, (i.ui_inbreeding) * 100.00))
             print("")
         except:
             raise
