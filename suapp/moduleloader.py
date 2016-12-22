@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
     with db_session():
         try:
+            # === BASE === "
             print(modlib.base.Individual.mro())
             vayf = modlib.base.Individual(code="VAYF", dob=datetime.date(year=2007, month=1, day=1))
             goc = modlib.base.Individual(code="GOc", dob=datetime.date(year=2006, month=1, day=1))
@@ -120,6 +121,9 @@ if __name__ == '__main__':
             print(vayf)
             print(goc)
             print(modlib.kinship.Kinship.mro())
+            print(goc._attrs_)
+
+            # === KINSHIP === #
             k_goc_vayf = modlib.kinship.Kinship(first=goc, second=vayf, kinship=0.0)
             ui_k_goc_vayf = modlib.kinship.UiKinship(orm=k_goc_vayf)
             print("%s, %s: %s" % (ui_k_goc_vayf.first.code, ui_k_goc_vayf.second.code, ui_k_goc_vayf.kinship))
@@ -128,16 +132,29 @@ if __name__ == '__main__':
             print("%s, %s: %s" % (ui_k_goc_vayf.first.code, ui_k_goc_vayf.second.code, ui_k_goc_vayf.kinship))
 
             print("Parents (GOVAYF)62: %s" % (govayf62.parents.page(1, pagesize=2)))
+            print("")
 
             # Start calculation inbreeding
             i = modlib.base.UiIndividual(orm=ac110280)
+            print("Record: %s" % (i._ui_orm))
+            for key in sorted(i.ui_attributes):
+                print("\t%s: %s" % (key, getattr(i, key)))
             print("")
-            #ks = modlib.kinship.UiKinship(first=i, second=i)
-            junk = i.ui_inbreeding
+
+            print("Record: %s" % (ui_k_goc_vayf))
+            for key in sorted(ui_k_goc_vayf.ui_attributes):
+                print("\t%s: %s" % (key, getattr(ui_k_goc_vayf, key)))
+            print("")
+
+            print("Calculated kinships:")
             for kinship in select(c for c in modlib.kinship.Kinship):
-                print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship))
+                if kinship.pc_kinship:
+                    print("\t%s, %s: %2.2f%% (%2.2f%%)" % (kinship.first.code, kinship.second.code, kinship.kinship*100.00, kinship.pc_kinship*100.00))
+                else:
+                    print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship*100.00))
             print("")
             print("Inbreeding in %s is: %2.2f%%" % (i.code, (i.ui_inbreeding)*100.00))
             print("")
         except:
+            raise
             pass

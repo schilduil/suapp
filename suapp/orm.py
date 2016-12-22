@@ -5,11 +5,18 @@ class UiOrmObject():
     The PonyORM object is set as attribute _ui_orm.
     All attributes not starting with _ui_ come from the PonyORM object.
     """
-    def __init__(self, orm):
+    def ui_init(self, orm):
         """
-        Initialize with PonyORM object in orm
+        Initialize from the PonyORM object.
         """
-        self._ui_orm = orm
+        self.ui_attributes = set()
+        for attr in orm._attrs_:
+            self.ui_attributes.add(attr.name) 
+
+    def ui_init(self):
+        self.ui_attributes = set()
+        for attr in self._ui_orm._attrs_:
+            self.ui_attributes.add(attr.name)
 
     def __getattr__(self, key):
         """
