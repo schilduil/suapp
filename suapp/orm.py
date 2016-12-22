@@ -11,7 +11,7 @@ class UiOrmObject():
         """
         self.ui_attributes = set()
         for attr in orm._attrs_:
-            self.ui_attributes.add(attr.name) 
+            self.ui_attributes.add(attr.name)
 
     def ui_init(self):
         self.ui_attributes = set()

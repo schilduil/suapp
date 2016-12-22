@@ -181,15 +181,16 @@ class HtmlTemplatingEngine():
                 output.append(prefix + '\t\t\t\t<li><a href="/?OUT=%s">Stefaan</a></li>' % (menu_sub))
         output.append(prefix + '\t\t\t</ul>')
 
-        #output.append(prefix + '\t\t\t<form class="navbar-form navbar-left" action="/search.html" role="search">')
-        #output.append(prefix + '\t\t\t\t<div class="form-group">')
-        #output.append(prefix + '\t\t\t\t\t<input type="text" required name="q" id="tipue_search_input" class="form-control" placeholder="Search">')
-        #output.append(prefix + '\t\t\t\t</div>')
-        #output.append(prefix + '\t\t\t</form>')
+        # In the future maybe used.
+        # output.append(prefix + '\t\t\t<form class="navbar-form navbar-left" action="/search.html" role="search">')
+        # output.append(prefix + '\t\t\t\t<div class="form-group">')
+        # output.append(prefix + '\t\t\t\t\t<input type="text" required name="q" id="tipue_search_input" class="form-control" placeholder="Search">')
+        # output.append(prefix + '\t\t\t\t</div>')
+        # output.append(prefix + '\t\t\t</form>')
 
-        #output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-right">')
-        #output.append(prefix + '\t\t\t\t<li><a href="/seealso.html">See also</a></li>')
-        #output.append(prefix + '\t\t\t</ul>')
+        # output.append(prefix + '\t\t\t<ul class="nav navbar-nav navbar-right">')
+        # output.append(prefix + '\t\t\t\t<li><a href="/seealso.html">See also</a></li>')
+        # output.append(prefix + '\t\t\t</ul>')
 
         output.append(prefix + '\t\t</div><!--/.nav-collapse -->')
         output.append(prefix + '\t</div>')
@@ -197,7 +198,7 @@ class HtmlTemplatingEngine():
 
         output.append(prefix + '<div class="container">')
         output.append(prefix + '\t<ol class="breadcrumb">')
-        #output.append(prefix + '\t\t<li><a href="/">Home</a></li>')
+        # output.append(prefix + '\t\t<li><a href="/">Home</a></li>')
         output.append(prefix + '\t\t<li class="active">Home</li>')
         output.append(prefix + '\t</ol>')
         output.append(prefix + '\t<div class="page-header">')
@@ -207,9 +208,9 @@ class HtmlTemplatingEngine():
         output.append(prefix + '\t<div class="row">')
         output.append(prefix + '\t\t<div class="content">')
         output.append(prefix + '\t\t\t<div class="col-md-7" role="main">')
-        #output.append(prefix + '\t\t\t\t<ul class="pager">')
-        #output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
-        #output.append(prefix + '\t\t\t\t</ul>')
+        # output.append(prefix + '\t\t\t\t<ul class="pager">')
+        # output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
+        # output.append(prefix + '\t\t\t\t</ul>')
 
         output.append(prefix + '\t\t\t\t<main>')
         if main:
@@ -217,33 +218,34 @@ class HtmlTemplatingEngine():
         # TODO
         output.append(prefix + '\t\t\t\t</main>')
 
-        #output.append(prefix + '\t\t\t\t<ul class="pager">')
-        #output.append(prefix + '\t\t\t\t\t<li class="previous"><a href="/start.html">&larr; Partnership SBR</a></li>')
-        #output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
-        #output.append(prefix + '\t\t\t\t</ul>')
+        # Maybe used later for "Most queried objects."
+        # output.append(prefix + '\t\t\t\t<ul class="pager">')
+        # output.append(prefix + '\t\t\t\t\t<li class="previous"><a href="/start.html">&larr; Partnership SBR</a></li>')
+        # output.append(prefix + '\t\t\t\t\t<li class="next"><a href="/stefaan.html">Stefaan &rarr;</a></li>')
+        # output.append(prefix + '\t\t\t\t</ul>')
 
-        #output.append(prefix + '\t\t\t\t<div class="col-md-3" role="complementary">')
-        #output.append(prefix + '\t\t\t\t\t<nav class="hidden-print hidden-xs hidden-sm">')
-        #output.append(prefix + '\t\t\t\t\t\t<div class="sidebar" data-spy="affix" data-offset-top="80" data-offset-bottom="60">')
-        #output.append(prefix + '\t\t\t\t\t\t\t<div class="well">')
+        # output.append(prefix + '\t\t\t\t<div class="col-md-3" role="complementary">')
+        # output.append(prefix + '\t\t\t\t\t<nav class="hidden-print hidden-xs hidden-sm">')
+        # output.append(prefix + '\t\t\t\t\t\t<div class="sidebar" data-spy="affix" data-offset-top="80" data-offset-bottom="60">')
+        # output.append(prefix + '\t\t\t\t\t\t\t<div class="well">')
 
-        #output.append(prefix + '\t\t\t\t\t\t\t\t<a href="#"><strong>%s</strong></a>' % (name))
-        #output.append(prefix + '\t\t\t\t\t\t\t\t<div class="toc">')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t<ul>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#favourite-colours">Favourite colours</a><ul>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t<li><a href="#ino">Ino</a><ul>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#lutino">Lutino</a></li>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#albino">Albino</a></li>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t</ul></li>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t</ul></li>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#band-codes">Band codes</a></li>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t\t</ul>')
-        #output.append(prefix + '\t\t\t\t\t\t\t\t</div>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t<a href="#"><strong>%s</strong></a>' % (name))
+        # output.append(prefix + '\t\t\t\t\t\t\t\t<div class="toc">')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t<ul>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#favourite-colours">Favourite colours</a><ul>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t<li><a href="#ino">Ino</a><ul>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#lutino">Lutino</a></li>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t\t<li><a href="#albino">Albino</a></li>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t\t</ul></li>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t</ul></li>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t\t<li><a href="#band-codes">Band codes</a></li>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t\t</ul>')
+        # output.append(prefix + '\t\t\t\t\t\t\t\t</div>')
 
-        #output.append(prefix + '\t\t\t\t\t\t\t</div>')
-        #output.append(prefix + '\t\t\t\t\t\t</div>')
-        #output.append(prefix + '\t\t\t\t\t</nav>')
-        #output.append(prefix + '\t\t\t\t</div>')
+        # output.append(prefix + '\t\t\t\t\t\t\t</div>')
+        # output.append(prefix + '\t\t\t\t\t\t</div>')
+        # output.append(prefix + '\t\t\t\t\t</nav>')
+        # output.append(prefix + '\t\t\t\t</div>')
 
         output.append(prefix + '\t\t\t</div>')
         output.append(prefix + '\t\t</div>')
@@ -394,9 +396,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         Gets the cookie information.
         """
         self.cookie = http.cookies.SimpleCookie()
-        #print("Headers: %s" % (self.headers)) # DELME
         if "Cookie" in self.headers:
-            #print("Cookie: %s" % (self.headers["Cookie"])) # DELME
             # Not sure why I need .split(";",1)[0], but otherwise it takes the last on on the line.
             # It seems the SimpleCookie only takes the last in case of multiples.
             # Not sure this is the solution: does the browser always put the new one in front?
@@ -463,7 +463,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             * POST / GET parameters (depending on the http method used)
             * Authentication header (basic authentication)
         """
-        #print("LOGON: session: %s" % (session.id)) # DELME
         # First check if someone is already logged in.
         userid = None
         try:
@@ -490,7 +489,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # There is already someone logged in and it was not forced out.
             return (200, "text/json; charset=utf-8", {"result": False, "message": "User %s is already logged in. Log out first before logging in." % (userid)})
 
-        #print("LOGON: session: %s" % (session.id)) # DELME
         # Logging in
         username = None
         password = None
@@ -642,7 +640,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             (key, var) = first_path.split(".")
         except:
             pass
-        #print("%s.%s/%s" % (key,var,rest_path)) # DELME
         if isinstance(start_object, list) or isinstance(start_object, tuple):
             index = 0
             try:
@@ -659,7 +656,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                                 extended_message['object'] = return_message['object']
                             else:
                                 extended_message['message'] = key + '.' + var + "/" + return_message['message']
-                            #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
                             return (return_code, return_mime, extended_message)
                         else:
                             return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[index], var)})
@@ -688,7 +684,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                                 extended_message['object'] = return_message['object']
                             else:
                                 extended_message['message'] = key + '.' + var + "/" + return_message['message']
-                            #print("%s.%s %s > %s" % (key, var, return_message, extended_message)) # DELME
                             return (return_code, return_mime, extended_message)
                         else:
                             return (200, "text/json; charset=utf-8", {'result': True, 'object': getattr(start_object[key], var)})
@@ -705,7 +700,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 else:
                     return (200, "text/json; charset=utf-8", {'result': True, 'object': start_object[key]})
             else:
-                #print("%s not in %s" % (key, start_object)) # DELME
                 return (200, "text/json; charset=utf-8", {'result': False, 'message': "%s not found." % (key)})
         else:
             return (200, "text/json; charset=utf-8", {'result': False, 'message': "Object is not a dict, list or tuple."})
@@ -758,7 +752,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             return_message = "%s\n%s" % (err, "".join(traceback.format_exception(ex_type, ex, tb)))
 
         # The imporant stuff is the OUT message.
-        #return (404, "text/plain; charset=utf-8", "Page not found.")
         return (return_code, return_mime, return_message)
 
     @loguse(3)  # Not logging return_message.
@@ -777,7 +770,6 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             self.expired_cookie = None
         for morsel in self.cookie.values():
             self.send_header('Set-Cookie', morsel.output(header='').lstrip() + '; Path=/')
-        # self.send_header("Content-length", len(DUMMY_RESPONSE))
         self.end_headers()
         self.wfile.write(return_message.encode('utf-8'))
 
@@ -1034,7 +1026,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                                                                            session_id[-8:],
                                                                            self.address_string(),
                                                                            self.log_date_time_string(),
-                                                                           format%args))
+                                                                           format % args))
 
 
 class BrowserThread(Thread):

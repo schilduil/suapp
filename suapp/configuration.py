@@ -170,21 +170,15 @@ class SplitConfiguration(Configuration):
         try:
             # Try to load the main configuration.
             self.main.load()
-            #print("Loaded main: %s (%s) in %s" % (self.main, type(self.main), type(self))) # DELME
         except:
             # That didn't work, so trying the backup.
             if self.backup is not None:
                 # Loading from the backup and saving it to the main configuration.
-                #print("Loading from backup %s in %s..." % (type(self.backup), type(self))) # DELME
                 self.backup.load()
-                #print("Updating main with %s in %s..." % (self.backup, type(self))) # DELME
                 self.main.update(self.backup)
-                #print("Saving main %s in %s..." % (self.main, type(self))) # DELME
                 self.main.save()
-                #print("Saved %s in %s" % (type(self.main), type(self))) # DELME
             else:
                 # No backup, re-raising the original exception.
-                #print("No backup in %s" % (type(self))) # DELME
                 raise
 
     def save(self):
@@ -244,7 +238,7 @@ class SplitConfiguration(Configuration):
         return self.main.copy()
 
     def has_key(self, key):
-        return self.main.has_key(key)
+        return self.main.has_key(key)  # noqa
 
     def pop(self, key, d=None):
         return self.main.pop(key, d)
@@ -423,7 +417,6 @@ class CfgConfigurationParser(ConfigurationParser):
             except ValueError:
                 section = ""
                 key = fullkey
-            #print("[%s] %s: %s - %s" % (section, key, value, fullkey))
             try:
                 if section != "":
                     config_parser.add_section(section)
