@@ -153,7 +153,7 @@ if __name__ == '__main__':
                 else:
                     print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship * 100.00))
             print("")
-            print("Inbreeding in %s is: %2.2f%%" % (i.code, (i.ui_inbreeding) * 100.00))
+            print("Inbreeding in %s is: %2.2f%% (%2.2f%%)" % (i.code, (i.ui_inbreeding) * 100.00, (i.ui_pc_inbreeding) * 100.00))
             print("")
         except:
             raise
