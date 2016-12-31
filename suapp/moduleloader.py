@@ -37,14 +37,18 @@ class ModuleException(Exception):
     pass
 
 
-class ModuleLoadingException(ModuleException):
+class ModuleLoadingError(ModuleException):
     pass
 
 
-def import_modlib(app_name, module_name, scope):
+def import_modlib(app_name, module_name, scope=None, config=None):
     """
-    Importing the modlib module and al dependencies.
+    Importing the modlib module and all dependencies.
     """
+    if config is not None:
+        suapp.orm.UiOrmObject.config = config
+    if scope is None:
+        scope = {}
     # Importing the module in Python.
     module_entity = importlib.import_module("modlib.%s" % (module_name))
     # Checking if the app matches in the module.
@@ -63,7 +67,7 @@ def import_modlib(app_name, module_name, scope):
             # Trying to import
             if not import_modlib(app_name, requirement_name, scope):
                 # Import of the requirement failed.
-                raise ModuleLoadingException("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
+                raise ModuleLoadingError("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
     # Loading all the PonyORM classes into the global scope.
     classes_dict = module_entity.definitions(db, scope)
     if 'modlib' not in globals():
@@ -140,6 +144,10 @@ if __name__ == '__main__':
             for key in sorted(i.ui_attributes):
                 print("\t%s: %s" % (key, getattr(i, key)))
             print("")
+            print("Record: %s" % (i._ui_orm))
+            for key in sorted(i.__dict__):
+                print("\t%s: %s" % (key, getattr(i, key)))
+            print("")
 
             print("Record: %s" % (ui_k_goc_vayf))
             for key in sorted(ui_k_goc_vayf.ui_attributes):
@@ -156,5 +164,5 @@ if __name__ == '__main__':
             print("Inbreeding in %s is: %2.2f%% (%2.2f%%)" % (i.code, (i.ui_inbreeding) * 100.00, (i.ui_pc_inbreeding) * 100.00))
             print("")
         except:
-            raise
+            #raise
             pass

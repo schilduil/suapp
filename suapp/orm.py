@@ -5,6 +5,9 @@ class UiOrmObject():
     The PonyORM object is set as attribute _ui_orm.
     All attributes not starting with _ui_ come from the PonyORM object.
     """
+
+    config = {}
+
     def ui_init(self, orm):
         """
         Initialize from the PonyORM object.
