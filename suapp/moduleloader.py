@@ -33,11 +33,7 @@ modules = []
 db = Database()
 
 
-class ModuleException(Exception):
-    pass
-
-
-class ModuleLoadingError(ModuleException):
+class ModuleDependencyLoading(ImportError):
     pass
 
 
@@ -67,7 +63,7 @@ def import_modlib(app_name, module_name, scope=None, config=None):
             # Trying to import
             if not import_modlib(app_name, requirement_name, scope):
                 # Import of the requirement failed.
-                raise ModuleLoadingError("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
+                raise ModuleDependencyLoading("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
     # Loading all the PonyORM classes into the global scope.
     classes_dict = module_entity.definitions(db, scope)
     if 'modlib' not in globals():
