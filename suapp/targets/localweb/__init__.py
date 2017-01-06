@@ -56,7 +56,7 @@ class HtmlTemplatingEngine():
 """
         else:
             # Fall back to a public URL
-            html_template += """        <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" media="screen">
+            html_template += """        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" media="screen">
 """
 
         html_template += """        <link href="/css/site.css" rel="stylesheet" media="screen">
@@ -110,7 +110,7 @@ class HtmlTemplatingEngine():
 """
         else:
             # Fall back to a public URL.
-            html_template += """        <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.js"></script>
+            html_template += """        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 """
         html_template += """
     </body>
