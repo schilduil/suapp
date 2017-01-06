@@ -22,5 +22,5 @@ modlib/*
 Makefile
 
 # Javascript and CSS files
-targets/localweb/js/*/*/*.js
-targets/localweb/css/*/*/*.css
+suapp/targets/localweb/js/*/*/*.js
+suapp/targets/localweb/css/*/*/*.css
