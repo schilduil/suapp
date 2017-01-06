@@ -40,3 +40,8 @@ wget https://code.jquery.com/jquery-3.1.1.min.js
 mv jquery-3.1.1.min.js jquery.min.js
 cd ../../../../../
 
+# viz - graphviz in the browser
+mkdir -p targets/localweb/js/viz.js/1.4.0
+cd targets/localweb/js/viz.js/1.4.0
+wget https://github.com/mdaines/viz.js/releases/download/v1.4.0/viz.js
+cd ../../../../../
