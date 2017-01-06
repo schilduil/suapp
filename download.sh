@@ -6,13 +6,13 @@
 # bootstrap
 mkdir -p suapp/targets/localweb/css/bootstrap/3.3.5
 cd suapp/targets/localweb/css/bootstrap/3.3.5/
-wget http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css
+wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css
 cd ../../../../../../
 
 # bootstrap
 mkdir -p suapp/targets/localweb/js/bootstrap/3.3.5
 cd suapp/targets/localweb/js/bootstrap/3.3.5/
-wget http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.js
+wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js
 cd ../../../../../../
 
 # html5shiv
