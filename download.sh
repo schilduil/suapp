@@ -36,8 +36,7 @@ cd ../../../../../../
 # jquery 3.1.1 - latest version (unused)
 mkdir -p suapp/targets/localweb/js/jquery/3.1.1
 cd suapp/targets/localweb/js/jquery/3.1.1
-wget -nc https://code.jquery.com/jquery-3.1.1.min.js
-mv jquery-3.1.1.min.js jquery.min.js
+wget -nc https://code.jquery.com/jquery-3.1.1.min.js -O jquery.min.js
 cd ../../../../../../
 
 # viz - graphviz in the browser
