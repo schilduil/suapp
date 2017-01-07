@@ -24,7 +24,16 @@ users = {
     "admin": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32)),
     "user": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32))
 }
+
 groups = {"administrators": ["admin"]}
+
+js_fancy_table = """
+$(document).ready(function() {
+    $("tr:even").css("background-color", "#F4F4F8");
+    $("tr:odd").css("background-color", "#EFF1F1");
+});
+</script>
+"""
 
 
 class HtmlTemplatingEngine():

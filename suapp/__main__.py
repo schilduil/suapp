@@ -111,6 +111,7 @@ if __name__ == "__main__":
         config["target"] = args.target
 
     try:
+        # Instanciating the application
         app = suapp.SuApp(config)
         app.start()
         print(suapp._("Bye."))

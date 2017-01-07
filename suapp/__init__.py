@@ -7,6 +7,8 @@ import os.path
 import platform
 import sys
 
+import pony.orm
+
 from suapp.jandw import *
 from suapp.logdecorator import *
 
@@ -129,6 +131,7 @@ class SuApp(object):
         Loading the UI target.
         Creating the Jeeves flow.
         Configure the flow.
+        Configure the database and instanciating it.
         """
         self.target_module = None
         self.configuration = configuration
@@ -139,6 +142,13 @@ class SuApp(object):
         # JEEVES needs a self.flow! and and __init__(self, configuration = None)
         self.flow = Jeeves(self)
         self.configure_flow()
+        # DATABASE: pony.orm
+        self.db = pony.orm.Database()
+        try:
+            self.db.bind(self.configuration['datasource']['type'], os.path.expanduser(self.configuration['datasource']['filename']), create_db=True)
+        except KeyError:
+            self.db.bind("sqlite", ":memory:")
+        self.db.generate_mapping(create_tables=True)
 
     def configure_log(self):
         """

@@ -77,7 +77,10 @@ class Jeeves(object):
             except:
                 # TODO: do something else then bluntly exiting.
                 logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting." % (self, outmessage))
-                sys.exit(100)
+                if outmessage is "OUT":
+                    sys.exit(0)
+                else:
+                    sys.exit(100)
         return drone
 
     @loguse('@')  # Not logging the return value.
