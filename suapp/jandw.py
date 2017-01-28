@@ -61,6 +61,8 @@ class Jeeves(object):
         """
         self.flow = {"": {}}
         self.app = app
+        self.views = {}
+        self.queries = {}
 
     @loguse
     def whichDrone(self, fromname, outmessage, **kwargs):
