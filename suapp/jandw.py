@@ -63,6 +63,7 @@ class Jeeves(object):
         self.app = app
         self.views = {}
         self.queries = {}
+        self.ormscope = {}
 
     @loguse
     def whichDrone(self, fromname, outmessage, **kwargs):
@@ -86,16 +87,16 @@ class Jeeves(object):
         return drone
 
     @loguse('@')  # Not logging the return value.
-    def do_query(self, name, scope=None, **kwargs):
+    def do_query(self, name, scope=None, params=None):
        """
        Execute a query by name and return the result.
        """
        if scope is None:
            scope = {}
        query_template, defaults = self.queries[name]
-       params = defaults.copy()
-       params.update(kwargs)
-       query = query_template % params
+       parameters = defaults.copy()
+       parameters.update(params)
+       query = query_template % parameters
        exec("result = %s" % (query), scope)
        return scope['result']
 
