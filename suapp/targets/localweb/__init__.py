@@ -57,8 +57,6 @@ class HtmlTemplatingEngine():
 
         <!-- Bootstrap -->
 """
-        print(os.path.dirname(__file__))
-        print(os.path.join(os.path.dirname(__file__), "css/bootstrap/3.3.5/bootstrap.min.css"))
         if os.path.isfile(os.path.join(os.path.dirname(__file__), "css/bootstrap/3.3.5/bootstrap.min.css")):
             # Use the local resource (so localweb does not require internet access)
             html_template += """        <link href="/css/bootstrap/3.3.5/bootstrap.min.css" rel="stylesheet" media="screen">
@@ -743,7 +741,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             else:
                 # Mode in a web setting can only be MODAL?
                 # DELME: creating a testing data object
-                data = {'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test', 'table': 'organism', 'object': {'ID': '(GOVAYF)62', 'father': 'GOc', 'mother': 'VAYF'}}
+                data = {'session': session, 'params': fields, 'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test', 'table': 'organism', 'object': {'ID': '(GOVAYF)62', 'father': 'GOc', 'mother': 'VAYF'}}
                 (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone=self.callback_drone)
         try:
             shortname = session['jeeves'].app.configuration['shortname']
@@ -1282,3 +1280,174 @@ class Record(suapp.jandw.Wooster):
             return ("Record", Record.raw_js % (params) + "\n".join(result))
         else:
             return ("Record", "TODO: nice output.")
+
+
+def arguments_as_dict(f):
+    def real_f(kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        try:
+            return f(**kwargs)
+        except KeyError as ke:
+            if len(ke.args) == 1:
+                raise TypeError("label() missing required keyword-only argument: '%s'" % ("', '".join(ke.args))).with_traceback(ke.__traceback__) from None
+            else:
+                *first, last = ke.args
+                raise TypeError("label() missing %s required keyword-only arguments: '%s' and '%s'" % (len(ke.args), "', '".join(first), last)).with_traceback(ke.__traceback__) from None
+    return real_f
+
+
+class View(suapp.jandw.Wooster):
+    """
+    Generic view page for showing.
+    """
+
+    @staticmethod
+    @arguments_as_dict
+    def label(**kwargs):
+        return "<span class='label'>%(value)s</span>" % kwargs
+
+    @staticmethod
+    def button_as_link(**kwargs):
+        return '<a href="/?OUT=%(outmessage)s>%(value)s</a>' % kwargs
+
+    @staticmethod
+    def button_as_button(**kwargs):
+        return '<form action="/" method="POST"><input type="hidden" name="OUT" value="%(outmessage)s" /><input type="submit" value="%(value)s" /></form>' % kwargs
+
+    @staticmethod
+    @arguments_as_dict
+    def button(**kwargs):
+        return View.button_as_button(**kwargs)
+
+    @staticmethod
+    @arguments_as_dict
+    def textfield(**kwargs):
+        return '<form action="/TODO/updatefield" method="POST"><input type="text" name="%(name)s" value="%(value)s"></form>' % kwargs
+
+    @staticmethod
+    def combobox_as_select(**kwargs):
+        result = []
+        result.append('<form action="/" method="POST"><input type="hidden" name="OUT" value="%(outmessage)s" /><select name="cars">' % kwargs)
+        for name, value in kwargs['options']:
+            result.append('<option value="%s">%s<option>' % (value, name))
+        result.append('</select></form>')
+        return result
+
+    @staticmethod
+    @arguments_as_dict
+    def combobox(**kwargs):
+        return View.combobox_as_select(**kwargs)
+
+    def inflow(self, jeeves, drone):
+        """
+        Entry point for the record page
+        """
+        self.jeeves = jeeves
+
+        # Getting the flow (usually uppercase) and ref (lowercase) names.
+        flow_name = drone.name
+        ref_name = flow_name.lower()
+        name = ref_name[0].upper() + ref_name[1:]
+
+        # Getting the view definition.
+        definition = jeeves.views.get(flow_name, {})
+
+        # Getting the session, params and preparing the scope.
+        #   jeeves.ormscope: all the ORM and GUIORM class definitions.
+        #   limit: page size for queries.
+        session = drone.dataobject.get('session', {})
+        params = drone.dataobject.get('params', {})
+        scope = {}
+        scope.update(jeeves.ormscope)
+        scope.update({'limit': 5})
+
+        # Creating the output.
+        html = []
+
+        # Title
+        title = definition.get('name', name)
+
+        def_tabs = definition.get('tabs', {0: {'title': ''}})
+        tabs = collections.OrderedDict()
+        tab_count = 0
+        if 'query' in def_tabs:
+            tab_title = def_tabs.get('title', name)
+            tab_objects = self.jeeves.do_query(def_tabs['query'], scope=scope, params=params)
+            for tab in tab_objects:
+                if tab_title[0] == ".":
+                    tabs[tab_count] = (getattr(tab, tab_title[1:]), tab)
+                else:
+                    tabs[tab_count] = (tab_title, tab)
+                tab_count += 1
+        else:
+            # Loop over all integer keys and get out the titles.
+            for i in def_tabs:
+                # TODO: is this second element in the tuple correct?
+                tabs[i] = (def_tabs[i]['title'], def_tabs[i])
+
+        # Tab headers
+        html.append('<ul class="nav nav-tabs">')
+        for i in sorted(tabs):
+            if i is 0:
+                html.append('\t<li class="active"><a data-toggle="tab" href="#tab%s">%s</a></li>' % (i, tabs[i][0]))
+            else:
+                html.append('\t<li><a data-toggle="tab" href="#tab%s">%s</a></li>' % (i, tabs[i][0]))
+        html.append('</ul>')
+
+        # Tabs
+        html.append('<div class="tab-content">')
+        for i in sorted(tabs):
+            if i is 0:
+                html.append('\t<div id="tab%s" class="tab-pane fade in active">' % (i))
+            else:
+                html.append('\t<div id="tab%s" class="tab-pane fade">' % (i))
+            # Sections
+            sections = tabs.get('sections', definition.get('sections', {0: {'title': ''}}))
+            for s in sorted(sections.keys(), key=str):
+                if not str(s).isdigit():
+                    continue
+                section_title = sections[s].get('title', '')
+                html.append('\t\t<div class="panel panel-default">')  # panel-primary <> panel-default ?
+                html.append('\t\t\t<div class="panel-heading">%s</div>' % (section_title))
+                html.append('\t\t\t<div class="panel-body">')
+                # Lines
+                lines = sections[s].get('lines', tabs.get('lines', definition.get('sections', {0: {'title': ''}})))
+                line_objects = []
+                if 'query' in lines:
+                    line_objects = self.jeeves.do_query(lines['query'], scope=scope, params=params)
+                for line_object in line_objects:
+                    line_elements = []
+                    # Line elements
+                    if 'elements' in lines:
+                        for e in sorted(lines['elements']):
+                            value = lines['elements'][e].get('value', '#')
+                            element_type = lines['elements'][e].get('type', 'label').lower()
+                            outmessage = lines['elements'][e].get('outmessage', '').lower()
+                            if value[0] == ".":
+                                value = getattr(line_object, value[1:])
+                            if element_type == "button":
+                                html.append("\t\t\t\t" + View.button({'value': value, 'outmessage': 'TODO'}))
+                            else:
+                                html.append("\t\t\t\t" + View.label({'value': value}))
+                for l in sorted(lines.keys(), key=str):
+                    if str(l).isdigit():
+                        # Line elements
+                        if 'elements' in lines[l]:
+                            for e in sorted(lines[l]['elements']):
+                                value = lines[l]['elements'][e].get('value', '#')
+                                l_type = lines[l]['elements'][e].get('type', 'button').lower()
+                                outmessage = lines[l]['elements'][e].get('outmessage', '').lower()
+                                if value[0] == ".":
+                                    value = getattr(line_object, value[1:])
+                                if element_type == "button":
+                                    html.append("\t\t\t" + View.button({'value': value, 'outmessage': 'TODO'}))
+                                else:
+                                    html.append("\t\t\t" + View.label({'value': value}))
+                html.append('\t\t\t</div>')
+                html.append('\t\t</div>')
+
+            html.append('\t</div>')
+        html.append('</div>')
+
+        return (title, "\n".join(html))
