@@ -86,6 +86,20 @@ class Jeeves(object):
         return drone
 
     @loguse('@')  # Not logging the return value.
+    def do_query(self, name, scope=None, **kwargs):
+       """
+       Execute a query by name and return the result.
+       """
+       if scope is None:
+           scope = {}
+       query_template, defaults = self.queries[name]
+       params = defaults.copy()
+       params.update(kwargs)
+       query = query_template % params
+       exec("result = %s" % (query), scope)
+       return scope['result']
+
+    @loguse('@')  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
         """
         Find the drone and execute it.
