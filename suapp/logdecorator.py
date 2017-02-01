@@ -18,13 +18,16 @@ def get_timings():
     return timings
 
 def init_timings():
-    timeings = {}
+    global timings
+    timings = {}
 
 def disable_timings():
+    global timings
     timings = None
 
 def add_timing(f, time):
     """Adds an executing time for a callable to the timings."""
+    global timings
     if timings is None:
         return
     if f in timings:
