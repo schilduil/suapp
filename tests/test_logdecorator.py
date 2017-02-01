@@ -2,11 +2,16 @@
 
 import pytest
 
+from collections import OrderedDict
 import logging
 import logging.handlers
+import os
+import os.path
+import re
 import sys
 
-from suapp.logdecorator import *
+sys.path.append(os.path.join(os.getcwd(), 'suapp'))
+import logdecorator
 
 
 """
@@ -19,78 +24,81 @@ class MyClass():
     """Test class for the logdecorator"""
     name = "APP"
 
-    @loguse(1)  # Don't log the variable with index 1 (i.e. name)
+    @logdecorator.loguse(1)  # Don't log the variable with index 1 (i.e. name)
     def __init__(self, name):
         """Initialize the name of the test class."""
         self.name = name
 
-    @loguse
+    @logdecorator.loguse
     def lock(self):
         """Locks the test class."""
         logging.getLogger(__name__).info("Locking %s" % (self.name))
 
-    @loguse
+    @logdecorator.loguse
     def unlock(self):
         """Unlocks the test class."""
         logging.getLogger(__name__).info("Unlocking %s" % (self.name))
 
-    @loguse
+    @logdecorator.loguse
     def close(self):
         """Closes the test class."""
         logging.getLogger(__name__).info("Closing %s" % (self.name))
 
 class SubMyClass(MyClass):
 
-    @loguse
+    @logdecorator.loguse
     def __init__(self, name):
         """Initialize the name of the test class."""
         super(SubMyClass, self).__init__(name)
 
-    @loguse
+    @logdecorator.loguse
     def close(self):
         """Closes the test class."""
         logging.getLogger(__name__).info("Closing %s" % (self.name))
 
-@loguse
+@logdecorator.loguse
 def my_function1(message):
     logging.getLogger(__name__).warn("Starting %s" % (message))
     return SubMyClass(message)
 
-@loguse(1)  # Don't log the variable with index 1 (i.e. two)
+@logdecorator.loguse(1)  # Don't log the variable with index 1 (i.e. two)
 def my_function2(one, two):
     logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
 
-@loguse('a')  # Don't log the named argument 'a'
+@logdecorator.loguse('a')  # Don't log the named argument 'a'
 def my_function3(a, b, g):
     logging.getLogger(__name__).warn("The previous line didn't log 'a', but did log 'b' and 'g'.")
 
+
 def test_timings():
     """ Testing the two timings functions. """
-    timeings = {}
-    add_timing("f1", 3)
-    add_timing("f2", 4.234)
-    add_timing("f1", 6)
-    add_timing("f3", 6.2524)
-    add_timing("f2", 7.5234)
-    add_timing("f2", 8.70987)
-    add_timing("f2", 9.78034970)
-    print(timeings)
-    report = timeings_report()
+    logdecorator.init_timings()
+    logdecorator.add_timing("f1", 3)
+    logdecorator.add_timing("f2", 4.234)
+    logdecorator.add_timing("f1", 6)
+    logdecorator.add_timing("f3", 6.2524)
+    logdecorator.add_timing("f2", 7.5234)
+    logdecorator.add_timing("f2", 8.70987)
+    logdecorator.add_timing("f2", 9.78034970)
+    timings = logdecorator.get_timings()
+    print(timings)
+    report = logdecorator.timings_report()
     print(report)
-    assert report == collections.OrderedDict([('f2', (4, 30.2476197, 7.561904925)), ('f3', (1, 6.2524, 6.2524)), ('f1', (2, 9, 4.5))])
-    
+    assert report == OrderedDict([('f2', (4, 30.2476197, 7.561904925)), ('f3', (1, 6.2524, 6.2524)), ('f1', (2, 9, 4.5))])
+
 def test_timings_disabled():
     """ Testing the two timings functions when they should do nothing. """
-    timeings = None
-    add_timing("f1", 3)
-    add_timing("f2", 4.234)
-    add_timing("f1", 6)
-    add_timing("f3", 6.2524)
-    add_timing("f2", 7.5234)
-    add_timing("f2", 8.70987)
-    add_timing("f2", 9.78034970)
-    print(timeings)
-    report = timeings_report()
+    logdecorator.disable_timings()
+    logdecorator.add_timing("f1", 3)
+    logdecorator.add_timing("f2", 4.234)
+    logdecorator.add_timing("f1", 6)
+    logdecorator.add_timing("f3", 6.2524)
+    logdecorator.add_timing("f2", 7.5234)
+    logdecorator.add_timing("f2", 8.70987)
+    logdecorator.add_timing("f2", 9.78034970)
+    timings = logdecorator.get_timings()
+    print(timings)
+    report = logdecorator.timings_report()
     print(report)
     assert report == None
 
@@ -110,10 +118,9 @@ def memory_logger():
         logger.removeHandler(h)
     logger.addHandler(handler)
     return (logger, handler)
-    
+
 def test_logging_info(memory_logger):
     """ Test the logging with loglevel=INFO """
-    timeings = None
     (logger, handler) = memory_logger
     logger.setLevel(logging.INFO)
     x = my_function1("Hello World!")
@@ -135,15 +142,14 @@ def test_logging_info(memory_logger):
     ]
     assert len(handler.buffer) == len(expected)
     for logline, expected in zip(handler.buffer,expected):
-        print(logline)
         line = []
         for field in fields:
-            line.append(str(getattr(logline, field)))
+            # We substitute any hex strings with 0x000000000000
+            line.append(re.sub('0x[0-9a-f]*', '0x000000000000', str(getattr(logline, field))))
         assert " ".join(line) == expected
 
 def test_logging_debug(memory_logger):
     """ Test the logging with loglevel=DEBUG """
-    timeings = None
     (logger, handler) = memory_logger
     logger.setLevel(logging.DEBUG)
     x = my_function1("The end of the World is near!")
@@ -155,18 +161,38 @@ def test_logging_debug(memory_logger):
 
     fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName', 'msg']
     expected = [
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function1(('The end of the World is near!',), {})" % (logging.DEBUG),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function1 Starting The end of the World is near!" % (logging.WARNING, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > SubMyClass.__init__((<test_logdecorator.SubMyClass object at 0x000000000000>, 'The end of the World is near!'), {})" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > MyClass.__init__((<test_logdecorator.SubMyClass object at 0x000000000000>,), {})" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < MyClass.__init__: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < SubMyClass.__init__: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < my_function1: <test_logdecorator.SubMyClass object at 0x000000000000>" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > MyClass.lock((<test_logdecorator.SubMyClass object at 0x000000000000>,), {})" % (logging.DEBUG),
         "%s INFO %s test_logdecorator.py test_logdecorator lock Locking The end of the World is near!" % (logging.INFO, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < MyClass.lock: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > MyClass.unlock((<test_logdecorator.SubMyClass object at 0x000000000000>,), {})" % (logging.DEBUG),
         "%s INFO %s test_logdecorator.py test_logdecorator unlock Unlocking The end of the World is near!" % (logging.INFO, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < MyClass.unlock: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > SubMyClass.close((<test_logdecorator.SubMyClass object at 0x000000000000>,), {})" % (logging.DEBUG),
         "%s INFO %s test_logdecorator.py test_logdecorator close Closing The end of the World is near!" % (logging.INFO, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < SubMyClass.close: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function2(('First variable',), {})" % (logging.DEBUG),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function2 The previous line didn't log 'two', but did log 'one'" % (logging.WARNING, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < my_function2: None" % (logging.DEBUG),
+        (
+            "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function3((), {'g': 'gamma', 'b': 'beta'})" % (logging.DEBUG),
+            "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function3((), {'b': 'beta', 'g': 'gamma'})" % (logging.DEBUG),
+        ),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function3 The previous line didn't log 'a', but did log 'b' and 'g'." % (logging.WARNING, __name__),
     ]
     #assert len(handler.buffer) == len(expected)
     for logline, expected in zip(handler.buffer,expected):
-        print(logline)
         line = []
         for field in fields:
-            line.append(str(getattr(logline, field)))
-        print(" ".join(line))
-        assert " ".join(line) == expected
+            # We substitute any hex strings with 0x000000000000
+            line.append(re.sub('0x[0-9a-f]*', '0x000000000000', str(getattr(logline, field))))
+        if isinstance(expected, tuple):
+            assert " ".join(line) in expected
+        else:
+            assert " ".join(line) == expected

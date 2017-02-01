@@ -1,3 +1,6 @@
+# Hidden cache
+.cache/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod~]
@@ -11,7 +14,7 @@ __pycache__/
 
 # Anything in try/
 try
-ry/*
+try/*
 
 # Project specific stuff
 comments.txt
