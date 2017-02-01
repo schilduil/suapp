@@ -13,6 +13,16 @@ from functools import wraps
 
 timings = None
 
+
+def get_timings():
+    return timings
+
+def init_timings():
+    timeings = {}
+
+def disable_timings():
+    timings = None
+
 def add_timing(f, time):
     """Adds an executing time for a callable to the timings."""
     if timings is None:
