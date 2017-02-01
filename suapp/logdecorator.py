@@ -5,8 +5,37 @@ Copyright (C), 2013, The Schilduil Team. All rights reserved.
 """
 import logging
 import inspect
-from functools import wraps
+import time
+from collections import OrderedDict
+from operator import add
+import timefrom functools import wraps
 
+
+timeings = None
+
+def add_timing(f, time):
+    """Adds an executing time for a callable to the timeings."""
+    if timeings is None:
+        return
+    if f in timeings:
+        timeings[f] = tuple(map(add, timeings[f], (1, time)))
+    else:
+        timeings[f] = (1, time)
+   
+def timeings_report():
+    """Generated a report of the timeings of functions.
+    The slowest on average will be first."""
+    if timeings is None:
+        return None
+    report = {}
+    for f, (count, time) in timeings.items():
+        report[f] = time / count
+        
+    sorted_report = OrderedDict()
+    for f in sorted(report, key=report.get, reverse=True):
+        sorted_report[f] = timeings[f] + (report[f],)
+        
+    return sorted_report
 
 def loguse(param=None):
     """When in debug it will log entering and exiting a function or object methods.
@@ -31,6 +60,9 @@ def loguse(param=None):
     #   It could be None => empty list
     #   It could be a string => list with that string as element
     #   It could be an iterable => ok
+    start_time = time.time()
+    start_time_callable = 0
+    end_time_callable = 0
     f = None
     ignore_parameters = []
     if param is None:
@@ -81,7 +113,9 @@ def loguse(param=None):
                     log.debug("> %s(%r, %r)" % (f.__name__, tuple(l_args), l_kwargs))
                 else:
                     log.debug("> %s.%s(%r, %r)" % (classname, f.__name__, tuple(l_args), l_kwargs))
+            start_time_callable = time.time()
             result = f(*args, **kwargs)
+            end_time_callable = time.time()
             if log.isEnabledFor(logging.DEBUG):
                 if '@' in ignore_parameters:
                     if classname == "<module>":
@@ -95,7 +129,10 @@ def loguse(param=None):
                         log.debug("< %s.%s: %r" % (classname, f.__name__, result))
             return result
         return decorator
+    end_time = time.time()
+    add_timeing('loguse overhead', end_time - end_time_callable + start_time_callable - start_time)
     if f:
+        add_timing(f, end_time_callable - start_time_callable)
         return real_loguse(f)
     else:
         return real_loguse
@@ -103,6 +140,8 @@ def loguse(param=None):
 
 if __name__ == "__main__":
 
+    timeings = {}
+    
     logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.INFO)
 
     class TestClass():
@@ -172,3 +211,5 @@ if __name__ == "__main__":
     print("%s: %s" % (x.lock.__name__, x.lock.__doc__))
     test2("First variable", "Second variable")
     test3(a="alpha", b="beta", g="gamma")
+
+    print(timeings_report())
