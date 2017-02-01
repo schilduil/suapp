@@ -8,32 +8,32 @@ import inspect
 import time
 from collections import OrderedDict
 from operator import add
-import timefrom functools import wraps
+from functools import wraps
 
 
-timeings = None
+timings = None
 
 def add_timing(f, time):
-    """Adds an executing time for a callable to the timeings."""
-    if timeings is None:
+    """Adds an executing time for a callable to the timings."""
+    if timings is None:
         return
-    if f in timeings:
-        timeings[f] = tuple(map(add, timeings[f], (1, time)))
+    if f in timings:
+        timings[f] = tuple(map(add, timings[f], (1, time)))
     else:
-        timeings[f] = (1, time)
+        timings[f] = (1, time)
    
-def timeings_report():
-    """Generated a report of the timeings of functions.
+def timings_report():
+    """Generated a report of the timings of functions.
     The slowest on average will be first."""
-    if timeings is None:
+    if timings is None:
         return None
     report = {}
-    for f, (count, time) in timeings.items():
+    for f, (count, time) in timings.items():
         report[f] = time / count
         
     sorted_report = OrderedDict()
     for f in sorted(report, key=report.get, reverse=True):
-        sorted_report[f] = timeings[f] + (report[f],)
+        sorted_report[f] = timings[f] + (report[f],)
         
     return sorted_report
 
@@ -130,7 +130,7 @@ def loguse(param=None):
             return result
         return decorator
     end_time = time.time()
-    add_timeing('loguse overhead', end_time - end_time_callable + start_time_callable - start_time)
+    add_timing('loguse overhead', end_time - end_time_callable + start_time_callable - start_time)
     if f:
         add_timing(f, end_time_callable - start_time_callable)
         return real_loguse(f)
@@ -140,7 +140,7 @@ def loguse(param=None):
 
 if __name__ == "__main__":
 
-    timeings = {}
+    timings = {}
     
     logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.INFO)
 
@@ -212,4 +212,5 @@ if __name__ == "__main__":
     test2("First variable", "Second variable")
     test3(a="alpha", b="beta", g="gamma")
 
-    print(timeings_report())
+    for f, (count, total, avg) in timings_report().items():
+        print("%s: %s (%s/%s)" % (f, avg, total, count))
