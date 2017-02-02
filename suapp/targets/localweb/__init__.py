@@ -1348,7 +1348,7 @@ class View(suapp.jandw.Wooster):
         # Getting the flow (usually uppercase) and ref (lowercase) names.
         flow_name = drone.name
         ref_name = flow_name.lower()
-        name = ref_name[0].upper() + ref_name[1:]
+        name = ref_name.capitalize()
 
         # Getting the view definition.
         definition = jeeves.views.get(flow_name, {})
