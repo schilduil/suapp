@@ -573,7 +573,7 @@ class WebConfiguration(Configuration):
             # Download the file from `url` and save it locally under `file_name`:
             (os_level_handle, file_name) = tempfile.mkstemp(suffix=".%s" % (file_type))
             os.close(os_level_handle)
-            with urllib.request.urlopen(self.url) as response, open(file_name, 'wb', encoding='utf-8') as out_file:
+            with urllib.request.urlopen(self.url) as response, open(file_name, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             # Using FileConfiguration on the temporary file to do the real stuff.
             file_conf = FileConfiguration(file_name, file_type, **self.options)
