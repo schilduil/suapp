@@ -275,11 +275,12 @@ class ConfigurationParser():
     """
     Dummy root of all configuration parser classes.
     """
-    def __init__(self, location):
+    def __init__(self, location, **options):
         """
         Initialize with a location.
         """
         self.location = location
+        self.options = options
 
     def load_into_dict(self, configuration):
         """
@@ -380,7 +381,7 @@ class CfgConfigurationParser(ConfigurationParser):
         Flattens the configuration from multiple levels to one.
 
         From:
-            {"a": {"b": "c": "value"}}}
+            {"a": {"b": {"c": "value"}}}
         To:
             {"a.b.c": "value"}
         """
@@ -396,6 +397,9 @@ class CfgConfigurationParser(ConfigurationParser):
                 config_flat.update(self.configuration_to_flat_dict(value, prefix=new_prefix))
             else:
                 config_flat['.'.join(new_prefix)] = value
+        if not config_flat:
+            # Nothing put into it, so creating an empty dummy sub prefix entry.
+            config_flat['.'.join(prefix) + '.'] = ""
         return config_flat
 
     def configuration_to_configparser(self, configuration):
@@ -403,7 +407,7 @@ class CfgConfigurationParser(ConfigurationParser):
         Converts the configuration to a configuration for configparser.
 
         From:
-            {"a": {"b": "c": "value"}}}
+            {"a": {"b": {"c": "value"}}}
         To:
             [a.b]
             c = value
@@ -423,7 +427,8 @@ class CfgConfigurationParser(ConfigurationParser):
             except configparser.DuplicateSectionError:
                 # Ignore
                 pass
-            config_parser.set(section, key, value)
+            if key:
+                config_parser.set(section, key, value)
         return config_parser
 
     def load_into_dict(self, configuration):
@@ -432,16 +437,44 @@ class CfgConfigurationParser(ConfigurationParser):
         """
         import configparser
         config = configparser.ConfigParser()
-        config.read_file(self.location)
-        for section in config:
+        config.read_file(open(self.location))
+        defaults = config.defaults()
+        for key, value in defaults.items():
+            try:
+                value = int(value)
+            except:
+                try:
+                    value = float(value)
+                except:
+                    pass
+            configuration[key] = value
+        for section in config.sections():
+            #print("SECTION: %s" % (section))
             section_path = section.split(".")
             current = configuration
             for step in section_path:
                 if step not in current:
                     current[step] = {}
-                    current = current[step]
-            for key in config[section]:
-                current[key] = config[section][key]
+                current = current[step]
+            for key in config.options(section):
+                #print("OPTIONS: %s" % self.options)
+                raw = self.options.get('raw', True)
+                #print("Raw: %s" % raw)
+                value = config.get(section, key, raw=raw)
+                #print("%s: %s" % (key, value))
+                if self.options.get('sparse', True):
+                    if key in defaults:
+                        if defaults[key] == value:
+                            continue
+                try:
+                    value = int(value)
+                except:
+                    try:
+                        value = float(value)
+                    except:
+                        pass
+                #print("%s: %s" % (key, value))
+                current[key] = value
 
     def save_from_dict(self, configuration):
         """
@@ -454,18 +487,18 @@ class CfgConfigurationParser(ConfigurationParser):
             config_parser.write(config_parser_file_handle)
 
 
-def get_configuration_parser(location, file_type):
+def get_configuration_parser(location, file_type, **options):
     """
     Returns the parser based on the file type.
     """
     if file_type == 'json':
-        return JsonConfigurationParser(location)
+        return JsonConfigurationParser(location, **options)
     elif file_type == 'cfg':
-        return CfgConfigurationParser(location)
+        return CfgConfigurationParser(location, **options)
     elif file_type == 'xml':
-        return XmlConfigurationParser(location)
+        return XmlConfigurationParser(location, **options)
     elif file_type == 'yaml':
-        return YamlConfigurationParser(location)
+        return YamlConfigurationParser(location, **options)
     else:
         raise NotImplementedError("Unknown file type to parse: %s." % (file_type))
 
@@ -475,7 +508,7 @@ class FileConfiguration(Configuration):
     Loads and saves the configuration from the file system.
     """
 
-    def __init__(self, location, file_type=None):
+    def __init__(self, location, file_type=None, **options):
         """
         Initializing the parser depending on the file type.
         """
@@ -495,7 +528,7 @@ class FileConfiguration(Configuration):
             else:
                 file_type = '???'
         # Based on the file type.
-        self.parser = get_configuration_parser(location, file_type)
+        self.parser = get_configuration_parser(location, file_type, **options)
 
     def load(self):
         """
@@ -515,12 +548,13 @@ class WebConfiguration(Configuration):
     Loads the configuration from the web.
     """
 
-    def __init__(self, url):
+    def __init__(self, url, **options):
         """
         Initializes with an url
         """
         super().__init__()
         self.url = url
+        self.options = options
 
     def load(self):
         """
@@ -542,7 +576,7 @@ class WebConfiguration(Configuration):
             with urllib.request.urlopen(self.url) as response, open(file_name, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             # Using FileConfiguration on the temporary file to do the real stuff.
-            file_conf = FileConfiguration(file_name, file_type)
+            file_conf = FileConfiguration(file_name, file_type, **self.options)
             file_conf.load()
             self.update(file_conf)
         except:
@@ -595,9 +629,9 @@ def get_configuration(location=None, source_type=None, file_type=None, **kwargs)
             source_type = 'file'
     # Getting the correct Configuration object.
     if source_type == 'http':
-        return WebConfiguration(location)
+        return WebConfiguration(location, **kwargs)
     elif source_type == 'file':
-        return FileConfiguration(location, file_type=file_type)
+        return FileConfiguration(location, file_type=file_type, **kwargs)
     else:
         raise IOError("Unknown source type %s." % (source_type))
 
