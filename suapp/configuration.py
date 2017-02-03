@@ -318,7 +318,7 @@ class JsonConfigurationParser(ConfigurationParser):
         """
         import json
         json_conf = None
-        with open(self.location) as data_file:
+        with open(self.location, encoding='utf-8') as data_file:
             json_conf = json.load(data_file)
         configuration.update(json_conf)
 
@@ -341,7 +341,7 @@ class YamlConfigurationParser(ConfigurationParser):
         Parsing a yaml file and updating the configuration.
         """
         import yaml
-        configuration.update(yaml.load(open(self.location, 'rb')))
+        configuration.update(yaml.load(open(self.location, 'rb', encoding='utf-8')))
 
     def save_from_dict(self, configuration):
         """
@@ -437,7 +437,7 @@ class CfgConfigurationParser(ConfigurationParser):
         """
         import configparser
         config = configparser.ConfigParser()
-        config.read_file(open(self.location))
+        config.read_file(open(self.location, encoding='utf-8'))
         defaults = config.defaults()
         for key, value in defaults.items():
             try:
@@ -483,7 +483,7 @@ class CfgConfigurationParser(ConfigurationParser):
         It uses the write function on the configparser that needs the file handle.
         """
         config_parser = self.configuration_to_configparser(configuration)
-        with open(self.location, 'w') as config_parser_file_handle:
+        with open(self.location, 'w', encoding='utf-8') as config_parser_file_handle:
             config_parser.write(config_parser_file_handle)
 
 
@@ -573,7 +573,7 @@ class WebConfiguration(Configuration):
             # Download the file from `url` and save it locally under `file_name`:
             (os_level_handle, file_name) = tempfile.mkstemp(suffix=".%s" % (file_type))
             os.close(os_level_handle)
-            with urllib.request.urlopen(self.url) as response, open(file_name, 'wb') as out_file:
+            with urllib.request.urlopen(self.url) as response, open(file_name, 'wb', encoding='utf-8') as out_file:
                 shutil.copyfileobj(response, out_file)
             # Using FileConfiguration on the temporary file to do the real stuff.
             file_conf = FileConfiguration(file_name, file_type, **self.options)
