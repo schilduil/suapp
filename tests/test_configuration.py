@@ -78,6 +78,9 @@ def add_extra_everywhere(source, extra):
             result[key] = value
     return result
 
+def unsparse(d):
+    return add_extra_everywhere(d, lowest_level(d))
+
 def file_name(suffix):
     """ Test fixture to a temporary file name. """
     (os_level_handle, file_name) = tempfile.mkstemp(suffix=suffix)
@@ -221,7 +224,7 @@ def notest_different_cfg_with_backup_not_sparse(cfg_file):
     for line in open(cfg_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    expected = add_extra_everywhere(different_sample, lowest_level(different_sample))
+    expected = unsparse(different_sample)
     with configuration.get_configuration([cfg_file, url, sample], sparse=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
