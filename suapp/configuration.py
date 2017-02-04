@@ -449,7 +449,6 @@ class CfgConfigurationParser(ConfigurationParser):
                     pass
             configuration[key] = value
         for section in config.sections():
-            #print("SECTION: %s" % (section))
             section_path = section.split(".")
             current = configuration
             for step in section_path:
@@ -457,11 +456,8 @@ class CfgConfigurationParser(ConfigurationParser):
                     current[step] = {}
                 current = current[step]
             for key in config.options(section):
-                #print("OPTIONS: %s" % self.options)
                 raw = self.options.get('raw', True)
-                #print("Raw: %s" % raw)
                 value = config.get(section, key, raw=raw)
-                #print("%s: %s" % (key, value))
                 if self.options.get('sparse', True):
                     if key in defaults:
                         if defaults[key] == value:
@@ -473,7 +469,6 @@ class CfgConfigurationParser(ConfigurationParser):
                         value = float(value)
                     except:
                         pass
-                #print("%s: %s" % (key, value))
                 current[key] = value
 
     def save_from_dict(self, configuration):

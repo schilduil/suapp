@@ -186,6 +186,23 @@ def test_different_cfg_with_backup(cfg_file):
     print("=== END FILE CONTENT ===\n")
     # TODO: Need to make a similar test but with extra option sparse=False
     # TODO: Need to make a similar test but with extra option raw=False
+    with configuration.get_configuration([cfg_file, url, sample], raw=True) as test:
+        print("Test:")
+        pprint.pprint(dict(test))
+        print("Different sample:")
+        pprint.pprint(different_sample)
+        assert test == different_sample
+
+def notest_different_cfg_with_backup_not_raw(cfg_file):
+    """ Test with a different cfg file than the backups. """
+    # Creating the cfg with a different sample configuration.
+    with configuration.get_configuration([cfg_file, different_sample]) as test:
+        test.save()
+    print("File: %s" % (cfg_file))
+    print("=== START FILE CONTENT ===")
+    for line in open(cfg_file, 'r', encoding='utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
     with configuration.get_configuration([cfg_file, url, sample], raw=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
