@@ -60,6 +60,24 @@ different_sample.update(difference)
 # URL used for tests.
 url = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
 
+def lowest_level(d):
+    result = {}
+    for key, value in d.items():
+        if isinstance(value, dict):
+            continue
+        result[key] = value
+    return result
+
+def add_extra_everywhere(source, extra):
+    result = {}
+    for key, value in source.items():
+        if isinstance(value, dict):
+            result[key] = add_extra_everywhere(value, extra)
+            result[key].update(extra)
+        else:
+            result[key] = value
+    return result
+
 def file_name(suffix):
     """ Test fixture to a temporary file name. """
     (os_level_handle, file_name) = tempfile.mkstemp(suffix=suffix)
@@ -192,6 +210,24 @@ def test_different_cfg_with_backup(cfg_file):
         print("Different sample:")
         pprint.pprint(different_sample)
         assert test == different_sample
+
+def notest_different_cfg_with_backup_not_sparse(cfg_file):
+    """ Test with a different cfg file than the backups. """
+    # Creating the cfg with a different sample configuration.
+    with configuration.get_configuration([cfg_file, different_sample]) as test:
+        test.save()
+    print("File: %s" % (cfg_file))
+    print("=== START FILE CONTENT ===")
+    for line in open(cfg_file, 'r', encoding='utf-8'):
+        print(line.rstrip())
+    print("=== END FILE CONTENT ===\n")
+    expected = add_extra_everywhere(different_sample, lowest_level(different_sample))
+    with configuration.get_configuration([cfg_file, url, sample], sparse=False) as test:
+        print("Test:")
+        pprint.pprint(dict(test))
+        print("Expected based on different sample:")
+        pprint.pprint(expected)
+        assert test == expected
 
 def notest_different_cfg_with_backup_not_raw(cfg_file):
     """ Test with a different cfg file than the backups. """
