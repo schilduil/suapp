@@ -60,6 +60,14 @@ different_sample.update(difference)
 # URL used for tests.
 url = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
 
+def recursively_unorder(d):
+    result = {}
+    for key, value in d.items():
+        if isinstance(value, dict):
+            value = recursively_unorder(value)
+        result[key] = value
+    return result
+
 def lowest_level(d):
     result = {}
     for key, value in d.items():
@@ -107,8 +115,30 @@ def json_file():
 
 @pytest.fixture
 def cfg_file():
-    """ Test fixture to a temporary json file name. """
+    """ Test fixture to a temporary configuration file name. """
     name = file_name('.cfg')
+    yield name
+    # Cleaning up after itself.
+    try:
+        os.remove(name)
+    except:
+        pass
+
+@pytest.fixture
+def xml_file():
+    """ Test fixture to a temporary xml file name. """
+    name = file_name('.xml')
+    yield name
+    # Cleaning up after itself.
+    try:
+        os.remove(name)
+    except:
+        pass
+
+@pytest.fixture
+def yaml_file():
+    """ Test fixture to a temporary yaml file name. """
+    name = file_name('.yaml')
     yield name
     # Cleaning up after itself.
     try:
@@ -148,7 +178,7 @@ def test_missing_json_with_backup(json_file):
         assert test == sample
         assert json.load(open(json_file)) == sample
 
-def test_new_empty_json_file_with_add_and_save(json_file):
+def test_empty_json_file_with_add_and_save(json_file):
     """ Test an empty json file configuration with modification via add. """
     expected = {'c': 'python'}
     with configuration.get_configuration([json_file, {}]) as test:
@@ -163,7 +193,7 @@ def test_new_empty_json_file_with_add_and_save(json_file):
     with configuration.get_configuration(json_file) as test:
         assert test == expected
 
-def test_new_empty_json_file_with_update_and_save(json_file):
+def test_empty_json_file_with_update_and_save(json_file):
     """ Test an empty json file configuration with modification via update. """
     expected = {'c': 'python'}
     with configuration.get_configuration([json_file, {}]) as test:
@@ -188,7 +218,7 @@ def test_different_json_file_with_backup(json_file):
     for line in open(json_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===")
-    with configuration.get_configuration([json_file, url, copy.deepcopy(sample)]) as test:
+    with configuration.get_configuration(json_file) as test:
         assert test == different_sample
 
 def test_missing_cfg_file_with_backup(cfg_file):
@@ -196,24 +226,17 @@ def test_missing_cfg_file_with_backup(cfg_file):
     with configuration.get_configuration([cfg_file, url, copy.deepcopy(sample)]) as test:
         assert test == sample
 
-    print("=== START FILE CONTENT ===")
-    for line in open(cfg_file, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
 def test_different_cfg_with_backup(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, different_sample]) as test:
+    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
     for line in open(cfg_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    # TODO: Need to make a similar test but with extra option sparse=False
-    # TODO: Need to make a similar test but with extra option raw=False
-    with configuration.get_configuration([cfg_file, url, sample], raw=True) as test:
+    with configuration.get_configuration(cfg_file, raw=True) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Different sample:")
@@ -223,7 +246,7 @@ def test_different_cfg_with_backup(cfg_file):
 def test_different_cfg_with_backup_not_sparse(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, different_sample]) as test:
+    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
@@ -231,7 +254,7 @@ def test_different_cfg_with_backup_not_sparse(cfg_file):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
     expected = unsparse(different_sample)
-    with configuration.get_configuration([cfg_file, url, sample], sparse=False) as test:
+    with configuration.get_configuration(cfg_file, sparse=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Expected based on different sample:")
@@ -241,74 +264,49 @@ def test_different_cfg_with_backup_not_sparse(cfg_file):
 def notest_different_cfg_with_backup_not_raw(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, different_sample]) as test:
+    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
     for line in open(cfg_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    with configuration.get_configuration([cfg_file, url, sample], raw=False) as test:
+    with configuration.get_configuration(cfg_file, raw=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Different sample:")
         pprint.pprint(different_sample)
         assert test == different_sample
 
-"""
-# TEST 9: xml
-# Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".xml")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 9: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
+def test_missing_xml_with_backup(xml_file):
+    """ Test with a missing xml with backup. """
+    with configuration.get_configuration([xml_file, url, copy.deepcopy(sample)]) as test:
+        assert test == sample
 
+def test_different_xml_with_backup(xml_file):
+    """ Test with an existing xml with different backup """
+    with configuration.get_configuration([xml_file, copy.deepcopy(different_sample)]) as test:
+        test.save()
+    print("File: %s" % (xml_file))
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
+    for line in open(xml_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
+    with configuration.get_configuration(xml_file) as test:
+        assert recursively_unorder(test) == different_sample
 
-# TEST 10: xml file/url/sample (file exists)
-    print("TEST 10: passing a xml file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
+def test_missing_yaml_with_backup(yaml_file):
+    """ Test with a missing yaml with backup. """
+    with configuration.get_configuration([yaml_file, url, copy.deepcopy(sample)]) as test:
+        assert test == sample
 
+def test_different_yaml_with_backup(yaml_file):
+    """ Test with a different yaml with backup. """
+    with configuration.get_configuration([yaml_file, copy.deepcopy(different_sample)]) as test:
+        test.save()
     print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
+    for line in open(yaml_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-
-    os.remove(file_name)
-
-# TEST 11: yaml
-# Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".yaml")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 11: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-# TEST 12: xml file/url/sample (file exists)
-    print("TEST 12: passing a yaml file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    os.remove(file_name)
-"""
+    with configuration.get_configuration(yaml_file) as test:
+        assert test == different_sample

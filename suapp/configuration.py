@@ -282,6 +282,20 @@ class ConfigurationParser():
         self.location = location
         self.options = options
 
+    @staticmethod
+    def infer_type(value):
+        if value is None:
+            return {}
+        try:
+            value = int(value)
+        except:
+            try:
+                value = float(value)
+            except:
+                pass
+        return value
+
+
     def load_into_dict(self, configuration):
         """
         Must be overwritten in the subclass.
@@ -341,7 +355,7 @@ class YamlConfigurationParser(ConfigurationParser):
         Parsing a yaml file and updating the configuration.
         """
         import yaml
-        configuration.update(yaml.load(open(self.location, 'rb', encoding='utf-8')))
+        configuration.update(yaml.load(open(self.location, 'r', encoding='utf-8')))
 
     def save_from_dict(self, configuration):
         """
@@ -361,14 +375,18 @@ class XmlConfigurationParser(ConfigurationParser):
         Parsing an xml file and updating the configuration.
         """
         import xmltodict
-        configuration.update(xmltodict.parse(open(self.location, 'rb'))['suapp'])
+        configuration.update(
+            xmltodict.parse(open(self.location, 'rb'),
+            encoding='utf-8',
+            postprocessor=lambda path, key, value: (key, ConfigurationParser.infer_type(value))
+        )['suapp'])
 
     def save_from_dict(self, configuration):
         """
         Saving the configuration again to xml.
         """
         import xmltodict
-        xmltodict.unparse({'suapp': dict(configuration)}, open(self.location, 'wb'))
+        xmltodict.unparse({'suapp': dict(configuration)}, open(self.location, 'wb'), encoding='utf-8', pretty=True)
 
 
 class CfgConfigurationParser(ConfigurationParser):
@@ -440,14 +458,7 @@ class CfgConfigurationParser(ConfigurationParser):
         config.read_file(open(self.location, encoding='utf-8'))
         defaults = config.defaults()
         for key, value in defaults.items():
-            try:
-                value = int(value)
-            except:
-                try:
-                    value = float(value)
-                except:
-                    pass
-            configuration[key] = value
+            configuration[key] = ConfigurationParser.infer_type(value)
         for section in config.sections():
             section_path = section.split(".")
             current = configuration
@@ -462,14 +473,7 @@ class CfgConfigurationParser(ConfigurationParser):
                     if key in defaults:
                         if defaults[key] == value:
                             continue
-                try:
-                    value = int(value)
-                except:
-                    try:
-                        value = float(value)
-                    except:
-                        pass
-                current[key] = value
+                current[key] = ConfigurationParser.infer_type(value)
 
     def save_from_dict(self, configuration):
         """
