@@ -70,12 +70,18 @@ def lowest_level(d):
 
 def add_extra_everywhere(source, extra):
     result = {}
+    has_a_value = False
+    has_a_dict = False
     for key, value in source.items():
         if isinstance(value, dict):
+            has_a_dict = True
             result[key] = add_extra_everywhere(value, extra)
-            result[key].update(extra)
         else:
+            has_a_value = True
             result[key] = value
+    # If this is not only a dict of dicts.
+    if has_a_value or not has_a_dict:
+        result.update(extra)
     return result
 
 def unsparse(d):
@@ -214,7 +220,7 @@ def test_different_cfg_with_backup(cfg_file):
         pprint.pprint(different_sample)
         assert test == different_sample
 
-def notest_different_cfg_with_backup_not_sparse(cfg_file):
+def test_different_cfg_with_backup_not_sparse(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
     with configuration.get_configuration([cfg_file, different_sample]) as test:
