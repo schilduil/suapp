@@ -520,6 +520,8 @@ class FileConfiguration(Configuration):
                 file_type = 'xml'
             elif location.lower().endswith('.cfg'):
                 file_type = 'cfg'
+            elif location.lower().endswith('.ini'):
+                file_type = 'cfg'
             elif location.lower().endswith('.yml'):
                 file_type = 'yaml'
             elif location.lower().endswith('.yaml'):
