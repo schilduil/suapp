@@ -88,6 +88,14 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     classes_dict = module_entity.ui_definitions(db, scope)
     for name, value in classes_dict.items():
         setattr(sys.modules[value.__module__], name, value)
+    # Loading the views.
+    (queries, views, flow) = module_entity.view_definitions()
+    if queries:
+        jeeves.queries.update(queries)
+    if flow:
+        jeeves.flow.update(flow)
+    if views:
+        jeeves.views.update(views)
     # Adding to the list of imported modules.
     modules.append(module_name)
     logging.getLogger(__name__).info("Loaded %s." % (module_name))
