@@ -11,6 +11,7 @@ import pony.orm
 
 from suapp.jandw import *
 from suapp.logdecorator import *
+from suapp.moduleloader import *
 
 
 class SuAppError(Exception):
@@ -142,6 +143,8 @@ class SuApp(object):
         # JEEVES needs a self.flow! and and __init__(self, configuration = None)
         self.flow = Jeeves(self)
         self.configure_flow()
+        # Import modlib libraries.
+        self.load_modules()
         # DATABASE: pony.orm
         self.db = pony.orm.Database()
         try:
@@ -291,6 +294,25 @@ class SuApp(object):
             for module in self.configuration["modules"]:
                 subflow = self.read_flow(os.path.join("modules", "%s.flow" % (module)))
                 self.flow.flow[module] = subflow
+
+    @loguse
+    def load_modules(self):
+        """
+        Start the application.
+        """
+        # Getting the modules to load form the configurarion.
+        modules_to_import = self.configuration["modules"].keys()
+        app_name = self.configuration["shortname"].lower()
+        # If no modules, at least do base.
+        if not modules_to_import:
+            modules_to_import = ['base']
+        logging.getLogger(__name__).debug("Modules to load: %s" % (modules_to_import))
+        # TODO: I have to find out why I need this next line.
+        #gl = globals()
+        scope = {}
+        for mod in modules_to_import:
+            import_modlib(app_name, mod, scope)
+        logging.getLogger(__name__).info("Modules loaded: %s" % (modules))
 
     @loguse
     def start(self):
