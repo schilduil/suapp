@@ -17,6 +17,17 @@ The datamodel.py must have the following elements:
     def definitions()
         A function returning a dictionary of names: subclass of db.Entity
         that describe the database tables of the module.
+
+    def ui_definitions()
+        A function returning a dictionary of UI ORM classes: subclass of
+        suapp.orm.UiOrmObject that describes the UI ORM that act as interface
+        between the application and the database.
+
+    def view_definitions()
+        A function returning a tuple of (queries, views, flow) where
+            views is a dict of view definitions.
+            queries is a dict of queries used in views.
+            flow is an update on the flow.
 """
 
 import datetime
@@ -27,6 +38,7 @@ import sys
 from pony.orm import *
 
 import suapp.orm
+from suapp.jandw import Jeeves
 
 
 modules = []
@@ -37,7 +49,7 @@ class ModuleDependencyLoading(ImportError):
     pass
 
 
-def import_modlib(app_name, module_name, scope=None, config=None):
+def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     """
     Importing the modlib module and all dependencies.
     """
@@ -61,7 +73,7 @@ def import_modlib(app_name, module_name, scope=None, config=None):
         # Checking if we've already done the required module.
         if requirement_name not in modules:
             # Trying to import
-            if not import_modlib(app_name, requirement_name, scope):
+            if not import_modlib(app_name, requirement_name, jeeves, scope):
                 # Import of the requirement failed.
                 raise ModuleDependencyLoading("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
     # Loading all the PonyORM classes into the global scope.
@@ -101,7 +113,7 @@ if __name__ == '__main__':
 
     scope = {}
     for mod in modules_to_import:
-        import_modlib(app_name, mod, scope)
+        import_modlib(app_name, mod, Jeeves(), scope)
 
     print("Modules: %s" % (modules))
 

@@ -311,7 +311,7 @@ class SuApp(object):
         #gl = globals()
         scope = {}
         for mod in modules_to_import:
-            import_modlib(app_name, mod, scope)
+            import_modlib(app_name, mod, self.flow, scope)
         logging.getLogger(__name__).info("Modules loaded: %s" % (modules))
 
     @loguse
