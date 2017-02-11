@@ -67,7 +67,7 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
             return False
     else:
         # Initializing it if it isn't set yet.
-        app_name = module_entitiy.app_name
+        app_name = module_entity.app_name
     # First making sure all requirement modules are loaded.
     for requirement_name in module_entity.requirements():
         # Checking if we've already done the required module.
