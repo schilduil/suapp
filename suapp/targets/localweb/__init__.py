@@ -150,6 +150,7 @@ class HtmlTemplatingEngine():
             test_menu = collections.OrderedDict()
             test_menu["Table"] = "TABLE"
             test_menu["Record"] = "RECORD"
+            test_menu["Adults"] = "ADULTS"
             help_menu = collections.OrderedDict()
             help_menu["Configuration"] = "CONFIGURATION"
             help_menu["About"] = "ABOUT"
