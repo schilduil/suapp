@@ -53,6 +53,12 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     """
     Importing the modlib module and all dependencies.
     """
+    # Listing the modules we've already loaded.
+    modules_loaded = []
+    if module_name in modules:
+        # Already loaded, skip
+        return modules_loaded
+    # Initializing config and scope if not passed.
     if config is not None:
         suapp.orm.UiOrmObject.config = config
     if scope is None:
@@ -73,9 +79,11 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
         # Checking if we've already done the required module.
         if requirement_name not in modules:
             # Trying to import
-            if not import_modlib(app_name, requirement_name, jeeves, scope):
+            required_modules_loaded =  import_modlib(app_name, requirement_name, jeeves, scope)
+            if not required_modules_loaded:
                 # Import of the requirement failed.
                 raise ModuleDependencyLoading("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
+            modules_loaded.extend(required_modules_loaded)
     # Loading all the PonyORM classes into the global scope.
     classes_dict = module_entity.definitions(db, scope)
     if 'modlib' not in globals():
@@ -98,8 +106,9 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
         jeeves.views.update(views)
     # Adding to the list of imported modules.
     modules.append(module_name)
+    modules_loaded.append(module_name)
     logging.getLogger(__name__).info("Loaded %s." % (module_name))
-    return True
+    return modules_loaded
 
 
 if __name__ == '__main__':
