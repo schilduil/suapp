@@ -111,7 +111,7 @@ class Jeeves(object):
         else:
             # DEPRECATED: python code as a string.
             return self._do_query_str(query_template, scope, parameters)
-    
+
     @loguse('@')  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
         """
