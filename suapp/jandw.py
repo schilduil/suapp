@@ -70,7 +70,7 @@ class Jeeves(object):
         """
         Finding the drone matching the outmessage.
         """
-        logging.getLogger(__name__).debug(": Jeeves[%r].whichDrone : Flow: %s" % (self, self.flow))
+        logging.getLogger(__name__).debug(": Jeeves[%r].whichDrone : Flow: %s", self, self.flow)
         drone = None
         try:
             drone = self.flow[fromname][outmessage]
@@ -79,7 +79,7 @@ class Jeeves(object):
                 drone = self.flow[""][outmessage]
             except:
                 # TODO: do something else then bluntly exiting.
-                logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting." % (self, outmessage))
+                logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting.", self, outmessage)
                 if outmessage is "OUT":
                     sys.exit(0)
                 else:
