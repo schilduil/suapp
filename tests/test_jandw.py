@@ -73,11 +73,12 @@ march to the drones.
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Jeeves.drone",
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Jeeves.start: None",
     ]
-    fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName', 'msg']
+    fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName']
     for log_line, expected in zip(handler.buffer, expected):
         line = []
         for field in fields:
             line.append(re.sub('0x[0-9a-f]*', '0x000000000000', str(getattr(log_line, field))))
+        line.append(re.sub('0x[0-9a-f]*', '0x000000000000', log_line.getMessage()))
         print("E: %s\nG: %s" % (expected, " ".join(line)))
         if isinstance(expected, tuple):
             assert " ".join(line) in expected

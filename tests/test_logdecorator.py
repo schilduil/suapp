@@ -159,7 +159,7 @@ def test_logging_debug(memory_logger):
     my_function2("First variable", "Second variable")
     my_function3(a="alpha", b="beta", g="gamma")
 
-    fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName', 'msg']
+    fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName']
     expected = [
         "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function1(('The end of the World is near!',), {})" % (logging.DEBUG),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function1 Starting The end of the World is near!" % (logging.WARNING, __name__),
@@ -192,6 +192,7 @@ def test_logging_debug(memory_logger):
         for field in fields:
             # We substitute any hex strings with 0x000000000000
             line.append(re.sub('0x[0-9a-f]*', '0x000000000000', str(getattr(logline, field))))
+        line.append(re.sub('0x[0-9a-f]*', '0x000000000000', logline.getMessage()))
         if isinstance(expected, tuple):
             assert " ".join(line) in expected
         else:

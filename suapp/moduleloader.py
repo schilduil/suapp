@@ -107,7 +107,7 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     # Adding to the list of imported modules.
     modules.append(module_name)
     modules_loaded.append(module_name)
-    logging.(__name__).info("Loaded %s.", module_name)
+    logging.getLogger(__name__).info("Loaded %s.", module_name)
     return modules_loaded
 
 
