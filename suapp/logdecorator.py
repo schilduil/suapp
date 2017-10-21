@@ -123,23 +123,23 @@ def loguse(param=None):
                             except:
                                 pass
                 if classname == "<module>":
-                    log.debug("> %s(%r, %r)" % (f.__name__, tuple(l_args), l_kwargs))
+                    log.debug("> %s(%r, %r)", f.__name__, tuple(l_args), l_kwargs)
                 else:
-                    log.debug("> %s.%s(%r, %r)" % (classname, f.__name__, tuple(l_args), l_kwargs))
+                    log.debug("> %s.%s(%r, %r)", classname, f.__name__, tuple(l_args), l_kwargs)
             start_time_callable = time.time()
             result = f(*args, **kwargs)
             end_time_callable = time.time()
             if log.isEnabledFor(logging.DEBUG):
                 if '@' in ignore_parameters:
                     if classname == "<module>":
-                        log.debug("< %s" % (f.__name__))
+                        log.debug("< %s", f.__name__)
                     else:
-                        log.debug("< %s.%s" % (classname, f.__name__))
+                        log.debug("< %s.%s", classname, f.__name__)
                 else:
                     if classname == "<module>":
-                        log.debug("< %s: %r" % (f.__name__, result))
+                        log.debug("< %s: %r", f.__name__, result)
                     else:
-                        log.debug("< %s.%s: %r" % (classname, f.__name__, result))
+                        log.debug("< %s.%s: %r", classname, f.__name__, result)
             return result
         return decorator
     end_time = time.time()

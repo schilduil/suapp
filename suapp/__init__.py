@@ -55,7 +55,7 @@ def do_locale(languages=None, domain=None, localedir=None):
         languages = [languages]
     if not localedir:
         localedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'locale')
-    logging.getLogger(__name__).debug("Locale %s: %s" % (languages, gettext.find(domain, localedir=localedir, languages=languages, all=True)))
+    logging.getLogger(__name__).debug("Locale %s: %s", languages, gettext.find(domain, localedir=localedir, languages=languages, all=True))
     try:
         trans = gettext.translation(domain, localedir=localedir, languages=languages)
         # This somehow doesn't work
@@ -63,7 +63,7 @@ def do_locale(languages=None, domain=None, localedir=None):
         # So we have this alternative
         _ = trans.gettext
     except:
-        logging.getLogger(__name__).warn("Locale for domain %s in languages %s not found. Falling back to default." % (domain, languages))
+        logging.getLogger(__name__).warn("Locale for domain %s in languages %s not found. Falling back to default.", domain, languages)
         _ = lambda s: s
         return False
     # Report our success.
@@ -201,16 +201,16 @@ class SuApp(object):
                         level = convert_to_log_level(self.configuration["log"]["modules"][module]["level"])
                         module_logger.setLevel(level)
                     if "filename" in self.configuration["log"]["modules"][module]:
-                        log.info("!Logging modules.%s to %s" % (module, self.configuration["log"]["modules"][module]["filename"]))
+                        log.info("!Logging modules.%s to %s", module, self.configuration["log"]["modules"][module]["filename"])
                         module_logger.propagate = False
                         module_logger.addHandler(logging.FileHandler(os.path.expanduser(self.configuration["log"]["modules"][module]["filename"])))
         except ConfigurationError:
             # Re-raise
             raise
         except AttributeError as err:
-            log.error("!SuApp.configure_log: Error in <log> tag (%s: %s)." % (type(err), err))
+            log.error("!SuApp.configure_log: Error in <log> tag (%s: %s).", type(err), err)
             raise ConfigurationError("Error in <log> tag (%s: %s)!" % (type(err), err))
-        log.debug("<configure_log() %s" % (self.configuration["log"]))
+        log.debug("<configure_log() %s", self.configuration["log"])
 
     @loguse
     def import_target(self):
@@ -336,19 +336,19 @@ if __name__ == "__main__":
     try:
         appconfig = config.get_config(xmlfilename)
     except config.ConfigurationError as err:
-        log.error("%s" % (err))
+        log.error("%s", err)
         print("%s" % (err))
         sys.exit(1)
 
     # Getting all the configuration from the appconfig
     flow = Jeeves()
     try:
-        log.info("Running on %s %s version %s on %s %s on %s (%s)" % (platform.python_implementation(), platform.python_build(), platform.python_version(), platform.system(), platform.release(), platform.machine(), platform.processor()))
-        log.debug("Config (%s):\n%s" % (xmlfilename, appconfig))
+        log.info("Running on %s %s version %s on %s %s on %s (%s)", platform.python_implementation(), platform.python_build(), platform.python_version(), platform.system(), platform.release(), platform.machine(), platform.processor())
+        log.debug("Config (%s):\n%s", xmlfilename, appconfig)
         (name, shortname) = setFlow_depr(flow, appconfig)
         dataDefinitions = appconfig.data_definition
     except config.ConfigurationError as err:
-        log.error("%s" % (err))
+        log.error("%s", err)
         print("%s" % (err))
         sys.exit(1)
 
@@ -359,7 +359,7 @@ if __name__ == "__main__":
     indtable = None
     try:
         for table in dataDefinitions['tables']:
-            log.debug("Table %s: %s" % (table, dataDefinitions['tables'][table]))
+            log.debug("Table %s: %s", table, dataDefinitions['tables'][table])
             tables[table] = (factory.tableFactory(dataDefinitions['tables'][table], table))
         for gen in tables:
             print("\nGoing to open %s (%s)" % (gen, tables[gen]))
@@ -378,8 +378,8 @@ if __name__ == "__main__":
         perstable.setFor('2', dict(firstname="Stefaan", lastname="Buggenhout", bandcode="SB18"))
         log.debug("All the (active) members:")
         for individual in indtable:
-            log.debug("\tIndividual %s" % (individual))
-        log.debug("State: %s" % indtable.state())
+            log.debug("\tIndividual %s", individual)
+        log.debug("State: %s", indtable.state())
         goc = indtable['GOc']
         print("\nGetting GOc: %s %r %s" % (id(goc), goc, goc))
         goc = indtable['GOc']
@@ -389,7 +389,7 @@ if __name__ == "__main__":
         # Pass the application configuration
         flow.start({'config': appconfig, 'name': name, 'shortname': shortname, 'tables': tables})
     except Exception as err:
-        log.error("%s" % (err))
+        log.error("%s", err)
         print(err)
         raise err
         sys.exit(2)
