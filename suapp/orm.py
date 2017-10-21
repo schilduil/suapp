@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+
+__all__ = ["UiOrmObject"]
+
+
 class UiOrmObject():
     """
     Parent of all UI ORM objects.

@@ -2,6 +2,7 @@
 
 import pytest
 
+import logging
 import os
 import os.path
 import re

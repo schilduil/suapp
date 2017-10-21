@@ -11,17 +11,23 @@ from operator import add
 from functools import wraps
 
 
+__all__ = ["logging", "get_timings", "init_timings", "disable_timings", "timings_report", "loguse"]
+
+
 timings = None
 
 
 def get_timings():
+    """ Returns the gathered timings. """
     return timings
 
 def init_timings():
+    """ Initiates/Resets the timings. """
     global timings
     timings = {}
 
 def disable_timings():
+    """ Disables the gathering of timings. """
     global timings
     timings = None
 
@@ -34,7 +40,7 @@ def add_timing(f, time):
         timings[f] = tuple(map(add, timings[f], (1, time)))
     else:
         timings[f] = (1, time)
-   
+
 def timings_report():
     """Generated a report of the timings of functions.
     The slowest on average will be first."""
@@ -43,11 +49,11 @@ def timings_report():
     report = {}
     for f, (count, time) in timings.items():
         report[f] = time / count
-        
+
     sorted_report = OrderedDict()
     for f in sorted(report, key=report.get, reverse=True):
         sorted_report[f] = timings[f] + (report[f],)
-        
+
     return sorted_report
 
 def loguse(param=None):
@@ -154,7 +160,7 @@ def loguse(param=None):
 if __name__ == "__main__":
 
     timings = {}
-    
+
     logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.INFO)
 
     class TestClass():

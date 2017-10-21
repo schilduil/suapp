@@ -10,6 +10,8 @@ import sys
 from suapp.logdecorator import *
 
 
+__all__ = ["Wooster", "Drone", "Jeeves"]
+
 class Wooster(object):
     """
     A Wooster represents a UI window/page.
