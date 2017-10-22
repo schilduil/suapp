@@ -150,8 +150,9 @@ class SuApp(object):
         self.configure_flow()
         # Import modlib libraries.
         self.load_modules()
-        # DATABASE: pony.orm
-        self.db = pony.orm.Database()
+        # Get the database object from the moduleloader with get_database,
+        # so that all the ORM/tables are defined.
+        self.db = get_database()
         try:
             self.db.bind(self.configuration['datasource']['type'], os.path.expanduser(self.configuration['datasource']['filename']), create_db=True)
         except KeyError:

@@ -1368,13 +1368,22 @@ class View(suapp.jandw.Wooster):
 
         # Title
         title = definition.get('name', name)
+        if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+            html.append('<!-- DEBUG title = %s -->' % (title))
 
         def_tabs = definition.get('tabs', {0: {'title': ''}})
+        if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+            html.append('<!-- DEBUG def_tabs = %s -->' % (def_tabs))
+
         tabs = collections.OrderedDict()
         tab_count = 0
         if 'query' in def_tabs:
+            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                html.append('<!-- DEBUG query = %s -->' % (def_tabs['query']))
             tab_title = def_tabs.get('title', name)
             tab_objects = self.jeeves.do_query(def_tabs['query'], scope=scope, params=params)
+            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                html.append('<!-- DEBUG tab_objects = %s -->' % (tab_objects))
             for tab in tab_objects:
                 if tab_title[0] == ".":
                     tabs[tab_count] = (getattr(tab, tab_title[1:]), tab)
@@ -1386,10 +1395,12 @@ class View(suapp.jandw.Wooster):
             for i in def_tabs:
                 # TODO: is this second element in the tuple correct?
                 tabs[i] = (def_tabs[i]['title'], def_tabs[i])
+                if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                    html.append('<!-- DEBUG tabs: %s -->' % (tabs))
 
         # Tab headers
         html.append('<ul class="nav nav-tabs">')
-        for i in sorted(tabs):
+        for i in sorted(tabs): # CHECKME: DO WE NEED SORTED HERE?
             if i is 0:
                 html.append('\t<li class="active"><a data-toggle="tab" href="#tab%s">%s</a></li>' % (i, tabs[i][0]))
             else:
@@ -1399,13 +1410,19 @@ class View(suapp.jandw.Wooster):
         # Tabs
         html.append('<div class="tab-content">')
         for i in sorted(tabs):
+            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                html.append('<!-- DEBUG tab: %s = %s -->' % (i, tabs[i]))
             if i is 0:
                 html.append('\t<div id="tab%s" class="tab-pane fade in active">' % (i))
             else:
                 html.append('\t<div id="tab%s" class="tab-pane fade">' % (i))
             # Sections
-            sections = tabs.get('sections', definition.get('sections', {0: {'title': ''}}))
+            sections = tabs[i][1].get('sections', definition.get('sections', {0: {'title': ''}}))
+            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                html.append('<!-- DEBUG sections: %s -->' % (sections))
             for s in sorted(sections.keys(), key=str):
+                if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                    html.append('<!-- DEBUG section: %s -->' % (s))
                 if not str(s).isdigit():
                     continue
                 section_title = sections[s].get('title', '')
@@ -1414,6 +1431,9 @@ class View(suapp.jandw.Wooster):
                 html.append('\t\t\t<div class="panel-body">')
                 # Lines
                 lines = sections[s].get('lines', tabs.get('lines', definition.get('sections', {0: {'title': ''}})))
+                # DEBUGGING
+                if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                    html.append('<!-- DEBUG lines = %s -->' % (lines))
                 line_objects = []
                 if 'query' in lines:
                     line_objects = self.jeeves.do_query(lines['query'], scope=scope, params=params)

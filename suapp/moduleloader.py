@@ -45,7 +45,15 @@ modules = []
 db = Database()
 
 
-__all__ = ["ModuleDependencyLoading", "import_modlib", "modules"]
+__all__ = [
+    "ModuleDependencyLoading",
+    "import_modlib", "get_database",
+    "modules"
+]
+
+
+def get_database():
+    return db
 
 
 class ModuleDependencyLoading(ImportError):
