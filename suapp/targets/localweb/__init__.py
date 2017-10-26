@@ -626,6 +626,19 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Unknown session id:
             return (200, "text/json; charset=utf-8", {})
 
+    @loguse([1, 3])  # Not logging session and json_object.
+    def do_service_fetch(self, session, fields, json_object):
+        """
+        Fetching an object by TableName[PrimaryKey]
+        """
+        try:
+            #TODO: need to look it up with ORM.
+            #For now a dummy object.
+            return (200, "text/json; charset=utf-8", {"result": True, {"id": 0}})
+        except:
+            # Unknown
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found."})
+
     @loguse  # ('@')
     def do_object(self, start_object, path):
         """
