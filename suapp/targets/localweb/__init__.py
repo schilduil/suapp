@@ -19,6 +19,7 @@ import webbrowser
 import suapp.jandw
 from suapp.logdecorator import *
 
+import suapp.targets.localweb.simple_json
 
 users = {
     "admin": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32)),
@@ -564,7 +565,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     try:
                         logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % result_message['message'])
                     except:
-                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % json.dumps(result_message))
+                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % simple_json.dumps(result_message))
 
         # FOR NOW: anybody logged in has all the rights.
         # Needs mapping from groups > /services/ROLE/... with permissions.
@@ -634,7 +635,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         try:
             #TODO: need to look it up with ORM.
             #For now a dummy object.
-            return (200, "text/json; charset=utf-8", {"result": True, {"id": 0}})
+            return (200, "text/json; charset=utf-8", {"result": True, "message": {"id": 0}})
         except:
             # Unknown
             return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found."})
@@ -866,14 +867,14 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     # The output should be json, so transforming it to json:
                     try:
                         if "pretty" in fields:
-                            return_message = json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                            return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
                         else:
-                            return_message = json.dumps(return_message)
+                            return_message = simple_json.dumps(return_message)
                     except:
                         if "pretty" in fields:
-                            return_message = json.dumps({'result': False, 'message': 'Object not convertible to json.'}, sort_keys=True, indent=4, separators=(',', ': '))
+                            return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'}, sort_keys=True, indent=4, separators=(',', ': '))
                         else:
-                            return_message = json.dumps({'result': False, 'message': 'Object not convertible to json.'})
+                            return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'})
                 elif self.path.startswith("/service/"):
                     # Looking up if we have a do_service_{} method.
                     temp = self.path.split("?")
@@ -888,9 +889,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     if return_mime == "text/json; charset=utf-8":
                         # The output should be json, so transforming it to json:
                         if "pretty" in fields:
-                            return_message = json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                            return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
                         else:
-                            return_message = json.dumps(return_message)
+                            return_message = simple_json.dumps(return_message)
                 else:
                     (return_code, return_mime, return_message) = self.do_dynamic_page(session, fields)
             else:
@@ -1177,7 +1178,7 @@ class Configuration(suapp.jandw.Wooster):
         """
         self.jeeves = jeeves
         result = "<pre><code>\n"
-        result += json.dumps(dict(self.jeeves.app.configuration), indent="    ")
+        result += simple_json.dumps(dict(self.jeeves.app.configuration), indent="    ")
         result += "\n</code></pre>"
         return ("Configuration", result)
 

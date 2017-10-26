@@ -39,6 +39,9 @@ if __name__ == "__main__":
         def toJSON(self):
             return {"name": self.name}
 
+    class OtherThing():
+        def toJSON(self):
+            return "OtherThing %s" % (hex(self.__hash__()))
 
     x = {
         0: Something("zero"),
@@ -47,3 +50,4 @@ if __name__ == "__main__":
     }
 
     print(dumps(x, indent=4))
+    print(dumps(OtherThing(), indent=4))

@@ -36,6 +36,9 @@ class Wooster(object):
     def close(self):
         pass
 
+    def toJSON(self):
+        return "Wooster %s" % (hex(self.__hash__()))
+
 
 class Drone(object):
     """
@@ -44,6 +47,9 @@ class Drone(object):
     def __init__(self, name, tovertex):
         self.name = name
         self.tovertex = tovertex
+
+    def toJSON(self):
+        return "Drone %s > %s" % (self.name, self.tovertex)
 
 
 class Jeeves(object):
@@ -66,6 +72,9 @@ class Jeeves(object):
         self.views = {}
         self.queries = {}
         self.ormscope = {}
+
+    def toJSON(self):
+        return "Jeeves %s" % (hex(self.__hash__()))
 
     @loguse
     def whichDrone(self, fromname, outmessage, **kwargs):
