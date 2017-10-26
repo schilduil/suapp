@@ -954,15 +954,15 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         except:
             # We don't care if we can't get the GET parameters.
             pass
-        field_data = self.rfile.read(length)
+        field_data = self.rfile.read(length).decode('utf-8')
         # TODO: depending on the mime type.
         #     application/x-www-form-urlencoded # parameters
         #     text/json                         # json
         #     multipart/form-data               # upload
 
         # Fields from the POST body get precedence over those from GET.
-        fields.update(urllib.parse.parse_qs(field_data))
-        do_dynamic(fields)
+        fields.update(urllib.parse.parse_qs(field_data, encoding='utf-8'))
+        self.do_dynamic(fields)
 
     @loguse
     def do_PUT(self):
@@ -1438,17 +1438,21 @@ class View(suapp.jandw.Wooster):
                 if 'query' in lines:
                     line_objects = self.jeeves.do_query(lines['query'], scope=scope, params=params)
                 for line_object in line_objects:
+                    if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                        html.append('<!-- DEBUG line_object = %s -->' % (line_object))
                     line_elements = []
                     # Line elements
                     if 'elements' in lines:
                         for e in sorted(lines['elements']):
+                            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                                html.append('<!-- DEBUG element = %s -->' % (e))
                             value = lines['elements'][e].get('value', '#')
                             element_type = lines['elements'][e].get('type', 'label').lower()
-                            outmessage = lines['elements'][e].get('outmessage', '').lower()
+                            outmessage = lines['elements'][e].get('outmessage', '')
                             if value[0] == ".":
                                 value = getattr(line_object, value[1:])
                             if element_type == "button":
-                                html.append("\t\t\t\t" + View.button({'value': value, 'outmessage': 'TODO'}))
+                                html.append("\t\t\t\t" + View.button({'value': value, 'outmessage': outmessage}))
                             else:
                                 html.append("\t\t\t\t" + View.label({'value': value}))
                 for l in sorted(lines.keys(), key=str):
@@ -1456,13 +1460,15 @@ class View(suapp.jandw.Wooster):
                         # Line elements
                         if 'elements' in lines[l]:
                             for e in sorted(lines[l]['elements']):
+                                if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                                    html.append('<!-- DEBUG element = %s -->' % (e))
                                 value = lines[l]['elements'][e].get('value', '#')
                                 l_type = lines[l]['elements'][e].get('type', 'button').lower()
-                                outmessage = lines[l]['elements'][e].get('outmessage', '').lower()
+                                outmessage = lines[l]['elements'][e].get('outmessage', '')
                                 if value[0] == ".":
                                     value = getattr(line_object, value[1:])
                                 if element_type == "button":
-                                    html.append("\t\t\t" + View.button({'value': value, 'outmessage': 'TODO'}))
+                                    html.append("\t\t\t" + View.button({'value': value, 'outmessage': outmessage}))
                                 else:
                                     html.append("\t\t\t" + View.label({'value': value}))
                 html.append('\t\t\t</div>')
