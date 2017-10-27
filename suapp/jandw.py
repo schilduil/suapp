@@ -47,6 +47,15 @@ class Drone(object):
     def __init__(self, name, tovertex):
         self.name = name
         self.tovertex = tovertex
+        
+    def get_new_instance_clone(self, dataobject, mode):
+        """
+        Clone the drone and add the dataobject and mode.
+        """
+        drone = Drone(self.name, self.tovertex)
+        drone.dataobject = dataobject
+        drone.mode = mode
+        return drone
 
     def toJSON(self):
         return "Drone %s > %s" % (self.name, self.tovertex)
@@ -135,10 +144,9 @@ class Jeeves(object):
             fromname = fromvertex.name
         else:
             fromname = str(fromvertex)
-        drone = self.whichDrone(fromname, name, **kwargs)
-        # Setting the dataobject
-        drone.dataobject = dataobject
-        drone.mode = mode
+        drone_type = self.whichDrone(fromname, name, **kwargs)
+        # Clone a new instance of the drone and setting dataobject & mode.
+        drone = get_new_instance_clone(drone_type, dataobject, mode)
         # If there is a callback, call it.
         if 'callback_drone' in kwargs:
             try:
