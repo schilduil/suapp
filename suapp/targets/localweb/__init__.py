@@ -637,10 +637,11 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         try:
             #TODO: need to look it up with ORM.
             #For now a dummy object.
-            return (200, "text/json; charset=utf-8", {"result": True, "message": {"id": 0}})
-        except:
+            record = session['jeeves'].do_fetch(fields['module'][0], fields['table'][0], fields['key'])
+            return (200, "text/json; charset=utf-8", {"result": True, "object": record})
+        except Exception as e:
             # Unknown
-            return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found."})
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found (%s)." % (e)})
 
     @loguse  # ('@')
     def do_object(self, start_object, path):
@@ -1287,9 +1288,8 @@ class Record(suapp.jandw.Wooster):
             if 'sessionobject' in params:
                 # The object is in the session and called.
                 js_params['query'] = "session/%s" % params['sessionobject'][0]
-            elif 'table' in params:
-                if 'key' in params:
-                    js_params['query'] = "fetch/%s/%s" % (params['table'][0], params['key'][0])
+            elif 'key' in params:
+                js_params['query'] = "fetch?" + urllib.parse.urlencode({k: params[k][0] for k in params if k in ["module", "table", "key"]})
         result = []
         if Record.raw:
             result.append('<table id="tableview">')
@@ -1346,7 +1346,13 @@ class View(suapp.jandw.Wooster):
         for param, paramvalue in kwargs.items():
             # Just making sure it is not a reserved parameter.
             if param not in reserved_params:
-                result.append('<input type="hidden" name="%s" value="%s" />' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(paramvalue), safe='', encoding=None, errors=None)))
+                if isinstance(paramvalue, str) or not hasattr(paramvalue, '__iter__'):
+                    # A string or something not iterable.
+                    result.append('<input type="hidden" name="%s" value="%s" />' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(paramvalue), safe='', encoding=None, errors=None)))
+                else:
+                    # For iterables, we'll put in the different values.
+                    for subvalue in paramvalue:
+                        result.append('<input type="hidden" name="%s" value="%s" />' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(subvalue), safe='', encoding=None, errors=None)))
         result.append('<input type="submit" value="%s" /></form>' % (value))
         return "".join(result)
 
@@ -1387,14 +1393,16 @@ class View(suapp.jandw.Wooster):
         definition = jeeves.views.get(flow_name, {})
 
         # Getting the session, params and preparing the scope.
-        #   jeeves.ormscope: all the ORM and GUIORM class definitions.
-        #   limit: page size for queries.
+        # scope['page_limit']: page size for queries.
+        # scope['page_start']: where to start the page.
         session = drone.dataobject.get('session', {})
         params = drone.dataobject.get('params', {})
         scope = {}
-        scope.update(jeeves.ormscope)
+        # scope.update(jeeves.ormscope) # jeeves.ormscope is always empty.
         if 'limit' in params:
-            scope['limit'] = params['limit']
+            scope['page_limit'] = params['limit']
+        if 'start' in params:
+            scope['page_start'] = params['start']
 
         # Creating the output.
         html = []
@@ -1472,7 +1480,7 @@ class View(suapp.jandw.Wooster):
                     line_objects = self.jeeves.do_query(lines['query'], scope=scope, params=params)
                 for line_object in line_objects:
                     if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
-                        html.append('<!-- DEBUG line_object = %s -->' % (line_object))
+                        html.append('<!-- DEBUG line_object = %s (%s in %s) -->' % (line_object, type(line_object), line_object.__module__))
                     line_elements = []
                     # Line elements
                     if 'elements' in lines:
@@ -1485,7 +1493,15 @@ class View(suapp.jandw.Wooster):
                             if value[0] == ".":
                                 value = getattr(line_object, value[1:])
                             if element_type == "button":
-                                html.append("\t\t\t\t" + View.button(value=value, outmessage=outmessage, table="Individual", key=1)) # FIXME: key is hardcoded.
+                                html.append("\t\t\t\t" +
+                                    View.button(
+                                        value=value,
+                                        outmessage=outmessage,
+                                        module=line_object.__module__,
+                                        table=line_object.__class__.__name__,
+                                        key=line_object._pk_
+                                    )
+                                )
                             else:
                                 html.append("\t\t\t\t" + View.label(value=value))
                 for l in sorted(lines.keys(), key=str):
@@ -1501,7 +1517,15 @@ class View(suapp.jandw.Wooster):
                                 if value[0] == ".":
                                     value = getattr(line_object, value[1:])
                                 if element_type == "button":
-                                    html.append("\t\t\t" + View.button(value=value, outmessage=outmessage, table="Individual", key=1)) # FIXME: key is hardcoded.
+                                    html.append("\t\t\t" +
+                                        View.button(
+                                            value=value,
+                                            outmessage=outmessage,
+                                            module=line_object.__module__,
+                                            table=line_object.__class__.__name__,
+                                            key=line_object._pk_
+                                        )
+                                    )
                                 else:
                                     html.append("\t\t\t" + View.label(value=value))
                 html.append('\t\t\t</div>')

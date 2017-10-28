@@ -47,7 +47,7 @@ class Drone(object):
     def __init__(self, name, tovertex):
         self.name = name
         self.tovertex = tovertex
-        
+
     def get_new_instance_clone(self, dataobject, mode):
         """
         Clone the drone and add the dataobject and mode.
@@ -80,6 +80,7 @@ class Jeeves(object):
         self.app = app
         self.views = {}
         self.queries = {}
+        # TODO: I have no idea why I added ormscope: get rid of it?
         self.ormscope = {}
 
     def toJSON(self):
@@ -110,6 +111,8 @@ class Jeeves(object):
     def _do_query_str(self, query_template, scope, parameters):
         """
         Execute a query that is a string.
+
+        DEPRECATED
         """
         query = query_template % parameters
         exec("result = %s" % (query), scope)
@@ -131,6 +134,23 @@ class Jeeves(object):
         else:
             # DEPRECATED: python code as a string.
             return self._do_query_str(query_template, scope, parameters)
+
+    @loguse
+    def do_fetch(self, module, table, primarykey):
+        if isinstance(primarykey, str):
+            primarykey = [primarykey]
+        module = sys.modules[module]
+        table_class = getattr(module, table)
+        params = {}
+        if len(table_class._pk_columns_) == 1:
+            if len(primarykey) == 1:
+                params[table_class._pk_columns_[0]] = primarykey[0]
+        else:
+            i = 0
+            for column in table_class._pk_columns_:
+                params[column] = primarykey.get(i, None)
+                i += 1
+        return table_class.get(**params)
 
     @loguse('@')  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
