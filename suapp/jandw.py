@@ -146,7 +146,7 @@ class Jeeves(object):
             fromname = str(fromvertex)
         drone_type = self.whichDrone(fromname, name, **kwargs)
         # Clone a new instance of the drone and setting dataobject & mode.
-        drone = get_new_instance_clone(drone_type, dataobject, mode)
+        drone = drone_type.get_new_instance_clone(dataobject, mode)
         # If there is a callback, call it.
         if 'callback_drone' in kwargs:
             try:
