@@ -28,6 +28,8 @@ users = {
 
 groups = {"administrators": ["admin"]}
 
+reserved_params = ['OUT']
+
 js_fancy_table = """
 $(document).ready(function() {
     $("tr:even").css("background-color", "#F4F4F8");
@@ -755,8 +757,8 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 pass
             else:
                 # Mode in a web setting can only be MODAL?
-                # DELME: creating a testing data object
-                data = {'session': session, 'params': fields, 'tables': {'test': {'ID': 'testid'}}, 'table_name': 'test', 'table': 'organism', 'object': {'ID': '(GOVAYF)62', 'father': 'GOc', 'mother': 'VAYF'}}
+                session['testobject'] = {"code": "(GOVAYF)62", "father": "GOc", "mother": "VAYF"} # DELME: for testing only.
+                data = {'session': session, 'params': fields}
                 (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone=self.callback_drone)
         try:
             shortname = session['jeeves'].app.configuration['shortname']
@@ -1251,7 +1253,7 @@ class Record(suapp.jandw.Wooster):
     # Is more complicated, check on 'result' and next 'object'.
     raw_js = """<script>
 (function() {
-    var suappAPI = "/service/session/drone.dataobject/%(object)s";
+    var suappAPI = "/service/%(query)s";
     $.getJSON( suappAPI, function( data ) {
       console.log("Got json.")
       console.log(data)
@@ -1278,21 +1280,25 @@ class Record(suapp.jandw.Wooster):
         Entry point for the record page
         """
         self.jeeves = jeeves
-        params = {'object': None}
+        js_params = {}
         if drone.dataobject:
-            if 'table' in drone.dataobject:
-                self.table = drone.dataobject['table']
-                # Either we pass in an object or we pass a full table and key.
-                if 'object' in drone.dataobject:
-                    params['object'] = 'object'
-                elif 'key' in drone.dataobject:
-                    params['object'] = "table/%s" % drone.dataobject['key']
+            session = drone.dataobject.get('session', {})
+            params = drone.dataobject.get('params', {})
+            if 'sessionobject' in params:
+                # The object is in the session and called.
+                js_params['query'] = "session/%s" % params['sessionobject'][0]
+            elif 'table' in params:
+                if 'key' in params:
+                    js_params['query'] = "fetch/%s/%s" % (params['table'][0], params['key'][0])
         result = []
         if Record.raw:
             result.append('<table id="tableview">')
             # Here the results will end up (see raw_js)
             result.append('</table>')
-            return ("Record", Record.raw_js % (params) + "\n".join(result))
+            if 'query' in js_params:
+                return ("Record", Record.raw_js % (js_params) + "\n".join(result))
+            else:
+                return ("Record", "Unable to find object due to missing query.")
         else:
             return ("Record", "TODO: nice output.")
 
@@ -1318,25 +1324,38 @@ class View(suapp.jandw.Wooster):
     """
 
     @staticmethod
-    @arguments_as_dict
-    def label(**kwargs):
-        return "<span class='label'>%(value)s</span>" % kwargs
+    def label(value, **kwargs):
+        return "<span class='label'>%s</span>" % (urllib.parse.quote_plus(str(value), safe='', encoding=None, errors=None))
 
     @staticmethod
-    def button_as_link(**kwargs):
-        return '<a href="/?OUT=%(outmessage)s>%(value)s</a>' % kwargs
+    def button_as_link(value, outmessage, **kwargs):
+        result = []
+        result.append('<a href="/?OUT=%s' % (urllib.parse.quote_plus(str(outmessage), safe='', encoding=None, errors=None)))
+        for param, paramvalue in kwargs.items():
+            # Just making sure it is not a reserved parameter.
+            if param not in reserved_params:
+                result.append('?%s=%s' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(paramvalue), safe='', encoding=None, errors=None)))
+        result.append('>%s</a>' % (value))
+        return "".join(result)
 
     @staticmethod
-    def button_as_button(**kwargs):
-        return '<form action="/" method="POST"><input type="hidden" name="OUT" value="%(outmessage)s" /><input type="submit" value="%(value)s" /></form>' % kwargs
+    def button_as_button(value, outmessage, **kwargs):
+        result = []
+        result.append('<form action="/" method="POST">')
+        result.append('<input type="hidden" name="OUT" value="%s" />' % (urllib.parse.quote_plus(str(outmessage), safe='', encoding=None, errors=None)))
+        for param, paramvalue in kwargs.items():
+            # Just making sure it is not a reserved parameter.
+            if param not in reserved_params:
+                result.append('<input type="hidden" name="%s" value="%s" />' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(paramvalue), safe='', encoding=None, errors=None)))
+        result.append('<input type="submit" value="%s" /></form>' % (value))
+        return "".join(result)
 
     @staticmethod
-    @arguments_as_dict
-    def button(**kwargs):
-        return View.button_as_button(**kwargs)
+    def button(value, outmessage, **kwargs):
+        return View.button_as_button(value, outmessage, **kwargs)
 
     @staticmethod
-    @arguments_as_dict
+    @arguments_as_dict # TODO: remove and properly encode the variables
     def textfield(**kwargs):
         return '<form action="/TODO/updatefield" method="POST"><input type="text" name="%(name)s" value="%(value)s"></form>' % kwargs
 
@@ -1350,7 +1369,6 @@ class View(suapp.jandw.Wooster):
         return result
 
     @staticmethod
-    @arguments_as_dict
     def combobox(**kwargs):
         return View.combobox_as_select(**kwargs)
 
@@ -1375,7 +1393,8 @@ class View(suapp.jandw.Wooster):
         params = drone.dataobject.get('params', {})
         scope = {}
         scope.update(jeeves.ormscope)
-        scope.update({'limit': 5})
+        if 'limit' in params:
+            scope['limit'] = params['limit']
 
         # Creating the output.
         html = []
@@ -1466,9 +1485,9 @@ class View(suapp.jandw.Wooster):
                             if value[0] == ".":
                                 value = getattr(line_object, value[1:])
                             if element_type == "button":
-                                html.append("\t\t\t\t" + View.button({'value': value, 'outmessage': outmessage}))
+                                html.append("\t\t\t\t" + View.button(value=value, outmessage=outmessage, table="Individual", key=1)) # FIXME: key is hardcoded.
                             else:
-                                html.append("\t\t\t\t" + View.label({'value': value}))
+                                html.append("\t\t\t\t" + View.label(value=value))
                 for l in sorted(lines.keys(), key=str):
                     if str(l).isdigit():
                         # Line elements
@@ -1482,9 +1501,9 @@ class View(suapp.jandw.Wooster):
                                 if value[0] == ".":
                                     value = getattr(line_object, value[1:])
                                 if element_type == "button":
-                                    html.append("\t\t\t" + View.button({'value': value, 'outmessage': outmessage}))
+                                    html.append("\t\t\t" + View.button(value=value, outmessage=outmessage, table="Individual", key=1)) # FIXME: key is hardcoded.
                                 else:
-                                    html.append("\t\t\t" + View.label({'value': value}))
+                                    html.append("\t\t\t" + View.label(value=value))
                 html.append('\t\t\t</div>')
                 html.append('\t\t</div>')
 
