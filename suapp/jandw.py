@@ -127,8 +127,19 @@ class Jeeves(object):
         if scope is None:
             scope = {}
         query_template, defaults = self.queries[name]
+        # Start with the default defined.
         parameters = defaults.copy()
         parameters.update(params)
+        # Making sure the paging parameters are integers.
+        try:
+            parameters['pagenum'] = int(parameters['pagenum'])
+        except:
+            parameters['pagenum'] = 1
+        try:
+            parameters['pagesize'] = int(parameters['pagesize'])
+        except:
+            parameters['pagesize'] = 10
+        logging.getLogger(__name__).debug("Paging #%s (%s)", parameters['pagenum'], parameters['pagesize'])
         if callable(query_template):
             # A callable, so just call it.
             return query_template(params=parameters)

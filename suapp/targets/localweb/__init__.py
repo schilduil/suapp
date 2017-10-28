@@ -643,6 +643,20 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             # Unknown
             return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found (%s)." % (e)})
 
+    @loguse([1, 3])  # Not logging seesion and json_ojbect.
+    def do_query(self, session, query, fields, json_object):
+        """
+        Executing a query.
+        """
+        try:
+            params = {}
+            for param in fields:
+                params[param] = fields[param][0]
+            results = session['jeeves'].do_query(query, params=params)
+            return (200, "text/json; charset=utf-8", {"result": True, "objects": results})
+        except Exception as e:
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query: %s." % (e)})
+
     @loguse  # ('@')
     def do_object(self, start_object, path):
         """
@@ -878,6 +892,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                             return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'}, sort_keys=True, indent=4, separators=(',', ': '))
                         else:
                             return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'})
+                elif self.path.startswith("/service/query/"):
+                    temp = self.path.split("?")
+                    (return_code, return_mime, return_message) = self.do_query(session, temp[0][15:], fields, json_object)
+                    if "pretty" in fields:
+                        return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                    else:
+                        return_message = simple_json.dumps(return_message)
                 elif self.path.startswith("/service/"):
                     # Looking up if we have a do_service_{} method.
                     temp = self.path.split("?")
