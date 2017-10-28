@@ -774,7 +774,15 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 # Mode in a web setting can only be MODAL?
                 session['testobject'] = {"code": "(GOVAYF)62", "father": "GOc", "mother": "VAYF"} # DELME: for testing only.
                 data = {'session': session, 'params': fields}
-                (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone=self.callback_drone)
+                try:
+                    (drone_title, drone_result) = session['jeeves'].drone(self, fields['OUT'][-1], session['jeeves'].MODE_MODAL, data, callback_drone=self.callback_drone)
+                except suapp.jandw.ApplicationClosed:
+                    self.server.shutdown()
+                    sys.exit(0)
+                except suapp.jandw.FlowException as fe:
+                    # TODO
+                    drone_title = "Flow Exception"
+                    drone_result = "<p>%s</p>" % (fe)
         try:
             shortname = session['jeeves'].app.configuration['shortname']
         except:
@@ -1120,7 +1128,7 @@ class Application(suapp.jandw.Wooster):
         """
         Entry point for the home page.
         """
-        # The port by default is ord(S)+10 + ord(U)
+        # The port by default is ord(S)ord(U)
         self.port = 8385  # SU
         self.ip = "127.0.0.1"
         httpd_conf = jeeves.app.configuration.get('httpd', {'ip': self.ip, 'port': self.port})
@@ -1133,6 +1141,7 @@ class Application(suapp.jandw.Wooster):
         browser_thread = BrowserThread(self.ip, self.port)
         browser_thread.start()
         self.server.serve_forever()
+        print("HTTPServer stopped.")
 
     @loguse
     def lock(self):

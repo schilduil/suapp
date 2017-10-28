@@ -12,6 +12,15 @@ from suapp.logdecorator import *
 
 __all__ = ["Wooster", "Drone", "Jeeves"]
 
+
+class FlowException(Exception):
+    pass
+
+
+class ApplicationClosed(FlowException):
+    pass
+
+
 class Wooster(object):
     """
     A Wooster represents a UI window/page.
@@ -102,10 +111,10 @@ class Jeeves(object):
             except:
                 # TODO: do something else then bluntly exiting.
                 logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting.", self, outmessage)
-                if outmessage is "OUT":
-                    sys.exit(0)
+                if outmessage == "EXIT":
+                    raise ApplicationClosed()
                 else:
-                    sys.exit(100)
+                    raise FlowException("Unknown outmessage: %s" % (outmessage))
         return drone
 
     @loguse('@')  # Not logging the return value.

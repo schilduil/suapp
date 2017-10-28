@@ -283,7 +283,6 @@ class SuApp(object):
                 logging.getLogger(self.__module__).debug(e)
             except OSError as e:
                 logging.getLogger(self.__module__).debug(e)
-        simpletestingflow = {"START": Drone("START", ui.Application())}
         return flow
 
     @loguse
