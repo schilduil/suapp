@@ -48,6 +48,7 @@ class Drone(object):
         self.name = name
         self.tovertex = tovertex
 
+    @loguse
     def get_new_instance_clone(self, dataobject, mode):
         """
         Clone the drone and add the dataobject and mode.
@@ -130,7 +131,7 @@ class Jeeves(object):
         parameters.update(params)
         if callable(query_template):
             # A callable, so just call it.
-            return query_template(scope=scope, params=parameters)
+            return query_template(params=parameters)
         else:
             # DEPRECATED: python code as a string.
             return self._do_query_str(query_template, scope, parameters)

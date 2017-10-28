@@ -1393,16 +1393,14 @@ class View(suapp.jandw.Wooster):
         definition = jeeves.views.get(flow_name, {})
 
         # Getting the session, params and preparing the scope.
-        # scope['page_limit']: page size for queries.
-        # scope['page_start']: where to start the page.
         session = drone.dataobject.get('session', {})
-        params = drone.dataobject.get('params', {})
-        scope = {}
+        # Setting default dabase paging parameters for the query.
+        query_params = {"pagenum": 1, "pagesize": 5}
+        # Getting the http request params.
+        for param in drone.dataobject['params']:
+            query_params[param] = drone.dataobject['params'][param][0]
+        scope = {} # NOTUSED
         # scope.update(jeeves.ormscope) # jeeves.ormscope is always empty.
-        if 'limit' in params:
-            scope['page_limit'] = params['limit']
-        if 'start' in params:
-            scope['page_start'] = params['start']
 
         # Creating the output.
         html = []
@@ -1422,7 +1420,7 @@ class View(suapp.jandw.Wooster):
             if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
                 html.append('<!-- DEBUG query = %s -->' % (def_tabs['query']))
             tab_title = def_tabs.get('title', name)
-            tab_objects = self.jeeves.do_query(def_tabs['query'], scope=scope, params=params)
+            tab_objects = self.jeeves.do_query(def_tabs['query'], params=query_params)
             if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
                 html.append('<!-- DEBUG tab_objects = %s -->' % (tab_objects))
             for tab in tab_objects:
@@ -1477,7 +1475,7 @@ class View(suapp.jandw.Wooster):
                     html.append('<!-- DEBUG lines = %s -->' % (lines))
                 line_objects = []
                 if 'query' in lines:
-                    line_objects = self.jeeves.do_query(lines['query'], scope=scope, params=params)
+                    line_objects = self.jeeves.do_query(lines['query'], params=query_params)
                 for line_object in line_objects:
                     if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
                         html.append('<!-- DEBUG line_object = %s (%s in %s) -->' % (line_object, type(line_object), line_object.__module__))
