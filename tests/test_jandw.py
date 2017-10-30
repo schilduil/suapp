@@ -71,6 +71,8 @@ march to the drones.
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator > Jeeves.whichDrone((<suapp.jandw.Jeeves object at 0x000000000000>, '', 'START'), {})",
         "10 DEBUG suapp.jandw jandw.py jandw whichDrone : Jeeves[<suapp.jandw.Jeeves object at 0x000000000000>].whichDrone : Flow: {'': {'START': <suapp.jandw.Drone object at 0x000000000000>}}",
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Jeeves.whichDrone: <suapp.jandw.Drone object at 0x000000000000>",
+        "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator > Drone.get_new_instance_clone((<suapp.jandw.Drone object at 0x000000000000>, None, 1), {})",
+        "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Drone.get_new_instance_clone: <suapp.jandw.Drone object at 0x000000000000>",
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Jeeves.drone",
         "10 DEBUG suapp.jandw logdecorator.py logdecorator decorator < Jeeves.start: None",
     ]
