@@ -158,6 +158,25 @@ class Jeeves(object):
 
     @loguse
     def do_fetch(self, module, table, primarykey):
+        """
+        Fetches a specific object from the database.
+        
+        This will return the object representing a row in the
+        specified table from the database. The return type is
+        either a pony.orm.db.Entity or suapp.orm.UiOrmObject
+        subclass, depending on the class name specified in table.
+        
+        Parameters:
+         - module: In what module the table is defined.
+                   This should start with modlib.
+         - table: Class name of the object representing the table.
+                  The class should be a subclass of either
+                    - pony.orm.db.Entity
+                    - suapp.orm.UiOrmObject
+         - primarykey: A string representing the primary key value
+                       or a list of values (useful in case of a
+                       multi variable primary key).
+        """
         if isinstance(primarykey, str):
             primarykey = [primarykey]
         module = sys.modules[module]
