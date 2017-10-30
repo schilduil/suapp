@@ -35,7 +35,6 @@ class UiOrmObject():
         starting with 'ui_' or '_ui_'.
         """
         if key.startswith("_ui_") or key.startswith("ui_"):
-            print("Super: %s" % (super()))
             return super().__getattr__(key)
         else:
             return getattr(self._ui_orm, key)
