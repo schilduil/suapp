@@ -3,8 +3,9 @@
 
 
 import json
-
 from pony.orm.core import Entity
+
+import suapp.orm
 
 
 __all__ = ["to_json", "dumps"]
@@ -17,7 +18,7 @@ def to_json(object_to_serialize):
     If standard json.dumps fails and it is a real object it will try to call
     toJSON() on it. If that fails it will return a TypeError.
     """
-    if isinstance(object_to_serialize, Entity):
+    if isinstance(object_to_serialize, Entity) or isinstance(object_to_serialize, suapp.orm.UiOrmObject):
         result = {}
         for column in object_to_serialize._columns_:
             result[column] = getattr(object_to_serialize, column)

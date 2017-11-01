@@ -6,7 +6,9 @@
 Copyright (C), 2013, The Schilduil Team. All rights reserved.
 """
 import sys
+import pony.orm
 
+import suapp.orm
 from suapp.logdecorator import *
 
 
@@ -160,18 +162,18 @@ class Jeeves(object):
     def do_fetch(self, module, table, primarykey):
         """
         Fetches a specific object from the database.
-        
+
         This will return the object representing a row in the
         specified table from the database. The return type is
-        either a pony.orm.db.Entity or suapp.orm.UiOrmObject
+        either a pony.orm.core.Entity or suapp.orm.UiOrmObject
         subclass, depending on the class name specified in table.
-        
+
         Parameters:
          - module: In what module the table is defined.
                    This should start with modlib.
          - table: Class name of the object representing the table.
                   The class should be a subclass of either
-                    - pony.orm.db.Entity
+                    - pony.orm.core.Entity
                     - suapp.orm.UiOrmObject
          - primarykey: A string representing the primary key value
                        or a list of values (useful in case of a
@@ -182,15 +184,24 @@ class Jeeves(object):
         module = sys.modules[module]
         table_class = getattr(module, table)
         params = {}
-        if len(table_class._pk_columns_) == 1:
+        if issubclass(table_class, pony.orm.core.Entity):
+            pk_columns = table_class._pk_columns_
+        elif issubclass(table_class, suapp.orm.UiOrmObject):
+            pk_columns = table_class._ui_class._pk_columns_
+        else:
+            return None
+        if len(pk_columns) == 1:
             if len(primarykey) == 1:
-                params[table_class._pk_columns_[0]] = primarykey[0]
+                params[pk_columns[0]] = primarykey[0]
         else:
             i = 0
-            for column in table_class._pk_columns_:
+            for column in pk_columns:
                 params[column] = primarykey.get(i, None)
                 i += 1
-        return table_class.get(**params)
+        if issubclass(table_class, suapp.orm.UiOrmObject):
+            return table_class(**params)
+        else:
+            return table_class.get(**params)
 
     @loguse('@')  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
