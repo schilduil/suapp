@@ -1526,7 +1526,7 @@ class View(suapp.jandw.Wooster):
                                         value=value,
                                         outmessage=outmessage,
                                         module=line_object.__module__,
-                                        table=line_object.__class__.__name__,
+                                        table=line_object.__class__.__name__.split("_")[-1],
                                         key=line_object._pk_
                                     )
                                 )
@@ -1550,7 +1550,7 @@ class View(suapp.jandw.Wooster):
                                             value=value,
                                             outmessage=outmessage,
                                             module=line_object.__module__,
-                                            table=line_object.__class__.__name__,
+                                            table=line_object.__class__.__name__.split("_")[-1],
                                             key=line_object._pk_
                                         )
                                     )

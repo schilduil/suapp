@@ -96,6 +96,9 @@ class Jeeves(object):
         self.ormscope = {}
 
     def toJSON(self):
+        """
+        Makes this object be made into json.
+        """
         return "Jeeves %s" % (hex(self.__hash__()))
 
     @loguse
@@ -153,10 +156,11 @@ class Jeeves(object):
         logging.getLogger(__name__).debug("Paging #%s (%s)", parameters['pagenum'], parameters['pagesize'])
         if callable(query_template):
             # A callable, so just call it.
-            return query_template(params=parameters)
+            result = query_template(params=parameters)
         else:
             # DEPRECATED: python code as a string.
-            return self._do_query_str(query_template, scope, parameters)
+            result = self._do_query_str(query_template, scope, parameters)
+        return (suapp.orm.UiOrmObject.uize(r) for r in result)
 
     @loguse
     def do_fetch(self, module, table, primarykey):

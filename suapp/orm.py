@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 
+import pony.orm
+import sys
+
+
 __all__ = ["UiOrmObject"]
 
 
@@ -13,6 +17,20 @@ class UiOrmObject():
     """
 
     config = {}
+
+    @staticmethod
+    def uize(orm_object):
+        """
+        Finds the UiOrmObject from a pony.orm.core.Entity.
+
+        It assumes the name of the UiOrmObject is the Entity name preceded
+        with "Ui".
+        """
+        if isinstance(orm_object, pony.orm.core.Entity):
+            #print("%s in %s" % (orm_object.__class__.__name__, orm_object.__class__.__module__))
+            module = sys.modules[orm_object.__class__.__module__]
+            ui_orm_class = getattr(module, "Ui%s" % orm_object.__class__.__name__)
+            return ui_orm_class(orm=orm_object)
 
     def ui_init(self):
         """
