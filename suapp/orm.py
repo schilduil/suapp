@@ -29,12 +29,9 @@ class UiOrmObject():
         Normally these come directly from the PonyORM object, except those
         starting with 'ui_' or '_ui_'.
         """
-        print("GETATTR %s, %s" % (self, key))
         if key.startswith("_ui_") or key.startswith("ui_"):
-            print("GETATTR: super")
             return super().__getattr__(key)
         else:
-            print("GETATTR: self._ui_orm")
             return getattr(self._ui_orm, key)
 
     def __setattr__(self, key, value):
