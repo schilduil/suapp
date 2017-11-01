@@ -137,6 +137,9 @@ class Jeeves(object):
     def do_query(self, name, scope=None, params=None):
         """
         Execute a query by name and return the result.
+
+        The result is always a UiOrmObject by using UiOrmObject.uize on the
+        results of the query.
         """
         if scope is None:
             scope = {}
