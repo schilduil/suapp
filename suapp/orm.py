@@ -14,15 +14,10 @@ class UiOrmObject():
 
     config = {}
 
-    def ui_init(self, orm):
+    def ui_init(self):
         """
         Initialize from the PonyORM object.
         """
-        self.ui_attributes = set()
-        for attr in orm._attrs_:
-            self.ui_attributes.add(attr.name)
-
-    def ui_init(self):
         self.ui_attributes = set()
         for attr in self._ui_orm._attrs_:
             self.ui_attributes.add(attr.name)
@@ -34,9 +29,12 @@ class UiOrmObject():
         Normally these come directly from the PonyORM object, except those
         starting with 'ui_' or '_ui_'.
         """
+        print("GETATTR %s, %s" % (self, key))
         if key.startswith("_ui_") or key.startswith("ui_"):
+            print("GETATTR: super")
             return super().__getattr__(key)
         else:
+            print("GETATTR: self._ui_orm")
             return getattr(self._ui_orm, key)
 
     def __setattr__(self, key, value):
