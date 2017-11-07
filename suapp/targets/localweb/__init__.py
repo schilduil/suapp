@@ -1133,7 +1133,7 @@ class Application(suapp.jandw.Wooster):
         httpd_conf = jeeves.app.configuration.get('httpd', {})
         httpd_conf['port'] = httpd_conf.get('port', self.port)
         httpd_conf['ip'] = httpd_conf.get('ip', self.ip)
-        httpd_conf['service_url'] = http_conf.get('service_url', "service/")
+        httpd_conf['service_url'] = httpd_conf.get('service_url', "/service")
         jeeves.app.configuration['httpd'] = httpd_conf
         LocalWebHandler.jeeves = jeeves
         LocalWebHandler.drone = drone
