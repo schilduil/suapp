@@ -2,3 +2,4 @@ xmltodict >= 0.10.2     # Tested with version 0.10.2
 pyyaml >= 3.12          # Tested with version 3.12
 pony >= 0.7             # Tested with version 0.7
 #pytest >= 3.0.6         # FOR TESTING
+#pytest-cov >= 2.5.1     # FOR TESTING
