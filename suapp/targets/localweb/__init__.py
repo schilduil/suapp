@@ -38,7 +38,6 @@ $(document).ready(function() {
 </script>
 """
 
-
 class HtmlTemplatingEngine():
     """
     Templating engine for the html.
@@ -1131,9 +1130,10 @@ class Application(suapp.jandw.Wooster):
         # The port by default is ord(S)ord(U)
         self.port = 8385  # SU
         self.ip = "127.0.0.1"
-        httpd_conf = jeeves.app.configuration.get('httpd', {'ip': self.ip, 'port': self.port})
+        httpd_conf = jeeves.app.configuration.get('httpd', {})
         httpd_conf['port'] = httpd_conf.get('port', self.port)
         httpd_conf['ip'] = httpd_conf.get('ip', self.ip)
+        httpd_conf['service_url'] = http_conf.get('service_url', "service/")
         jeeves.app.configuration['httpd'] = httpd_conf
         LocalWebHandler.jeeves = jeeves
         LocalWebHandler.drone = drone
@@ -1228,7 +1228,7 @@ class Table(suapp.jandw.Wooster):
     # Is more complicated, check on 'result' and next 'object'.
     raw_js = """<script>
 (function() {
-    var suappAPI = "/service/session/drone.dataobject/tables/%(table_name)s";
+    var suappAPI = "%(service_url)s/session/drone.dataobject/tables/%(table_name)s";
     $.getJSON( suappAPI, function( data ) {
       console.log("Got json.")
       console.log(data)
@@ -1263,6 +1263,7 @@ class Table(suapp.jandw.Wooster):
                 drone.dataobject['tables'] = {'test': {'ID': 'testid'}}
             params = {"table_name": drone.dataobject['table_name']}
         result = []
+        params["service_url"] = jeeves.app.configuration['httpd']['service_url']
         if Table.raw:
             result.append('<table id="tableview">')
             # Here the results will end up (see raw_js)
@@ -1284,7 +1285,7 @@ class Record(suapp.jandw.Wooster):
     # Is more complicated, check on 'result' and next 'object'.
     raw_js = """<script>
 (function() {
-    var suappAPI = "/service/%(query)s";
+    var suappAPI = "%(service_url)s/%(query)s";
     $.getJSON( suappAPI, function( data ) {
       console.log("Got json.")
       console.log(data)
@@ -1321,6 +1322,7 @@ class Record(suapp.jandw.Wooster):
             elif 'key' in params:
                 js_params['query'] = "fetch?" + urllib.parse.urlencode({k: params[k][0] for k in params if k in ["module", "table", "key"]})
         result = []
+        js_params['service_url'] = jeeves.app.configuration['httpd']['service_url']
         if Record.raw:
             result.append('<table id="tableview">')
             # Here the results will end up (see raw_js)
@@ -1563,3 +1565,4 @@ class View(suapp.jandw.Wooster):
         html.append('</div>')
 
         return (title, "\n".join(html))
+
