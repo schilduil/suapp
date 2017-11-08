@@ -24,6 +24,7 @@ def to_json(object_to_serialize):
             result[column] = getattr(object_to_serialize, column)
         # Also putting out the primary key
         result['_pk_'] = getattr(object_to_serialize, '_pk_')
+        result['__str__'] = "%s" % (object_to_serialize)
         return result
     try:
         return json.dumps(object_to_serialize)

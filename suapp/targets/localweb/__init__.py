@@ -653,11 +653,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 params[param] = fields[param][0]
             results = list(session['jeeves'].do_query(query, params=params))
             table_type = None
+            module = None
             try:
+                module = results[0].__class__.__module__
                 table_type = results[0].__class__.__name__
             except:
                 pass
-            return (200, "text/json; charset=utf-8", {"result": True, "objects": results, "table": table_type})
+            return (200, "text/json; charset=utf-8", {"result": True, "objects": results, "module": module, "table": table_type})
         except Exception as e:
             return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query: %s." % (e)})
 
@@ -1164,6 +1166,14 @@ class Application(suapp.jandw.Wooster):
         pass
 
 
+@loguse
+def with_expanded_values(d, params):
+    result = {}
+    for key, value in d.items():
+        result[key] = value % (params)
+    return result
+
+
 class About(suapp.jandw.Wooster):
     """
     About page with content from a file.
@@ -1255,6 +1265,7 @@ class Table(suapp.jandw.Wooster):
 </script>
 """
 
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the table page.
@@ -1312,6 +1323,7 @@ class Record(suapp.jandw.Wooster):
 </script>
 """
 
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the record page
@@ -1360,6 +1372,32 @@ class View(suapp.jandw.Wooster):
     Generic view page for showing.
     """
 
+    # http://api.jquery.com/jquery.getjson/
+    # Is more complicated, check on 'result' and next 'object'.
+    raw_js = """<script>
+(function() {
+    var suappAPI = "%(service_url)s/%(query)s";
+    $.getJSON( suappAPI, function( data ) {
+      console.log("Got json.")
+      console.log(data)
+      var table_type = data["table"].split("_").pop()
+      var module = data["module"]
+      console.log("Table: " + table_type)
+      var items = [];
+      for (var elementid=0; elementid < data["objects"].length; elementid++) {
+        console.log("For Element " + elementid)
+        console.log(data["objects"][elementid])
+        items.push('<p id="' + table_type + '_' + data["objects"][elementid]["_pk_"] + '">%(html)s</p>')
+      };
+      $( "<span/>", {
+        "class": "my-new-list",
+        html: items.join( " " )
+      }).appendTo("#%(view)s");
+    });
+})();
+</script>
+"""
+
     @staticmethod
     def label(value, **kwargs):
         return "<span class='label'>%s</span>" % (urllib.parse.quote_plus(str(value), safe='', encoding=None, errors=None))
@@ -1373,6 +1411,45 @@ class View(suapp.jandw.Wooster):
             if param not in reserved_params:
                 result.append('?%s=%s' % (urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None), urllib.parse.quote_plus(str(paramvalue), safe='', encoding=None, errors=None)))
         result.append('>%s</a>' % (value))
+        return "".join(result)
+
+    @staticmethod
+    def _button_as_button(value, outmessage, **kwargs):
+        # Setting some default values.
+        if outmessage == "RECORD":
+            if "module" not in kwargs:
+                kwargs["module"] = "module"
+            if "table_type" not in kwargs:
+                kwargs["table"] = "table_type"
+            if "key" not in kwargs:
+                kwargs["key"] = 'data["objects"][elementid]["_pk_"]'
+        result = []
+        result.append('<form action="/" method="POST">')
+        result.append('<input type="hidden" name="OUT" value="%s" />' % (urllib.parse.quote_plus(str(outmessage), safe='', encoding=None, errors=None)))
+        for param, paramvalue in kwargs.items():
+            # Just making sure it is not a reserved parameter.
+            if param not in reserved_params:
+                if isinstance(paramvalue, str) or not hasattr(paramvalue, '__iter__'):
+                    # A string or something not iterable.
+                    result.append(
+                        '<input type="hidden" name="' +
+                        urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None) +
+                        '" value="\' + ' +
+                        paramvalue +
+                        ' + \'" />'
+                    )
+                else:
+                    # TODO: PROBABLY VERY BUG THIS THINGY.
+                    # For iterables, we'll put in the different values.
+                    for subvalue in paramvalue:
+                        result.append(
+                            '<input type="hidden" name="' +
+                            urllib.parse.quote_plus(str(param), safe='', encoding=None, errors=None) +
+                            '" value="\' + data["objects"][elementid]["' +
+                            urllib.parse.quote_plus(str(subvalue), safe='', encoding=None, errors=None) +
+                            '"] + \'" />'
+                        )
+        result.append('<input type="submit" value="' + value + '" /></form>')
         return "".join(result)
 
     @staticmethod
@@ -1415,6 +1492,7 @@ class View(suapp.jandw.Wooster):
     def combobox(**kwargs):
         return View.combobox_as_select(**kwargs)
 
+    @loguse('@')  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the record page
@@ -1439,6 +1517,13 @@ class View(suapp.jandw.Wooster):
         scope = {} # NOTUSED
         # scope.update(jeeves.ormscope) # jeeves.ormscope is always empty.
 
+        # JS parameters
+        js_params = {}
+        if drone.dataobject:
+            js_params['query'] = "query/%(query)s?pagenum=%(pagenum)s&pagesize=%(pagesize)s"
+        result = []
+        js_params['service_url'] = jeeves.app.configuration['httpd']['service_url']
+
         # Creating the output.
         html = []
 
@@ -1458,6 +1543,14 @@ class View(suapp.jandw.Wooster):
                 html.append('<!-- DEBUG query = %s -->' % (def_tabs['query']))
             tab_title = def_tabs.get('title', name)
             tab_objects = self.jeeves.do_query(def_tabs['query'], params=query_params)
+            parameters = self.jeeves.pre_query(def_tabs['query'], params=query_params)[1]
+            parameters['query'] = def_tabs['query']
+            js_query_params = with_expanded_values(js_params, params=parameters)
+            js_query_params['view'] = "testview" # TODO
+            html.append(View.raw_js % (js_query_params))
+            # TESTVIEW
+            html.append('<table id="testview">')
+            html.append('</table>')
             if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
                 html.append('<!-- DEBUG tab_objects = %s -->' % (tab_objects))
             for tab in tab_objects:
@@ -1504,7 +1597,7 @@ class View(suapp.jandw.Wooster):
                 section_title = sections[s].get('title', '')
                 html.append('\t\t<div class="panel panel-default">')  # panel-primary <> panel-default ?
                 html.append('\t\t\t<div class="panel-heading">%s</div>' % (section_title))
-                html.append('\t\t\t<div class="panel-body">')
+                html.append('\t\t\t<div class="panel-body" id="section%s_%s">' % (i, s))
                 # Lines
                 lines = sections[s].get('lines', tabs.get('lines', definition.get('sections', {0: {'title': ''}})))
                 # DEBUGGING
@@ -1513,46 +1606,46 @@ class View(suapp.jandw.Wooster):
                 line_objects = []
                 if 'query' in lines:
                     line_objects = self.jeeves.do_query(lines['query'], params=query_params)
-                for line_object in line_objects:
-                    if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
-                        html.append('<!-- DEBUG line_object = %s (%s in %s) -->' % (line_object, type(line_object), line_object.__module__))
-                    line_elements = []
-                    # Line elements
+                    query_template, parameters = self.jeeves.pre_query(lines['query'], params=query_params)
+                    parameters['query'] = lines['query']
+                    js_query_params = with_expanded_values(js_params, params=parameters)
+                    js_query_params['view'] = "section%s_%s" % (i, s)
                     if 'elements' in lines:
                         for e in sorted(lines['elements']):
-                            if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
-                                html.append('<!-- DEBUG element = %s -->' % (e))
                             value = lines['elements'][e].get('value', '#')
                             element_type = lines['elements'][e].get('type', 'label').lower()
                             outmessage = lines['elements'][e].get('outmessage', '')
                             if value[0] == ".":
-                                value = getattr(line_object, value[1:])
+                                value = '\' + data["objects"][elementid]["' + value[1:] + '"] + \''
+                            html_element = "&nbsp;"
                             if element_type == "button":
-                                html.append("\t\t\t\t" +
-                                    View.button(
-                                        value=value,
-                                        outmessage=outmessage,
-                                        module=line_object.__module__,
-                                        table=line_object.__class__.__name__.split("_")[-1],
-                                        key=line_object._pk_
-                                    )
+                                # Button
+                                html_element = View._button_as_button(
+                                    value=value,
+                                    outmessage=outmessage
                                 )
                             else:
-                                html.append("\t\t\t\t" + View.label(value=value))
-                for l in sorted(lines.keys(), key=str):
-                    if str(l).isdigit():
+                                # Label
+                                pass
+                            js_query_params['html'] = html_element
+                    html.append(View.raw_js % (js_query_params))
+                else:
+                    for line_object in line_objects:
+                        if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                            html.append('<!-- DEBUG line_object = %s (%s in %s) -->' % (line_object, type(line_object), line_object.__module__))
+                        line_elements = []
                         # Line elements
-                        if 'elements' in lines[l]:
-                            for e in sorted(lines[l]['elements']):
+                        if 'elements' in lines:
+                            for e in sorted(lines['elements']):
                                 if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
                                     html.append('<!-- DEBUG element = %s -->' % (e))
-                                value = lines[l]['elements'][e].get('value', '#')
-                                l_type = lines[l]['elements'][e].get('type', 'button').lower()
-                                outmessage = lines[l]['elements'][e].get('outmessage', '')
+                                value = lines['elements'][e].get('value', '#')
+                                element_type = lines['elements'][e].get('type', 'label').lower()
+                                outmessage = lines['elements'][e].get('outmessage', '')
                                 if value[0] == ".":
                                     value = getattr(line_object, value[1:])
                                 if element_type == "button":
-                                    html.append("\t\t\t" +
+                                    html.append("\t\t\t\t" +
                                         View.button(
                                             value=value,
                                             outmessage=outmessage,
@@ -1562,7 +1655,31 @@ class View(suapp.jandw.Wooster):
                                         )
                                     )
                                 else:
-                                    html.append("\t\t\t" + View.label(value=value))
+                                    html.append("\t\t\t\t" + View.label(value=value))
+                    for l in sorted(lines.keys(), key=str):
+                        if str(l).isdigit():
+                            # Line elements
+                            if 'elements' in lines[l]:
+                                for e in sorted(lines[l]['elements']):
+                                    if logging.getLogger(self.__module__).isEnabledFor(logging.DEBUG):
+                                        html.append('<!-- DEBUG element = %s -->' % (e))
+                                    value = lines[l]['elements'][e].get('value', '#')
+                                    l_type = lines[l]['elements'][e].get('type', 'button').lower()
+                                    outmessage = lines[l]['elements'][e].get('outmessage', '')
+                                    if value[0] == ".":
+                                        value = getattr(line_object, value[1:])
+                                    if element_type == "button":
+                                        html.append("\t\t\t" +
+                                            View.button(
+                                                value=value,
+                                                outmessage=outmessage,
+                                                module=line_object.__module__,
+                                                table=line_object.__class__.__name__.split("_")[-1],
+                                                key=line_object._pk_
+                                            )
+                                        )
+                                    else:
+                                        html.append("\t\t\t" + View.label(value=value))
                 html.append('\t\t\t</div>')
                 html.append('\t\t</div>')
 

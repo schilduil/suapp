@@ -134,7 +134,7 @@ class Jeeves(object):
         return scope['result']
 
     @loguse('@')  # Not logging the return value.
-    def do_query(self, name, scope=None, params=None):
+    def pre_query(self, name, scope=None, params=None):
         """
         Execute a query by name and return the result.
 
@@ -157,6 +157,11 @@ class Jeeves(object):
         except:
             parameters['pagesize'] = 10
         logging.getLogger(__name__).debug("Paging #%s (%s)", parameters['pagenum'], parameters['pagesize'])
+        return (query_template, parameters)
+
+    @loguse('@')  # Not loggin the return value.
+    def do_query(self, name, scope=None, params=None):
+        query_template, parameters = self.pre_query(name, scope, params)
         if callable(query_template):
             # A callable, so just call it.
             result = query_template(params=parameters)
