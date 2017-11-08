@@ -41,11 +41,16 @@ def pony_entity_object(pony_entity):
 
 @pytest.fixture()
 def orm_objects(pony_entity_object):
-    class Test(orm.UiOrmObject):
+    class UiTestOrm(orm.UiOrmObject):
+        def __init__(self, orm=None):
+            pass
+    class UiSubTestOrm(UiTestOrm):
         pass
-    test = Test()
+    test = UiTestOrm()
     test._ui_orm = pony_entity_object
     test.ui_init()
+    setattr(sys.modules[pony_entity_object.__class__.__module__], "UiTestOrm", UiTestOrm)
+    setattr(sys.modules[pony_entity_object.__class__.__module__], "UiSubTestOrm", UiSubTestOrm)
     return (pony_entity_object, test)
 
 def test_orm(orm_objects):
@@ -63,3 +68,13 @@ def test_columns(orm_objects):
     (pony_entity_object, ui_orm_object) = orm_objects
     assert pony_entity_object._pk_columns_ == ["id"]
     assert ui_orm_object._pk_columns_ == ["id"]
+
+def test_uize(orm_objects):
+    (pony_entity_object, ui_orm_object) = orm_objects
+    assert orm.UiOrmObject.uize(pony_entity_object).__class__.__name__ == "Ui%s" % (pony_entity_object.__class__.__name__)
+
+def test_ui_attributes(orm_objects):
+    (pony_entity_object, ui_orm_object) = orm_objects
+    x = "This is me."
+    ui_orm_object._ui_x = x
+    assert ui_orm_object._ui_x is x
