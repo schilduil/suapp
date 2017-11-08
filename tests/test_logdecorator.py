@@ -64,11 +64,17 @@ def my_function1(message):
 @logdecorator.loguse(1)  # Don't log the variable with index 1 (i.e. two)
 def my_function2(one, two):
     logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
+    return "three"
 
 @logdecorator.loguse('a')  # Don't log the named argument 'a'
 def my_function3(a, b, g):
     logging.getLogger(__name__).warn("The previous line didn't log 'a', but did log 'b' and 'g'.")
+    return "abg"
 
+@logdecorator.loguse('@')  # Don't log the return value.
+def my_function4(one, two):
+    logging.getLogger(__name__).warn("The previous line logged 'one' and 'two' but the next will not log the return value.")
+    return "three"
 
 def test_timings():
     """ Testing the two timings functions. """
@@ -129,6 +135,7 @@ def test_logging_info(memory_logger):
     x.close()
     my_function2("First variable", "Second variable")
     my_function3(a="alpha", b="beta", g="gamma")
+    my_function4(one=1, two=2)
 
     # fields = ['created', 'exc_info', 'exc_text', 'filename', 'funcName', 'getMessage', 'levelname', 'levelno', 'lineno', 'module', 'msecs', 'msg', 'name', 'pathname', 'process', 'processName', 'relativeCreated', 'stack_info', 'thread', 'threadName']
     fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName', 'msg']
@@ -139,6 +146,7 @@ def test_logging_info(memory_logger):
         "%s INFO %s test_logdecorator.py test_logdecorator close Closing Hello World!" % (logging.INFO, __name__),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function2 The previous line didn't log 'two', but did log 'one'" % (logging.WARNING, __name__),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function3 The previous line didn't log 'a', but did log 'b' and 'g'." % (logging.WARNING, __name__),
+        "%s WARNING %s test_logdecorator.py test_logdecorator my_function4 The previous line logged 'one' and 'two' but the next will not log the return value." % (logging.WARNING, __name__),
     ]
     assert len(handler.buffer) == len(expected)
     for logline, expected in zip(handler.buffer,expected):
@@ -158,6 +166,7 @@ def test_logging_debug(memory_logger):
     x.close()
     my_function2("First variable", "Second variable")
     my_function3(a="alpha", b="beta", g="gamma")
+    my_function4(one=1, two=2)
 
     fields = ['levelno', 'levelname', 'name', 'filename', 'module', 'funcName']
     expected = [
@@ -179,14 +188,21 @@ def test_logging_debug(memory_logger):
         "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < SubMyClass.close: None" % (logging.DEBUG),
         "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function2(('First variable',), {})" % (logging.DEBUG),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function2 The previous line didn't log 'two', but did log 'one'" % (logging.WARNING, __name__),
-        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < my_function2: None" % (logging.DEBUG),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < my_function2: 'three'" % (logging.DEBUG),
         (
             "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function3((), {'g': 'gamma', 'b': 'beta'})" % (logging.DEBUG),
             "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function3((), {'b': 'beta', 'g': 'gamma'})" % (logging.DEBUG),
         ),
         "%s WARNING %s test_logdecorator.py test_logdecorator my_function3 The previous line didn't log 'a', but did log 'b' and 'g'." % (logging.WARNING, __name__),
+        "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator < my_function3: 'abg'" % (logging.DEBUG),
+        (
+            "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function4((), {'one': 1, 'two': 2})" % (logging.DEBUG),
+            "%s DEBUG test_logdecorator logdecorator.py logdecorator decorator > my_function4((), {'two': 2, 'one': 1})" % (logging.DEBUG),
+        ),
+        "%s WARNING %s test_logdecorator.py test_logdecorator my_function4 The previous line logged 'one' and 'two' but the next will not log the return value." % (logging.WARNING, __name__),
+        "%s DEBUG %s logdecorator.py logdecorator decorator < my_function4" % (logging.DEBUG, __name__),
     ]
-    #assert len(handler.buffer) == len(expected)
+    assert len(handler.buffer) == len(expected)
     for logline, expected in zip(handler.buffer,expected):
         line = []
         for field in fields:
