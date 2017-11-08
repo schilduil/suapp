@@ -651,8 +651,13 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             params = {}
             for param in fields:
                 params[param] = fields[param][0]
-            results = session['jeeves'].do_query(query, params=params)
-            return (200, "text/json; charset=utf-8", {"result": True, "objects": results})
+            results = list(session['jeeves'].do_query(query, params=params))
+            table_type = None
+            try:
+                table_type = results[0].__class__.__name__
+            except:
+                pass
+            return (200, "text/json; charset=utf-8", {"result": True, "objects": results, "table": table_type})
         except Exception as e:
             return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query: %s." % (e)})
 
