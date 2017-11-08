@@ -300,7 +300,7 @@ class ConfigurationParser():
         """
         Must be overwritten in the subclass.
         """
-        if self.__class__.__name__ == 'ConfigurationParser':
+        if isinstance(self, ConfigurationParser):
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Load is not implemented in %s." % (self.__class__.__name__))
@@ -309,7 +309,7 @@ class ConfigurationParser():
         """
         Must be overwritten in the subclass.
         """
-        if self.__class__.__name__ == 'ConfigurationParser':
+        if isinstance(self, ConfigurationParser):
             raise NotImplementedError("ConfigurationParser is a dummy.")
         else:
             raise NotImplementedError("Save is not implemented in %s." % (self.__class__.__name__))
@@ -635,175 +635,3 @@ def get_configuration(location=None, source_type=None, file_type=None, **kwargs)
         return FileConfiguration(location, file_type=file_type, **kwargs)
     else:
         raise IOError("Unknown source type %s." % (source_type))
-
-
-if __name__ == "__main__":
-
-    import os
-    import os.path
-    import tempfile
-
-    sample = {
-        "name": "SU Demo Application",
-        "shortname": "suapp",
-        "log": {
-            "filename": "~/.suapp/log/suapp.log",
-            "filemode": "w",
-            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
-            "level": "INFO",
-            "modules": {
-                "base": {
-                    "level": "INFO"
-                },
-                "httpd": {
-                    "level": "DEBUG",
-                    "filename": "~/.suapp/log/httpd.accces_log"
-                }
-            }
-        },
-        "datasource": {
-            "type": "Plank",
-            "location": "~/.susm/data/"
-        },
-        "modules": {
-            "base": {}
-        }
-    }
-
-    print("SAMPLE: %s\n" % (sample))
-
-    # TEST 1: dictionary
-    print("TEST 1: passing a dictionary.")
-    with get_configuration(sample) as test:
-        print("\t%s\n" % (test))
-
-    # TEST 2: url (might fail if no network)
-    url = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
-    print("TEST 2: passing a URL (will fail if no network): %s" % (url))
-    try:
-        with get_configuration(url) as test:
-            print("\t%s\n" % (test))
-    except:
-        print("Failed (probably no network).")
-
-    # TEST 3: json file/url/sample (file does not exist)
-    # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".json")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 3: passing a json file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    # TEST 4: file
-    print("TEST 4: passing a json file: %s" % (file_name))
-    with get_configuration(file_name) as test:
-        print("\t%s\n" % (test))
-        # TEST 5: save
-        print("TEST 5: saving a small modification: 'c': 'python'")
-        test['c'] = 'python'
-        test.save()
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    # TEST 6: json file/url/sample (file exists)
-    print("TEST 6: passing a json file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    os.remove(file_name)
-
-    # TEST 7: cfg
-    # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".cfg")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 7: passing a cfg file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    # TEST 8: cfg file/url/sample (file exists)
-    print("TEST 8: passing a cfg file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    os.remove(file_name)
-
-    # TEST 9: xml
-    # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".xml")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 9: passing a xml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    # TEST 10: xml file/url/sample (file exists)
-    print("TEST 10: passing a xml file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    os.remove(file_name)
-
-    # TEST 11: yaml
-    # Creating a temporary file for the configuration.
-    (os_level_handle, file_name) = tempfile.mkstemp(suffix=".yaml")
-    os.close(os_level_handle)
-    os.remove(file_name)
-    print("TEST 11: passing a yaml file and a backup URL where the file doesn't exist: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be False): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    # TEST 12: xml file/url/sample (file exists)
-    print("TEST 12: passing a yaml file and a backup URL where the file exists: %s, %s" % (file_name, url))
-    print("\tDoes the file exists (should be True): %s." % (os.path.isfile(file_name)))
-    with get_configuration([file_name, url, sample]) as test:
-        print("\t%s\n" % (test))
-
-    print("=== START FILE CONTENT ===")
-    for line in open(file_name, 'r', encoding='utf-8'):
-        print(line.rstrip())
-    print("=== END FILE CONTENT ===\n")
-
-    os.remove(file_name)

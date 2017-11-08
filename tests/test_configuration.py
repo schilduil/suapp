@@ -7,6 +7,7 @@ import json
 import os
 import os.path
 import pprint
+import re
 import tempfile
 import sys
 import urllib.error
@@ -113,10 +114,10 @@ def json_file():
     except:
         pass
 
-@pytest.fixture
-def cfg_file():
+@pytest.fixture(params=('cfg', 'ini'))
+def cfg_file(request):
     """ Test fixture to a temporary configuration file name. """
-    name = file_name('.cfg')
+    name = file_name('.%s' % (request.param))
     yield name
     # Cleaning up after itself.
     try:
@@ -135,10 +136,10 @@ def xml_file():
     except:
         pass
 
-@pytest.fixture
-def yaml_file():
+@pytest.fixture(params=('yaml', 'yml'))
+def yaml_file(request):
     """ Test fixture to a temporary yaml file name. """
-    name = file_name('.yaml')
+    name = file_name('.%s' % (request.param))
     yield name
     # Cleaning up after itself.
     try:
@@ -310,3 +311,61 @@ def test_different_yaml_with_backup(yaml_file):
     print("=== END FILE CONTENT ===\n")
     with configuration.get_configuration(yaml_file) as test:
         assert test == different_sample
+
+def test_ConfigurationParser():
+    """
+    Test the string representation.
+    """
+    conf = configuration.ConfigurationParser("here")
+    string = re.sub('0x[0-9a-f]*', '0x000000000000', "%s" % (conf))
+    assert string == "<configuration.ConfigurationParser object at 0x000000000000> on location here"
+
+def test_load_into_dict():
+    """
+    Test the not supported of load_into_dict.
+    """
+    with pytest.raises(NotImplementedError):
+        conf = configuration.ConfigurationParser("here")
+        conf.load_into_dict(conf)
+
+def test_save_from_dict():
+    """
+    Test the not supported of save_from_dict.
+    """
+    with pytest.raises(NotImplementedError):
+        conf = configuration.ConfigurationParser("here")
+        conf.save_from_dict(conf)
+
+@pytest.fixture
+def empty_subclass_ConfigurationParser():
+    """
+    Returns and empty subclass of ConfigurationParser.
+    """
+    class SubConfigurationParser(configuration.ConfigurationParser):
+        pass
+    return SubConfigurationParser
+
+def test_sub_ConfigurationParser(empty_subclass_ConfigurationParser):
+    """
+    Test the string representation.
+    """
+    conf = empty_subclass_ConfigurationParser("here")
+    string = re.sub('0x[0-9a-f]*', '0x000000000000', "%s" % (conf))
+    assert string == "<test_configuration.empty_subclass_ConfigurationParser.<locals>.SubConfigurationParser object at 0x000000000000> on location here"
+
+def test_sub_load_into_dict(empty_subclass_ConfigurationParser):
+    """
+    Test the not supported of load_into_dict.
+    """
+    with pytest.raises(NotImplementedError):
+        conf = empty_subclass_ConfigurationParser("here")
+        conf.load_into_dict(conf)
+
+def test_sub_save_from_dict():
+    """
+    Test the not supported of load_into_dict.
+    """
+    with pytest.raises(NotImplementedError):
+        conf = empty_subclass_ConfigurationParser()
+        conf.save_from_dict(conf, conf)
+
