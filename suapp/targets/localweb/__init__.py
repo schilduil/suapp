@@ -1649,7 +1649,8 @@ class View(suapp.jandw.Wooster):
                     continue
                 section_title = sections[s].get('title', '')
                 html.append('\t\t<div class="panel panel-default">')  # panel-primary <> panel-default ?
-                html.append('\t\t\t<div class="panel-heading">%s</div>' % (section_title))
+                if section_title != tabs[i][0]:
+                    html.append('\t\t\t<div class="panel-heading">%s</div>' % (section_title))
                 html.append('\t\t\t<div class="panel-body" id="section%s_%s">' % (i, s))
                 # Lines
                 lines = sections[s].get('lines', tabs.get('lines', definition.get('sections', {0: {'title': ''}})))
