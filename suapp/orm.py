@@ -4,6 +4,8 @@
 import pony.orm
 import sys
 
+from suapp.logdecorator import loguse
+
 
 __all__ = ["UiOrmObject"]
 
@@ -27,10 +29,17 @@ class UiOrmObject():
         with "Ui".
         """
         if isinstance(orm_object, pony.orm.core.Entity):
-            #print("%s in %s" % (orm_object.__class__.__name__, orm_object.__class__.__module__))
             module = sys.modules[orm_object.__class__.__module__]
             ui_orm_class = getattr(module, "Ui%s" % orm_object.__class__.__name__)
             return ui_orm_class(orm=orm_object)
+
+    @loguse
+    def commit(self):
+        return self._ui_orm._database_.commit()
+
+    @loguse
+    def rollback(self):
+        return self._ui_orm._database_.rollback()
 
     def ui_init(self):
         """
