@@ -136,10 +136,13 @@ class Jeeves(object):
     @loguse('@')  # Not logging the return value.
     def pre_query(self, name, scope=None, params=None):
         """
-        Execute a query by name and return the result.
+        Returns the the query and parameters.
 
-        The result is always a UiOrmObject by using UiOrmObject.uize on the
-        results of the query.
+        The query and the default parameters are looked up in self.queries.
+        The parameters are next updated with the passed params.
+
+        The self.queries is filled by moduleloader from the loaded modlib's
+        view_definitions() function.
         """
         if scope is None:
             scope = {}
@@ -161,6 +164,12 @@ class Jeeves(object):
 
     @loguse('@')  # Not loggin the return value.
     def do_query(self, name, scope=None, params=None):
+        """
+        Executes a query by name and return the result.
+
+        The result is always a UiOrmObject by using UiOrmObject.uize on the
+        results of the query.
+        """
         query_template, parameters = self.pre_query(name, scope, params)
         if callable(query_template):
             # A callable, so just call it.
@@ -168,6 +177,26 @@ class Jeeves(object):
         else:
             # DEPRECATED: python code as a string.
             result = self._do_query_str(query_template, scope, parameters)
+        return (suapp.orm.UiOrmObject.uize(r) for r in result)
+
+    @loguse
+    def do_fetch_set(self, module, table, primarykey, link):
+        """
+        Fetches the result from a foreign key that is a set.
+
+        This will return the list of  objects representing the rows in the
+        database pointed to by the foreign key (which name should be passed in
+        link). The return typ is either a list of suapp.orm.UiOrmObject's.
+
+        Usually you can follow the foreign key directly, but not in an
+        asynchronous target (UI) like the web where you need to fetch it anew.
+        For foreign keys that are not sets you can use do_fetch.
+        The module, table and primarykey are those from the object having the
+        foreign key and behave the same as with do_fetch. The extra parameter
+        link is the foreign key that is pointing to the set.
+        """
+        origin = self.do_fetch(module, table, primarykey)
+        result = getattr(origin, link)
         return (suapp.orm.UiOrmObject.uize(r) for r in result)
 
     @loguse

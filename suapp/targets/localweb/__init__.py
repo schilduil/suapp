@@ -635,16 +635,32 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         Fetching an object by TableName[PrimaryKey]
         """
         try:
-            #TODO: need to look it up with ORM.
-            #For now a dummy object.
             record = session['jeeves'].do_fetch(fields['module'][0], fields['table'][0], fields['key'])
             return (200, "text/json; charset=utf-8", {"result": True, "object": record})
         except Exception as e:
             # Unknown
             return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found (%s: %s)" % (type(e), e), "traceback":  traceback.format_exc().split("\n")})
 
+    @loguse([1, 3])  # Not logging session and json_object.
+    def do_service_setfetch(self, session, fields, json_object):
+        """
+        Fetching a foreign key set by TableName[PrimaryKey].Link
+        """
+        try:
+            results = list(session['jeeves'].do_fetch_set(fields['module'][0], fields['table'][0], fields['key'], fields['link'][0]))
+            table_type = None
+            module = None
+            try:
+                module = results[0].__class__.__module__
+                table_type = results[0].__class__.__name__
+            except:
+                pass
+            return (200, "text/json; charset=utf-8", {"result": True, "objects": results, "module": module, "table": table_type})
+        except Exception as e:
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query (%s: %s)" % (type(e), e), "traceback":  traceback.format_exc().split("\n")})
+
     @loguse([1, 3])  # Not logging seesion and json_ojbect.
-    def do_query(self, session, query, fields, json_object):
+    def do_service_query(self, session, query, fields, json_object):
         """
         Executing a query.
         """
@@ -662,7 +678,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                 pass
             return (200, "text/json; charset=utf-8", {"result": True, "objects": results, "module": module, "table": table_type})
         except Exception as e:
-            return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query: %s." % (e)})
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Error during query (%s: %s)" % (type(e), e), "traceback":  traceback.format_exc().split("\n")})
 
     @loguse  # ('@')
     def do_object(self, start_object, path):
@@ -902,14 +918,29 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                             return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
                         else:
                             return_message = simple_json.dumps(return_message)
-                    except:
+                    except Exception as e:
                         if "pretty" in fields:
-                            return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'}, sort_keys=True, indent=4, separators=(',', ': '))
+                            return_message = simple_json.dumps(
+                                {
+                                    'result': False,
+                                    'message': 'Object not convertible to json (%s: %s).' % (type(e), e),
+                                    "traceback":  traceback.format_exc().split("\n")
+                                },
+                                sort_keys=True,
+                                indent=4,
+                                separators=(',', ': ')
+                            )
                         else:
-                            return_message = simple_json.dumps({'result': False, 'message': 'Object not convertible to json.'})
+                            return_message = simple_json.dumps(
+                                {
+                                    'result': False,
+                                    'message': 'Object not convertible to json (%s: %s).' % (type(e), e),
+                                    "traceback":  traceback.format_exc().split("\n")
+                                }
+                            )
                 elif self.path.startswith("/service/query/"):
                     temp = self.path.split("?")
-                    (return_code, return_mime, return_message) = self.do_query(session, temp[0][15:], fields, json_object)
+                    (return_code, return_mime, return_message) = self.do_service_query(session, temp[0][15:], fields, json_object)
                     if "pretty" in fields:
                         return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
                     else:
@@ -926,11 +957,32 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                         return_mime = "text/json; charset=utf-8"
                         return_message = {"result": False, "message": "Service %s not found." % (method_name.lower())}
                     if return_mime == "text/json; charset=utf-8":
-                        # The output should be json, so transforming it to json:
-                        if "pretty" in fields:
-                            return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
-                        else:
-                            return_message = simple_json.dumps(return_message)
+                        try:
+                            # The output should be json, so transforming it to json:
+                            if "pretty" in fields:
+                               return_message = simple_json.dumps(return_message, sort_keys=True, indent=4, separators=(',', ': '))
+                            else:
+                                return_message = simple_json.dumps(return_message)
+                        except Exception as e:
+                            if "pretty" in fields:
+                                return_message = simple_json.dumps(
+                                    {
+                                        'result': False,
+                                        'message': 'Object not convertible to json (%s: %s).' % (type(e), e),
+                                        "traceback":  traceback.format_exc().split("\n")
+                                    },
+                                    sort_keys=True,
+                                    indent=4,
+                                    separators=(',', ': ')
+                                )
+                            else:
+                                return_message = simple_json.dumps(
+                                    {
+                                        'result': False,
+                                        'message': 'Object not convertible to json (%s: %s).' % (type(e), e),
+                                        "traceback":  traceback.format_exc().split("\n")
+                                    }
+                                )
                 else:
                     (return_code, return_mime, return_message) = self.do_dynamic_page(session, fields)
             else:
