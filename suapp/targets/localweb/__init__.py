@@ -9,6 +9,7 @@ import http.server
 import json
 from threading import Thread
 import time
+import traceback
 import os.path
 import random
 import string
@@ -640,7 +641,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             return (200, "text/json; charset=utf-8", {"result": True, "object": record})
         except Exception as e:
             # Unknown
-            return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found (%s)." % (e)})
+            return (200, "text/json; charset=utf-8", {"result": False, "message": "Object not found (%s: %s)" % (type(e), e), "traceback":  traceback.format_exc().split("\n")})
 
     @loguse([1, 3])  # Not logging seesion and json_ojbect.
     def do_query(self, session, query, fields, json_object):

@@ -208,8 +208,12 @@ class Jeeves(object):
         else:
             i = 0
             for column in pk_columns:
-                params[column] = primarykey.get(i, None)
+                params[column] = primarykey[i]
                 i += 1
+        # Checking if the primary key is a foreign key.
+        for column in pk_columns:
+            logging.getLogger(__name__).debug("Primary key column: %s = %s", column, params[column])
+        logging.getLogger(__name__).debug("Fetching %s (%s)", table_class, params)
         if issubclass(table_class, suapp.orm.UiOrmObject):
             return table_class(**params)
         else:
