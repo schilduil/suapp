@@ -31,12 +31,14 @@ cd ../../../../../../
 mkdir -p suapp/targets/localweb/js/jquery/2.1.4
 cd suapp/targets/localweb/js/jquery/2.1.4/
 wget -nc https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js
+wget -nc https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.map
 cd ../../../../../../
 
 # jquery 3.1.1 - latest version (unused)
 mkdir -p suapp/targets/localweb/js/jquery/3.1.1
 cd suapp/targets/localweb/js/jquery/3.1.1
 wget -nc https://code.jquery.com/jquery-3.1.1.min.js -O jquery.min.js
+wget -nc https://code.jquery.com/jquery-3.1.1.min.js -O jquery.min.map
 cd ../../../../../../
 
 # viz - graphviz in the browser

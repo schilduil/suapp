@@ -565,9 +565,9 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                     user_id = result_message['userid']
                 else:
                     try:
-                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % result_message['message'])
+                        logging.getLogger(self.__name__).info("Automatic authorization failed: %s" % result_message['message'])
                     except:
-                        logging.getLogger(self.__module__).info("Automatic authorization failed: %s" % simple_json.dumps(result_message))
+                        logging.getLogger(self.__name__).info("Automatic authorization failed: %s" % simple_json.dumps(result_message))
 
         # FOR NOW: anybody logged in has all the rights.
         # Needs mapping from groups > /services/ROLE/... with permissions.
@@ -845,7 +845,7 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
 
     @loguse([1, 4])  # Not logging session nor return_message.
     def do_error_page(self, session, return_code, return_mime, return_message):
-        logging.getLogger(self.__module__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
+        logging.getLogger(self.__name__).info("Error page (%s): %s (%s)" % (return_code, return_message, return_mime))
         message = return_message
         if return_mime.startswith("text/plain"):
             # template
@@ -1030,13 +1030,14 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
                         self.end_headers()
                         self.wfile.write(f.read())
                 except FileNotFoundError:
+                    logging.getLogger(self.__name__).info("Request file not found: %s" % (localfile))
                     self.send_response(404)
                     self.send_header('Content-type', 'text/plain; charset=utf-8')
                     self.end_headers()
                     message = "File %s not found.\n%s" % (self.path, localfile)
                     self.wfile.write(message.encode('utf-8'))
                 except BrokenPipeError as err:
-                    logging.getLogger(self.__module__).info("Broken pipe: %s" % (err))
+                    logging.getLogger(self.__name__).info("Broken pipe: %s" % (err))
                     pass
                 return
             else:

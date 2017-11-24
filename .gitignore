@@ -27,6 +27,7 @@ Makefile
 
 # Javascript and CSS files
 suapp/targets/localweb/js/*/*/*.js
+suapp/targets/localweb/js/*/*/*.map
 suapp/targets/localweb/css/*/*/*.css
 
 # Coverage
