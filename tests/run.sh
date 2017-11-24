@@ -8,8 +8,10 @@ cd ../
 WDIR="$(pwd)"
 echo Working directory: $WDIR
 echo 
-
-/usr/local/bin/py.test $*
+echo Enabling virtual environment on .venv
+source .venv/bin/activate
+echo Launching tests...
+py.test $*
 
 #FILES=$DIR/test_*.py
 #for f in $FILES
