@@ -37,8 +37,8 @@ htmlcov
 # Very experimental targets
 suapp/targets/*only
 suapp/targets/*only/
-tests/*only
-tests/*only/
+tests/targets/*only
+tests/targets/*only/
 
 # Virtual Environment
 .venv
