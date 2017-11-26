@@ -14,4 +14,6 @@ echo Installing the requirements...
 .venv/bin/pip install -r requirements.txt
 echo Installing pytest and pytest-cov...
 .venv/bin/pip install pytest-cov
+echo Installing pytest-annotate
+.venv/bin/pip install pytest-annotate
 echo Done.
