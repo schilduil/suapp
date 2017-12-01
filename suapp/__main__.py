@@ -50,9 +50,23 @@ def update_conf(configuration, option_string):
         (key, value) = option.split("=", 1)
         context = key.split(".")
         subconfig = configuration
-        while len(context) > 1 and (context[0]) in subconfig:
+        while len(context) > 1:
+            if (context[0]) not in subconfig:
+                subconfig[context[0]] = {}
             subconfig = subconfig[context[0]]
             context.pop(0)
+        # Transforming so clear booleans from str.
+        try:
+            value = {
+                    'false': False,
+                    'true': True
+            }.get(value.lower(), value)
+            value = int(value)
+        except ValueError as e:
+            try:
+                value = float(value)
+            except ValueError as ve:
+                pass
         subconfig[context[0]] = value
 
 
