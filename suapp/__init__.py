@@ -332,10 +332,10 @@ def main(config):
         # Instanciating the application
         app = SuApp(config)
         app.start()
-        print(suapp._("Bye."))
+        print(_("Bye."))
     except Exception as e:
         try:
-            logging.getLogger(__name__).fatal(suapp._("Unexpected end of SuApp: %s") % (e))
+            logging.getLogger(__name__).fatal(_("Unexpected end of SuApp: %s") % (e))
         finally:
             print(_("Unexpected end of SuApp!"))
             import traceback
