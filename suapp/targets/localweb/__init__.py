@@ -1223,9 +1223,10 @@ class Application(suapp.jandw.Wooster):
         if httpd_conf.get('background', False):
             server_thread = ServerThread(self.server)
             server_thread.start()
+            print("HttpServer started.")
         else:
             self.server.serve_forever()
-        print("HTTPServer stopped.")
+            print("HTTPServer stopped.")
 
     @loguse
     def lock(self):
