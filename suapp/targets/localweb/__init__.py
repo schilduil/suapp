@@ -1181,7 +1181,7 @@ class ServerThread(Thread):
         """
         Run the thread: i.e. wait and lauch the browser.
         """
-        this.server.serve_forever()
+        self.server.serve_forever()
 
 
 class Application(suapp.jandw.Wooster):
