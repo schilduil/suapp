@@ -10,8 +10,8 @@ import os.path
 import re
 import sys
 
-sys.path.append(os.path.join(os.getcwd(), 'suapp'))
-import logdecorator
+sys.path.append(os.getcwd())
+from suapp.logdecorator import *
 
 
 """
@@ -24,87 +24,89 @@ class MyClass():
     """Test class for the logdecorator"""
     name = "APP"
 
-    @logdecorator.loguse(1)  # Don't log the variable with index 1 (i.e. name)
+    @loguse(1)  # Don't log the variable with index 1 (i.e. name)
     def __init__(self, name):
         """Initialize the name of the test class."""
         self.name = name
 
-    @logdecorator.loguse
+    @loguse
     def lock(self):
         """Locks the test class."""
         logging.getLogger(__name__).info("Locking %s" % (self.name))
 
-    @logdecorator.loguse
+    @loguse
     def unlock(self):
         """Unlocks the test class."""
         logging.getLogger(__name__).info("Unlocking %s" % (self.name))
 
-    @logdecorator.loguse
+    @loguse
     def close(self):
         """Closes the test class."""
         logging.getLogger(__name__).info("Closing %s" % (self.name))
 
 class SubMyClass(MyClass):
 
-    @logdecorator.loguse
+    @loguse
     def __init__(self, name):
         """Initialize the name of the test class."""
         super(SubMyClass, self).__init__(name)
 
-    @logdecorator.loguse
+    @loguse
     def close(self):
         """Closes the test class."""
         logging.getLogger(__name__).info("Closing %s" % (self.name))
 
-@logdecorator.loguse
+@loguse
 def my_function1(message):
     logging.getLogger(__name__).warn("Starting %s" % (message))
     return SubMyClass(message)
 
-@logdecorator.loguse(1)  # Don't log the variable with index 1 (i.e. two)
+@loguse(1)  # Don't log the variable with index 1 (i.e. two)
 def my_function2(one, two):
     logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
     return "three"
 
-@logdecorator.loguse('a')  # Don't log the named argument 'a'
+@loguse('a')  # Don't log the named argument 'a'
 def my_function3(a, b, g):
     logging.getLogger(__name__).warn("The previous line didn't log 'a', but did log 'b' and 'g'.")
     return "abg"
 
-@logdecorator.loguse('@')  # Don't log the return value.
+@loguse('@')  # Don't log the return value.
 def my_function4(one, two):
     logging.getLogger(__name__).warn("The previous line logged 'one' and 'two' but the next will not log the return value.")
     return "three"
 
 def test_timings():
     """ Testing the two timings functions. """
-    logdecorator.init_timings()
-    logdecorator.add_timing("f1", 3)
-    logdecorator.add_timing("f2", 4.234)
-    logdecorator.add_timing("f1", 6)
-    logdecorator.add_timing("f3", 6.2524)
-    logdecorator.add_timing("f2", 7.5234)
-    logdecorator.add_timing("f2", 8.70987)
-    logdecorator.add_timing("f2", 9.78034970)
-    timings = logdecorator.get_timings()
+    from suapp.logdecorator import add_timing
+    init_timings()
+    add_timing("f1", 3)
+    add_timing("f2", 4.234)
+    add_timing("f1", 6)
+    add_timing("f3", 6.2524)
+    add_timing("f2", 7.5234)
+    add_timing("f2", 8.70987)
+    add_timing("f2", 9.78034970)
+    timings = get_timings()
     print(timings)
-    report = logdecorator.timings_report()
+    report = timings_report()
     print(report)
     assert report == OrderedDict([('f2', (4, 30.2476197, 7.561904925)), ('f3', (1, 6.2524, 6.2524)), ('f1', (2, 9, 4.5))])
 
 def test_timings_disabled():
     """ Testing the two timings functions when they should do nothing. """
-    logdecorator.disable_timings()
-    logdecorator.add_timing("f1", 3)
-    logdecorator.add_timing("f2", 4.234)
-    logdecorator.add_timing("f1", 6)
-    logdecorator.add_timing("f3", 6.2524)
-    logdecorator.add_timing("f2", 7.5234)
-    logdecorator.add_timing("f2", 8.70987)
-    logdecorator.add_timing("f2", 9.78034970)
-    timings = logdecorator.get_timings()
+    from suapp.logdecorator import add_timing
+    disable_timings()
+    add_timing("f1", 3)
+    add_timing("f2", 4.234)
+    add_timing("f1", 6)
+    add_timing("f3", 6.2524)
+    add_timing("f2", 7.5234)
+    add_timing("f2", 8.70987)
+    add_timing("f2", 9.78034970)
+    timings = get_timings()
     print(timings)
-    report = logdecorator.timings_report()
+    report = timings_report()
     print(report)
     assert report == None
 

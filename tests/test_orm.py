@@ -12,8 +12,8 @@ import tempfile
 import sys
 import urllib.error
 
-sys.path.append(os.path.join(os.getcwd(), 'suapp'))
-import orm
+sys.path.append(os.getcwd())
+import suapp.orm
 
 @pytest.fixture(params=[None, "five"])
 def pony_entity(request):
@@ -41,7 +41,7 @@ def pony_entity_object(pony_entity):
 
 @pytest.fixture()
 def orm_objects(pony_entity_object):
-    class UiTestOrm(orm.UiOrmObject):
+    class UiTestOrm(suapp.orm.UiOrmObject):
         def __init__(self, orm=None):
             pass
     class UiSubTestOrm(UiTestOrm):
@@ -71,7 +71,7 @@ def test_columns(orm_objects):
 
 def test_uize(orm_objects):
     (pony_entity_object, ui_orm_object) = orm_objects
-    assert orm.UiOrmObject.uize(pony_entity_object).__class__.__name__ == "Ui%s" % (pony_entity_object.__class__.__name__)
+    assert suapp.orm.UiOrmObject.uize(pony_entity_object).__class__.__name__ == "Ui%s" % (pony_entity_object.__class__.__name__)
 
 def test_ui_attributes(orm_objects):
     (pony_entity_object, ui_orm_object) = orm_objects

@@ -12,8 +12,8 @@ import tempfile
 import sys
 import urllib.error
 
-sys.path.append(os.path.join(os.getcwd(), 'suapp'))
-import configuration
+sys.path.append(os.getcwd())
+import suapp.configuration
 
 
 # Sample configuration we're expecting.
@@ -149,7 +149,7 @@ def yaml_file(request):
 
 def test_dictionary():
     """ Test initializing the configuration with a dictionary. """
-    with configuration.get_configuration(copy.deepcopy(sample)) as test:
+    with suapp.configuration.get_configuration(copy.deepcopy(sample)) as test:
         assert test == sample
 
 @pytest.mark.xfail(raises=urllib.error.URLError)
@@ -160,7 +160,7 @@ def test_url():
     This depends on the network and the url being available. So a URLError
     should not mean a failure, just an xfail.
     """
-    with configuration.get_configuration(url) as test:
+    with suapp.configuration.get_configuration(url) as test:
         assert test == sample
 
 @pytest.mark.xfail(raises=[urllib.error.URLError,NotImplementedError])
@@ -175,14 +175,14 @@ def test_missing_json_with_backup(json_file):
     as that is not implemented for a WebConfiguration. So that as well should
     not be seen as a failure, just an xfail.
     """
-    with configuration.get_configuration([json_file, url, copy.deepcopy(sample)]) as test:
+    with suapp.configuration.get_configuration([json_file, url, copy.deepcopy(sample)]) as test:
         assert test == sample
         assert json.load(open(json_file)) == sample
 
 def test_empty_json_file_with_add_and_save(json_file):
     """ Test an empty json file configuration with modification via add. """
     expected = {'c': 'python'}
-    with configuration.get_configuration([json_file, {}]) as test:
+    with suapp.configuration.get_configuration([json_file, {}]) as test:
         for key in expected:
             test[key] = copy.deepcopy(expected[key])
         test.save()
@@ -191,13 +191,13 @@ def test_empty_json_file_with_add_and_save(json_file):
     for line in open(json_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===")
-    with configuration.get_configuration(json_file) as test:
+    with suapp.configuration.get_configuration(json_file) as test:
         assert test == expected
 
 def test_empty_json_file_with_update_and_save(json_file):
     """ Test an empty json file configuration with modification via update. """
     expected = {'c': 'python'}
-    with configuration.get_configuration([json_file, {}]) as test:
+    with suapp.configuration.get_configuration([json_file, {}]) as test:
         test.update(expected)
         test.save()
     print("File: %s" % (json_file))
@@ -205,7 +205,7 @@ def test_empty_json_file_with_update_and_save(json_file):
     for line in open(json_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===")
-    with configuration.get_configuration(json_file) as test:
+    with suapp.configuration.get_configuration(json_file) as test:
         assert test == expected
 
 def test_different_json_file_with_backup(json_file):
@@ -219,25 +219,25 @@ def test_different_json_file_with_backup(json_file):
     for line in open(json_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===")
-    with configuration.get_configuration(json_file) as test:
+    with suapp.configuration.get_configuration(json_file) as test:
         assert test == different_sample
 
 def test_missing_cfg_file_with_backup(cfg_file):
     """ Test with a cfg file that doesn't exist yet and backup. """
-    with configuration.get_configuration([cfg_file, url, copy.deepcopy(sample)]) as test:
+    with suapp.configuration.get_configuration([cfg_file, url, copy.deepcopy(sample)]) as test:
         assert test == sample
 
 def test_different_cfg_with_backup(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
+    with suapp.configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
     for line in open(cfg_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    with configuration.get_configuration(cfg_file, raw=True) as test:
+    with suapp.configuration.get_configuration(cfg_file, raw=True) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Different sample:")
@@ -247,7 +247,7 @@ def test_different_cfg_with_backup(cfg_file):
 def test_different_cfg_with_backup_not_sparse(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
+    with suapp.configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
@@ -255,7 +255,7 @@ def test_different_cfg_with_backup_not_sparse(cfg_file):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
     expected = unsparse(different_sample)
-    with configuration.get_configuration(cfg_file, sparse=False) as test:
+    with suapp.configuration.get_configuration(cfg_file, sparse=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Expected based on different sample:")
@@ -265,14 +265,14 @@ def test_different_cfg_with_backup_not_sparse(cfg_file):
 def notest_different_cfg_with_backup_not_raw(cfg_file):
     """ Test with a different cfg file than the backups. """
     # Creating the cfg with a different sample configuration.
-    with configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
+    with suapp.configuration.get_configuration([cfg_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (cfg_file))
     print("=== START FILE CONTENT ===")
     for line in open(cfg_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    with configuration.get_configuration(cfg_file, raw=False) as test:
+    with suapp.configuration.get_configuration(cfg_file, raw=False) as test:
         print("Test:")
         pprint.pprint(dict(test))
         print("Different sample:")
@@ -281,51 +281,51 @@ def notest_different_cfg_with_backup_not_raw(cfg_file):
 
 def test_missing_xml_with_backup(xml_file):
     """ Test with a missing xml with backup. """
-    with configuration.get_configuration([xml_file, url, copy.deepcopy(sample)]) as test:
+    with suapp.configuration.get_configuration([xml_file, url, copy.deepcopy(sample)]) as test:
         assert test == sample
 
 def test_different_xml_with_backup(xml_file):
     """ Test with an existing xml with different backup """
-    with configuration.get_configuration([xml_file, copy.deepcopy(different_sample)]) as test:
+    with suapp.configuration.get_configuration([xml_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("File: %s" % (xml_file))
     print("=== START FILE CONTENT ===")
     for line in open(xml_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    with configuration.get_configuration(xml_file) as test:
+    with suapp.configuration.get_configuration(xml_file) as test:
         assert recursively_unorder(test) == different_sample
 
 def test_missing_yaml_with_backup(yaml_file):
     """ Test with a missing yaml with backup. """
-    with configuration.get_configuration([yaml_file, url, copy.deepcopy(sample)]) as test:
+    with suapp.configuration.get_configuration([yaml_file, url, copy.deepcopy(sample)]) as test:
         assert test == sample
 
 def test_different_yaml_with_backup(yaml_file):
     """ Test with a different yaml with backup. """
-    with configuration.get_configuration([yaml_file, copy.deepcopy(different_sample)]) as test:
+    with suapp.configuration.get_configuration([yaml_file, copy.deepcopy(different_sample)]) as test:
         test.save()
     print("=== START FILE CONTENT ===")
     for line in open(yaml_file, 'r', encoding='utf-8'):
         print(line.rstrip())
     print("=== END FILE CONTENT ===\n")
-    with configuration.get_configuration(yaml_file) as test:
+    with suapp.configuration.get_configuration(yaml_file) as test:
         assert test == different_sample
 
 def test_ConfigurationParser():
     """
     Test the string representation.
     """
-    conf = configuration.ConfigurationParser("here")
+    conf = suapp.configuration.ConfigurationParser("here")
     string = re.sub('0x[0-9a-f]*', '0x000000000000', "%s" % (conf))
-    assert string == "<configuration.ConfigurationParser object at 0x000000000000> on location here"
+    assert string == "<suapp.configuration.ConfigurationParser object at 0x000000000000> on location here"
 
 def test_load_into_dict():
     """
     Test the not supported of load_into_dict.
     """
     with pytest.raises(NotImplementedError):
-        conf = configuration.ConfigurationParser("here")
+        conf = suapp.configuration.ConfigurationParser("here")
         conf.load_into_dict(conf)
 
 def test_save_from_dict():
@@ -333,7 +333,7 @@ def test_save_from_dict():
     Test the not supported of save_from_dict.
     """
     with pytest.raises(NotImplementedError):
-        conf = configuration.ConfigurationParser("here")
+        conf = suapp.configuration.ConfigurationParser("here")
         conf.save_from_dict(conf)
 
 @pytest.fixture
@@ -341,7 +341,7 @@ def empty_subclass_ConfigurationParser():
     """
     Returns and empty subclass of ConfigurationParser.
     """
-    class SubConfigurationParser(configuration.ConfigurationParser):
+    class SubConfigurationParser(suapp.configuration.ConfigurationParser):
         pass
     return SubConfigurationParser
 
