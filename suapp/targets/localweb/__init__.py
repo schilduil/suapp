@@ -1166,6 +1166,24 @@ class BrowserThread(Thread):
         print("Admin credentials: admin/%s" % (users['admin']))
 
 
+class ServerThread(Thread):
+
+    # @loguse seems to break it.
+    def __init__(self, server):
+        """
+        Set the server.
+        """
+        self.server = server
+        super().__init__()
+
+    @loguse
+    def run(self):
+        """
+        Run the thread: i.e. wait and lauch the browser.
+        """
+        this.server.serve_forever()
+
+
 class Application(suapp.jandw.Wooster):
     """
     Application home page.
@@ -1202,7 +1220,11 @@ class Application(suapp.jandw.Wooster):
         if httpd_conf.get('client', True):
             browser_thread = BrowserThread(self.ip, self.port)
             browser_thread.start()
-        self.server.serve_forever()
+        if httpd_conf.get('background', False):
+            server_thread = ServerThread(self.server)
+            server_thread.start()
+        else:
+            self.server.serve_forever()
         print("HTTPServer stopped.")
 
     @loguse
