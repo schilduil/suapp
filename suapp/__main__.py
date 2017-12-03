@@ -47,30 +47,31 @@ def update_conf(configuration, option_string):
         return
     options = option_string.split(",")
     for option in options:
-        (key, value) = option.split("=", 1)
-        context = key.split(".")
-        subconfig = configuration
-        while len(context) > 1:
-            if (context[0]) not in subconfig:
-                subconfig[context[0]] = {}
-            subconfig = subconfig[context[0]]
-            context.pop(0)
-        # Transforming so clear booleans from str.
-        try:
-            value = {
-                    'false': False,
-                    'true': True
-            }.get(value.lower(), value)
-            value = int(value)
-        except ValueError as e:
+        if option:
+            (key, value) = option.split("=", 1)
+            context = key.split(".")
+            subconfig = configuration
+            while len(context) > 1:
+                if (context[0]) not in subconfig:
+                    subconfig[context[0]] = {}
+                subconfig = subconfig[context[0]]
+                context.pop(0)
+            # Transforming so clear booleans from str.
             try:
-                value = float(value)
-            except ValueError as ve:
-                pass
-        subconfig[context[0]] = value
+                value = {
+                        'false': False,
+                        'true': True
+                }.get(value.lower(), value)
+                value = int(value)
+            except ValueError as e:
+                try:
+                    value = float(value)
+                except ValueError as ve:
+                    pass
+            subconfig[context[0]] = value
 
 
-if __name__ == "__main__":
+def main():
     # By default the json configuration file is in the local directory and is
     # called suapp.json.
     # But this can be overwritten by passing a -c parameter passing the
@@ -137,3 +138,7 @@ if __name__ == "__main__":
             import traceback
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+
+if __name__ == "__main__":
+    main()
