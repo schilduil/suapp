@@ -15,7 +15,7 @@ from suapp.moduleloader import *
 
 
 __all__ = ["SuAppError", "ModuleError", "ConfigurationError",
-           "Config", "SuApp"]
+           "Config", "SuApp", "main"]
            # "jandw", "logdecorator", "moduleloader", "orm", "locale", "targets"
 
 
@@ -327,79 +327,17 @@ class SuApp(object):
         self.flow.start()
 
 
-#
-# MAIN: The root of all evil
-#
-if __name__ == "__main__":
-    #
-    # This was some test code, but I'm not sure it still works.
-    #
-
-    log = logging.getLogger(__name__)
-
-    # Run with a configuration
+def main(config):
     try:
-        appconfig = config.get_config(xmlfilename)
-    except config.ConfigurationError as err:
-        log.error("%s", err)
-        print("%s" % (err))
-        sys.exit(1)
-
-    # Getting all the configuration from the appconfig
-    flow = Jeeves()
-    try:
-        log.info("Running on %s %s version %s on %s %s on %s (%s)", platform.python_implementation(), platform.python_build(), platform.python_version(), platform.system(), platform.release(), platform.machine(), platform.processor())
-        log.debug("Config (%s):\n%s", xmlfilename, appconfig)
-        (name, shortname) = setFlow_depr(flow, appconfig)
-        dataDefinitions = appconfig.data_definition
-    except config.ConfigurationError as err:
-        log.error("%s", err)
-        print("%s" % (err))
-        sys.exit(1)
-
-    # A poor man's nested context manager, which in this case isn't too
-    # bad since we sys.exit(2) anyway so no lingering resources anyway.
-    # Nevertheless it should behave nicely on error.
-    tables = {}
-    indtable = None
-    try:
-        for table in dataDefinitions['tables']:
-            log.debug("Table %s: %s", table, dataDefinitions['tables'][table])
-            tables[table] = (factory.tableFactory(dataDefinitions['tables'][table], table))
-        for gen in tables:
-            print("\nGoing to open %s (%s)" % (gen, tables[gen]))
-            tables[gen].__enter__()
-
-        # == START TEMPORARY TEST CODE == #
-        indtable = tables['organism']
-        perstable = tables['person']
-        indtable.setFor('GOc', dict(gender=1, bandcode=dict(breeder='FS2', year='06', sequence=654), breeder='Frank Silva', status=-128))
-        indtable.setFor('GOh', dict(gender=2, bandcode=dict(breeder='FS2', year='06', sequence=774), breeder='Frank Silva', status=-128))
-        indtable.setFor('MCc', dict(gender=1, bandcode=dict(breeder='FS2', year='06', sequence=870), breeder='Frank Silva', status=-128))
-        indtable.setFor('MCh', dict(gerder=2, bandcode=dict(breeder='FS2', year='06', sequence=559), breeder='Frank Silva', status=-128))
-        indtable.setFor('(131GAOC)298', dict(gender=1, bandcode=dict(issuer='BGC', breeder='BR23', year='11', sequence=298), breeder='Bert Raeymaekers', status=1))
-        indtable.setFor('(302267)343', dict(gender=2, bandcode=dict(issuer='BGC', breeder='BR23', year='12', sequence=343), breeder='Bert Raeymaekers', status=1))
-        perstable.setFor('1', dict(firstname="Bert", lastname="Raeymaekers", email="br23@schilduil.org", bandcode="BR23"))
-        perstable.setFor('2', dict(firstname="Stefaan", lastname="Buggenhout", bandcode="SB18"))
-        log.debug("All the (active) members:")
-        for individual in indtable:
-            log.debug("\tIndividual %s", individual)
-        log.debug("State: %s", indtable.state())
-        goc = indtable['GOc']
-        print("\nGetting GOc: %s %r %s" % (id(goc), goc, goc))
-        goc = indtable['GOc']
-        print("\nGetting GOc: %s %r %s" % (id(goc), goc, goc))
-        # == END TEST == #
-
-        # Pass the application configuration
-        flow.start({'config': appconfig, 'name': name, 'shortname': shortname, 'tables': tables})
-    except Exception as err:
-        log.error("%s", err)
-        print(err)
-        raise err
-        sys.exit(2)
-    finally:
-        for gen in tables:
-            tables[gen].__exit__(None, None, None)
-
-    print("Bye.")
+        # Instanciating the application
+        app = SuApp(config)
+        app.start()
+        print(suapp._("Bye."))
+    except Exception as e:
+        try:
+            logging.getLogger(__name__).fatal(suapp._("Unexpected end of SuApp: %s") % (e))
+        finally:
+            print(_("Unexpected end of SuApp!"))
+            import traceback
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
