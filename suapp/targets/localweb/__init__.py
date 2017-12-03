@@ -1152,7 +1152,7 @@ class BrowserThread(Thread):
         """
         self.ip = ip
         self.port = port
-        super().__init__()
+        super().__init__(name="BrowserThread")
 
     @loguse
     def run(self):
@@ -1174,7 +1174,7 @@ class ServerThread(Thread):
         Set the server.
         """
         self.server = server
-        super().__init__()
+        super().__init__(name="ServerThread")
 
     @loguse
     def run(self):
@@ -1182,6 +1182,10 @@ class ServerThread(Thread):
         Run the thread: i.e. wait and lauch the browser.
         """
         self.server.serve_forever()
+
+    @loguse
+    def shutdown(self):
+        self.server.shutdown()
 
 
 class Application(suapp.jandw.Wooster):
@@ -1224,6 +1228,12 @@ class Application(suapp.jandw.Wooster):
             server_thread = ServerThread(self.server)
             server_thread.start()
             print("HttpServer started.")
+            answer = ""
+            while answer != "shutdown":
+                print("Enter 'shutdown' to stop.")
+                answer = input("$> ").lower()
+            server_thread.shutdown()
+            print("HTTPServer stopped.")
         else:
             self.server.serve_forever()
             print("HTTPServer stopped.")
