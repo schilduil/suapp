@@ -1199,7 +1199,6 @@ class Application(suapp.jandw.Wooster):
         LocalWebHandler.jeeves = jeeves
         LocalWebHandler.drone = drone
         self.server = http.server.HTTPServer((self.ip, self.port), LocalWebHandler)
-        print(httpd_conf.get('client', True))
         if httpd_conf.get('client', True):
             browser_thread = BrowserThread(self.ip, self.port)
             browser_thread.start()
