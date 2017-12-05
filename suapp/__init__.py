@@ -335,7 +335,7 @@ def main(config):
         print(_("Bye."))
     except Exception as e:
         try:
-            logging.getLogger(__name__).fatal(_("Unexpected end of SuApp: %s") % (e))
+            logging.getLogger(__name__).fatal(_("Unexpected end of SuApp: %s (%s)") % (type(e), e))
         finally:
             print(_("Unexpected end of SuApp!"))
             import traceback
