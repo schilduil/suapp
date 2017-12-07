@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+#import http.client
 import os
+import random
 import sys
 import threading
 import time
@@ -27,13 +29,22 @@ import suapp
     http://127.0.0.1:8385/service/setfetch?table=UiIndividual&key=5&module=modlib.base&link=first_kinships&pretty
 """
 
-# scope="module"
-@pytest.fixture()
-def launch(tmpdir):
+random_string_params = [None, (0,10), (1,10), (2,20), (3,30), (4, 40), (5,1), (6,2), (7,3), (8,4), (9,5), (10,6), (11,7), (12,8), (13,9)]
+
+
+def random_string(seed, length):
+    random.seed(seed)
+    uri = []
+    for x in range(length):
+        uri.append(chr(random.randint(64,122)))
+    return "" # .join(uri)
+
+@pytest.fixture(scope="module")
+def launch(tmpdir_factory):
     # Launch with the localweb target, without client.
-    datapath = tmpdir.mkdir("data")
-    logpath = tmpdir.mkdir("log")
-    configpath = tmpdir.mkdir("config")
+    datapath = tmpdir_factory.mktemp("data")
+    logpath = tmpdir_factory.mktemp("log")
+    configpath = tmpdir_factory.mktemp("config")
     flow = configpath.join("tlwt.flow")
     port = 8385
     hostname = "127.0.0.1"
@@ -75,24 +86,61 @@ def launch(tmpdir):
     suapp.main(config)
     time.sleep(1)
     # ServerThread is now running, so do your tests...
+    print("Before")
     yield (hostname, port)
+    print("After")
     # Find the ServerThread and shut it down.
     for t in threading.enumerate():
-        # print("Thread: %s (%r/%s) alive: %s" % (t.name, t, t, t.is_alive()))
+        print("Thread: %s (%r/%s) alive: %s" % (t.name, t, t, t.is_alive()))
         if t.name == "ServerThread":
             t.shutdown()
 
-@pytest.fixture(params=[None])
+@pytest.fixture(params=random_string_params)
 def random_uri(request):
     if not request.param:
         return ""
+    else:
+        (seed, length) = request.param
+        random.seed(seed)
+        uri = []
+        for x in range(length):
+            uri.append(chr(random.randint(64,122)))
+        return "".join(uri)
 
+@pytest.fixture
+def random_service_uri(random_uri):
+    return "service/" + random_uri
 
-def test_unauthenticated(launch, random_uri):
-    print(launch)
-    print(dir(suapp.targets.localweb))
+@pytest.fixture(params=[None, (46546,11)])
+def random_random_uri(request, random_uri):
+    uri = ['/']
+    if request.param:
+        (seed, length) = request.param
+        for x in range(length):
+            uri.append(chr(random.randint(64,122)))
+    print("URI: %s" % (random_uri))
+    print("  +: %s" % (uri))
+    return random_uri + "".join(uri)
+
+def test_random_unauthenticated(launch, random_uri):
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         with urllib.request.urlopen("http://%s:%s/" % launch + random_uri) as r:
             assert True == False
     # Not logged in, so should return HTTP Error 403: Forbidden
     assert exc_info.value.getcode() == 403
+
+def test_random_service_uri(launch, random_service_uri):
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        with urllib.request.urlopen("http://%s:%s/" % launch + random_service_uri) as r:
+            assert True == False
+    # Not logged in, so should return HTTP Error 403: Forbidden
+    assert exc_info.value.getcode() == 403
+
+def test_random_random_uri(launch, random_random_uri):
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        with urllib.request.urlopen("http://%s:%s/" % launch + random_random_uri) as r:
+            assert True == False
+    # Not logged in, so should return
+    #   HTTP Error 403: Forbidden
+    #   HTTP Error 400: Bad Request
+    assert exc_info.value.getcode() in [400, 403]

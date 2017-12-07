@@ -1091,29 +1091,35 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
         Entry point for an http GET request.
         """
         self.command = 'GET'
-        # TODO: this parsing does not work on keys without a variable.
-        fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query, keep_blank_values=True)
-        # Anything starting with /js/, /css/, /img/ is static content.
-        if self.path == "/favicon.ico":
-            self.do_static(fields, "image/x-icon")
-        elif self.path.startswith("/js/"):
-            self.do_static(fields, "application/x-javascript")
-        elif self.path.startswith("/img/"):
-            file_name = self.path.split("?", 1)[0]
-            if file_name.endswith(".png"):
-                self.do_static(fields, "image/png")
-            elif file_name.endswith(".ico"):
+        try:
+            # TODO: this parsing does not work on keys without a variable.
+            fields = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query, keep_blank_values=True)
+            # Anything starting with /js/, /css/, /img/ is static content.
+            if self.path == "/favicon.ico":
                 self.do_static(fields, "image/x-icon")
-            elif file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
-                self.do_static(fields, "image/jpeg")
-            elif file_name.endswith(".gif"):
-                self.do_static(fields, "image/gif")
+            elif self.path.startswith("/js/"):
+                self.do_static(fields, "application/x-javascript")
+            elif self.path.startswith("/img/"):
+                file_name = self.path.split("?", 1)[0]
+                if file_name.endswith(".png"):
+                    self.do_static(fields, "image/png")
+                elif file_name.endswith(".ico"):
+                    self.do_static(fields, "image/x-icon")
+                elif file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
+                    self.do_static(fields, "image/jpeg")
+                elif file_name.endswith(".gif"):
+                    self.do_static(fields, "image/gif")
+                else:
+                    self.do_static(fields, "binary/octet-stream")
+            elif self.path.startswith("/css/"):
+                self.do_static(fields, "text/css; charset=utf-8")
             else:
-                self.do_static(fields, "binary/octet-stream")
-        elif self.path.startswith("/css/"):
-            self.do_static(fields, "text/css; charset=utf-8")
-        else:
-            self.do_dynamic(fields)
+                self.do_dynamic(fields)
+        except Exception as e:
+            self.send_response(400)
+            self.end_headers()
+            message = "%s" % (e)
+            self.wfile.write(message.encode('utf-8'))
 
     # No @loguse as then we would be logging what we are logging.
     def log_message(self, format, *args):
@@ -1152,7 +1158,7 @@ class BrowserThread(Thread):
         """
         self.ip = ip
         self.port = port
-        super().__init__(name="BrowserThread")
+        super().__init__(name="BrowserThread", daemon=True)
 
     @loguse
     def run(self):
@@ -1174,7 +1180,7 @@ class ServerThread(Thread):
         Set the server.
         """
         self.server = server
-        super().__init__(name="ServerThread")
+        super().__init__(name="ServerThread", daemon=True)
 
     @loguse
     def run(self):
