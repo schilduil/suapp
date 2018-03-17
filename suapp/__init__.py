@@ -116,7 +116,7 @@ def convert_to_log_level(txt):
         return logging.WARNING
     if txt == "NOTSET":
         return logging.NOTSET
-    if txt.startsWith("LEVEL "):
+    if txt.startswith("LEVEL "):
         try:
             return int(txt[6:])
         except:
@@ -124,11 +124,31 @@ def convert_to_log_level(txt):
     raise ConfigurationException("Unknow log level: %s" % (txt))
 
 
-def print_report(report):
-    print("TIMINGS:")
-    for key, value in report.items():
-        print("%8.2fms / %8.0f = %8.2fms\t%s" % (value[1]*1000, value[0], value[2]*1000, key))
+def print_report(report, top=None):
+    """
+    Prints out the top number of average times in the report.
 
+    It assumes the report is descendingly sorted by average. If top is not
+    something that works when doing int(top), sys.maxsize lines are written.
+    Lines that start with loguse (i.e. reporting the overhead of loguse) are
+    always written, even if they are not in the top.
+    """
+    print("TIMINGS:")
+    print("Total time / # called =  avg. time     function/method")
+    print("-" * 79)
+    try:
+        # If top is something int like, use it as max number of lines.
+        top = int(top)
+    except:
+        # If there are more entries than this, who's going to read them?
+        top = sys.maxsize
+    for key, value in report.items():
+        if top > 0 or str(key).startswith("loguse "):
+            print("%8.2fms / %8.0f = %8.2fms\t%s" % (value[1]*1000, value[0], value[2]*1000, key))
+        elif top == 0:
+            print(" -" * 39)
+        top -= 1
+    print("-" * 79)
 
 class SuApp(object):
     """
@@ -340,7 +360,7 @@ class SuApp(object):
             pass
         if "timings" in self.configuration["log"]:
             if self.configuration["log"]["timings"]:
-                print_report(timings_report())
+                print_report(timings_report(), top=self.configuration["log"]["timings"])
 
 
 def main(config):
