@@ -155,7 +155,6 @@ def loguse(param=None):
     end_time = time.time()
     add_timing('loguse function initialization overhead', end_time - start_time)
     if f:
-        #add_timing(f, end_time_callable - start_time_callable)
         return real_loguse(f)
     else:
         return real_loguse
