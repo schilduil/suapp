@@ -3,6 +3,7 @@
 
 
 import importlib
+import json
 import os.path
 import platform
 import sys
@@ -123,6 +124,12 @@ def convert_to_log_level(txt):
     raise ConfigurationException("Unknow log level: %s" % (txt))
 
 
+def print_report(report):
+    print("TIMINGS:")
+    for key, value in report.items():
+        print("%8.2fms / %8.0f = %8.2fms\t%s" % (value[1]*1000, value[0], value[2]*1000, key))
+
+
 class SuApp(object):
     """
     The SuApp class represents a running application.
@@ -190,6 +197,9 @@ class SuApp(object):
                 level = self.configuration["log"]["level"]
             else:
                 self.configuration["log"]["level"] = level
+            if "timings" in self.configuration["log"]:
+                if self.configuration["log"]["timings"]:
+                    init_timings()
 
             # Making sure the directory exists.
             os.makedirs(os.path.dirname(os.path.expanduser(filename)), exist_ok=True)
@@ -324,7 +334,13 @@ class SuApp(object):
         """
         Start the application.
         """
-        self.flow.start()
+        try:
+            self.flow.start()
+        except:
+            pass
+        if "timings" in self.configuration["log"]:
+            if self.configuration["log"]["timings"]:
+                print_report(timings_report())
 
 
 def main(config):
