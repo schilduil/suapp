@@ -80,8 +80,8 @@ def loguse(param=None):
     #   It could be a string => list with that string as element
     #   It could be an iterable => ok
     start_time = time.time()
-    start_time_callable = 0
-    end_time_callable = 0
+    start_time_callable = 0.0
+    end_time_callable = 0.0
     f = None
     ignore_parameters = []
     if param is None:
@@ -111,6 +111,7 @@ def loguse(param=None):
 
         @wraps(f)
         def decorator(*args, **kwargs):
+            start_time_logdecorator = time.time()
             l_args = list(args)
             l_kwargs = dict(kwargs)
             if log.isEnabledFor(logging.DEBUG):
@@ -135,6 +136,7 @@ def loguse(param=None):
             start_time_callable = time.time()
             result = f(*args, **kwargs)
             end_time_callable = time.time()
+            add_timing(f, end_time_callable - start_time_callable)
             if log.isEnabledFor(logging.DEBUG):
                 if '@' in ignore_parameters:
                     if classname == "<module>":
@@ -146,12 +148,14 @@ def loguse(param=None):
                         log.debug("< %s: %r", f.__name__, result)
                     else:
                         log.debug("< %s.%s: %r", classname, f.__name__, result)
+            end_time_logdecorator = time.time()
+            add_timing('loguse function call overhead', end_time_logdecorator - end_time_callable + start_time_callable - start_time_logdecorator)
             return result
         return decorator
     end_time = time.time()
-    add_timing('loguse overhead', end_time - end_time_callable + start_time_callable - start_time)
+    add_timing('loguse function initialization overhead', end_time - start_time)
     if f:
-        add_timing(f, end_time_callable - start_time_callable)
+        #add_timing(f, end_time_callable - start_time_callable)
         return real_loguse(f)
     else:
         return real_loguse
