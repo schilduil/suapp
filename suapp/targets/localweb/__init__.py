@@ -1122,6 +1122,20 @@ class LocalWebHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(message.encode('utf-8'))
 
     # No @loguse as then we would be logging what we are logging.
+    def log_error(self, format, *args):
+        # TODO: to error log.
+        session_id = ""
+        try:
+            session_id = self.session_id
+        except:
+            pass
+        logging.getLogger("modules.httpd").error("%s %s %s - - [%s] %s" % (hex(hash(self))[-8:],
+                                                                           session_id[-8:],
+                                                                           self.address_string(),
+                                                                           self.log_date_time_string(),
+                                                                           format % args))
+
+    # No @loguse as then we would be logging what we are logging.
     def log_message(self, format, *args):
         """
         Logging to modules.httpd logger.
