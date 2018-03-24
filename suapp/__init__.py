@@ -123,6 +123,28 @@ def convert_to_log_level(txt):
             raise ConfigurationException("Log level is not a number: %s" % (txt))
     raise ConfigurationException("Unknow log level: %s" % (txt))
 
+def format_float(value, length=10, precision=2, unit=None, scales={1: "µs", 1000: "ms", 1000000: " s", 60000000: " m", 3600000000: " h", 604800000000: " w"}):
+    scale = list(scales.keys())
+    scale.sort()
+    scale_label = [scales[x] for x in scale]
+    if unit:
+        scale_index = scale_label.index(unit)
+    else:
+        scale_index = 0
+        unit = scale_label[0]
+    float_length = length - len(unit)
+    if precision:
+        float_max = 10**(float_length - 1 - precision) - 1
+    else:
+        float_max = 10**float_length - 1
+    while value > float_max:
+        value *= (scale[scale_index] / scale[scale_index+1])
+        scale_index += 1
+    if precision:
+        result = ("%" + str(float_length) + "." + str(precision) + "f" + scale_label[scale_index]) % value
+    else:
+        result = ("%" + str(float_length) + ".0f" + scale_label[scale_index]) % value
+    return result
 
 def print_report(report, top=None):
     """
@@ -144,7 +166,10 @@ def print_report(report, top=None):
         top = sys.maxsize
     for key, value in report.items():
         if top > 0 or str(key).startswith("loguse "):
-            print("%8.2fms / %8.0f = %8.2fms\t%s" % (value[1]*1000, value[0], value[2]*1000, key))
+            tot = format_float(value[1] * 1000000)
+            cnt = format_float(value[0], length=9, precision=0, unit=" ", scales={1: " ", 1000: "K", 1000000: "M", 1000000000: "T"})
+            avg = format_float(value[2] * 1000000)
+            print("%s / %s= %s\t%s" % (tot, cnt, avg, key))
         elif top == 0:
             print(" -" * 39)
         top -= 1
