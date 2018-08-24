@@ -9,7 +9,7 @@ import sys
 import pony.orm
 
 import suapp.orm
-from suapp.logdecorator import *
+from suapp.logdecorator import loguse, logging
 
 
 __all__ = ["Wooster", "Drone", "Jeeves"]
@@ -186,7 +186,7 @@ class Jeeves(object):
 
         This will return the list of  objects representing the rows in the
         database pointed to by the foreign key (which name should be passed in
-        link). The return typ is either a list of suapp.orm.UiOrmObject's.
+        link). The return type is either a list of suapp.orm.UiOrmObject's.
 
         Usually you can follow the foreign key directly, but not in an
         asynchronous target (UI) like the web where you need to fetch it anew.
