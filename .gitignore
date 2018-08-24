@@ -44,3 +44,6 @@ tests/targets/*only/
 .venv
 .venv/
 
+# Visual Studio Code
+.vscode
+.vscode/
