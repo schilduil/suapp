@@ -76,7 +76,17 @@ def update_conf(configuration, option_string):
 # But this can be overwritten by passing a -c parameter passing the
 # filename, path or the full json file location.
 
-languages = set([locale.getlocale()[0], locale.getlocale()[0].split('_')[0]])
+# Get the language, default to UK English and we're always using UTF-8
+running_locale = locale.getlocale()
+if not running_locale[0]:
+    running_locale = ('en_GB', 'UTF-8')
+else:
+    running_locale = (running_locale, 'UTF-8')
+try:
+    language = running_locale[0].split('_')[0]
+except AttributeError:
+    pass
+languages = set([running_locale[0], language])
 suapp.do_locale(languages)
 
 parser = argparse.ArgumentParser(description=suapp._('Start a SuApp application.'))
