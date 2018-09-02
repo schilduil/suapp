@@ -478,10 +478,10 @@ class AboutWindow(ToplevelWooster):
             with open(file_name) as fh:
                 for line in fh:
                     text.append(line)
-        except OSError as e:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
-        except IOError as e:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
+        except OSError:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
+        except IOError:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
         if not text:
             text = ["ERROR: Could not open file %s." % (file_name)]
         self.text.config(state=NORMAL)

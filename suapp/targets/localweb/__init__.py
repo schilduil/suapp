@@ -1312,10 +1312,10 @@ class About(suapp.jandw.Wooster):
             with open(file_name) as fh:
                 for line in fh:
                     result.append(line)
-        except OSError as e:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
-        except IOError as e:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
+        except OSError:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
+        except IOError:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
         if not result:
             result = ["ERROR: Could not open file %s." % (file_name)]
         return ("About", "".join(result) + "".join(suffix))
