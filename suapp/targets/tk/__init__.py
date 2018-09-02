@@ -6,6 +6,7 @@ from tkinter import *
 from tkinter.ttk import *
 
 import suapp.jandw
+import suapp.simple_json as simple_json
 from suapp.logdecorator import *
 
 
@@ -447,8 +448,7 @@ class UniqueRecord(Record):
 class AboutWindow(ToplevelWooster):
 
     @loguse
-    def __init__(self, jeeves=None, master=None):
-        self.jeeves = jeeves
+    def __init__(self, master=None):
         Toplevel.__init__(self, master, class_="About")
         self.title("About")
         # Don't make it smaller then this
@@ -460,6 +460,16 @@ class AboutWindow(ToplevelWooster):
 
     @loguse
     def createWidgets(self):
+        self.text = Text(self, wrap=WORD)
+        self.text.config(state=DISABLED)
+        self.text.grid()
+        self.button = Button(self, text="Close", command=self.close)
+        self.button.grid()
+        self.update()
+
+    @loguse
+    def inflow(self, jeeves, drone):
+        self.jeeves = jeeves
         # Looking for txt file
         text = []
         file_name = self.jeeves.app.configuration["self"].rsplit(".", 1)[0]
@@ -474,17 +484,11 @@ class AboutWindow(ToplevelWooster):
             logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
         if not text:
             text = ["ERROR: Could not open file %s." % (file_name)]
-        self.text = Text(self, wrap=WORD)
+        self.text.config(state=NORMAL)
+        self.text.delete('1.0', END)
         self.text.insert(END, "\n".join(text))
         self.text.config(state=DISABLED)
-        self.text.grid()
-        self.button = Button(self, text="Close", command=self.close)
-        self.button.grid()
         self.update()
-
-    @loguse
-    def inflow(self, jeeves, drone):
-        self.jeeves = jeeves
 
 
 class About(suapp.jandw.Wooster):
@@ -504,7 +508,7 @@ class About(suapp.jandw.Wooster):
             if isinstance(drone.fromvertex, Frame):
                 logging.getLogger(self.__module__).debug(": About[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
-                self.window = AboutWindow(jeeves=jeeves, master=drone.fromvertex)
+                self.window = AboutWindow(drone.fromvertex)
             else:
                 logging.getLogger(self.__module__).debug(": About[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()
@@ -633,7 +637,6 @@ class ConfigurationWindow(ToplevelWooster):
     @loguse
     def createWidgets(self):
         self.text = Text(self, wrap=WORD)
-        self.text.insert(END, "Configuration of the Application.")
         self.text.config(state=DISABLED)
         self.text.grid()
         self.button = Button(self, text="Close", command=self.close)
@@ -642,10 +645,11 @@ class ConfigurationWindow(ToplevelWooster):
 
     @loguse
     def inflow(self, jeeves, drone):
-        import json
+        self.jeeves = jeeves
         self.text.config(state=NORMAL)
         self.text.delete(1.0, END)
-        self.text.insert(END, "Configuration of the Application:\n\n%s" % (json.dumps(jeeves.app.configuration, indent="\t")))
+        print(type(self.jeeves.app.configuration))
+        self.text.insert(END, "Configuration of the Application:\n\n%s" % (simple_json.dumps(dict(self.jeeves.app.configuration), indent="    ")))
         self.text.config(state=DISABLED)
         self.update()
 
