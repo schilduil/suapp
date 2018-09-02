@@ -447,7 +447,8 @@ class UniqueRecord(Record):
 class AboutWindow(ToplevelWooster):
 
     @loguse
-    def __init__(self, master=None):
+    def __init__(self, jeeves=None, master=None):
+        self.jeeves = jeeves
         Toplevel.__init__(self, master, class_="About")
         self.title("About")
         # Don't make it smaller then this
@@ -459,8 +460,22 @@ class AboutWindow(ToplevelWooster):
 
     @loguse
     def createWidgets(self):
+        # Looking for txt file
+        text = []
+        file_name = self.jeeves.app.configuration["self"].rsplit(".", 1)[0]
+        file_name += ".txt"
+        try:
+            with open(file_name) as fh:
+                for line in fh:
+                    text.append(line)
+        except OSError as e:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
+        except IOError as e:
+            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name)
+        if not text:
+            text = ["ERROR: Could not open file %s." % (file_name)]
         self.text = Text(self, wrap=WORD)
-        self.text.insert(END, "About the Application.\n\t1. Yes\n\t2. No\n\t3. %s" % (ipsum))
+        self.text.insert(END, "\n".join(text))
         self.text.config(state=DISABLED)
         self.text.grid()
         self.button = Button(self, text="Close", command=self.close)
@@ -489,7 +504,7 @@ class About(suapp.jandw.Wooster):
             if isinstance(drone.fromvertex, Frame):
                 logging.getLogger(self.__module__).debug(": About[%r].inflow : Using parent" % (self))
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
-                self.window = AboutWindow(drone.fromvertex)
+                self.window = AboutWindow(jeeves=jeeves, master=drone.fromvertex)
             else:
                 logging.getLogger(self.__module__).debug(": About[%r].inflow : Not using parent" % (self))
                 self.window = AboutFrame()
@@ -865,16 +880,16 @@ class View(suapp.jandw.Wooster):
 
 
 if __name__ == "__main__":
-    logging.getLogger(self.__module__).setLevel(logging.DEBUG)  # DEBUG/INFO
-    flow = Jeeves()
+    logging.getLogger(__name__).setLevel(logging.DEBUG)  # DEBUG/INFO
+    flow = suapp.jandw.Jeeves()
     flow.flow = {
         "": {
-            "START": Drone("START", Application()),
-            "RECORD": Drone("RECORD", UniqueRecordFactory())
+            "START": suapp.jandw.Drone("START", Application()),
+            "RECORD": suapp.jandw.Drone("RECORD", UniqueRecord())
         },
         "APP": {
-            "ABOUT": Drone("ABOUT", AboutFactory()),
-            "TABLE": Drone("TABLE", TableFactory())
+            "ABOUT": suapp.jandw.Drone("ABOUT", About()),
+            "TABLE": suapp.jandw.Drone("TABLE", Table())
         }
     }
     flow.start()
