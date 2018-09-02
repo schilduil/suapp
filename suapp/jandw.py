@@ -23,7 +23,7 @@ class ApplicationClosed(FlowException):
     pass
 
 
-class Wooster(object):
+class Wooster():
     """
     A Wooster represents a UI window/page.
 
