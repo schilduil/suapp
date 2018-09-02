@@ -20,7 +20,7 @@ import webbrowser
 import suapp.jandw
 from suapp.logdecorator import *
 
-import suapp.targets.localweb.simple_json
+import suapp.simple_json as simple_json
 
 users = {
     "admin": ''.join(random.choice(string.ascii_letters.upper() + string.ascii_letters.lower() + string.digits + '-_') for i in range(32)),

@@ -8,7 +8,7 @@ import sys
 
 sys.path.append(os.getcwd())
 import suapp.orm
-import suapp.targets.localweb.simple_json as simple_json
+import suapp.simple_json as simple_json
 
 
 class Attribute():
