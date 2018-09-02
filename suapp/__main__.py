@@ -87,7 +87,6 @@ try:
 except AttributeError:
     pass
 languages = set([running_locale[0], language])
-suapp.do_locale(languages)
 
 parser = argparse.ArgumentParser(description=suapp._('Start a SuApp application.'))
 parser.add_argument('-l', '--lang', help=suapp._("language, use 'none' if you don't want a language setting. If not set it infers the language from the environment setting."), default=locale.getlocale()[0])
@@ -96,12 +95,15 @@ parser.add_argument('-c', '--configuration', help=suapp._("path or filename of t
 parser.add_argument('-t', '--target', help=suapp._("target user interface"))
 args = parser.parse_args()
 
-if args.lang.lower() == 'none':
+if not args.lang:
+    suapp.do_locale()
+elif args.lang.lower() == 'none':
     suapp.do_locale()
 else:
     languages = set([args.lang, args.lang.split('_')[0]])
     suapp.do_locale(languages)
 
+print(suapp._("Python version: %s" % (sys.version)))
 print(suapp._("Taal: %s") % (args.lang))
 print(suapp._("Configuration file: %s") % (args.configuration))
 print(suapp._("User interface target: %s") % (args.target))
