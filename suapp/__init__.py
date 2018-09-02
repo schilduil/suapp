@@ -79,7 +79,7 @@ def do_locale(languages=None, domain=None, localedir=None):
 
 
 def do_all_locale(modules, languages=None):
-    result = do_locale(language=languages)
+    result = do_locale(languages=languages)
     # TODO stuff for the modules.
     # result &= <module>.do_locale(language=languages)
     return result
@@ -120,8 +120,9 @@ def convert_to_log_level(txt):
         try:
             return int(txt[6:])
         except:
-            raise ConfigurationException("Log level is not a number: %s" % (txt))
-    raise ConfigurationException("Unknow log level: %s" % (txt))
+            raise ConfigurationError("Log level is not a number: %s" % (txt))
+    raise ConfigurationError("Unknow log level: %s" % (txt))
+
 
 def format_float(value, length=10, precision=2, unit=None, scales={1: "µs", 1000: "ms", 1000000: " s", 60000000: " m", 3600000000: " h", 604800000000: " w"}):
     scale = list(scales.keys())
@@ -322,7 +323,7 @@ class SuApp(object):
                 for line in fh:
                     (out, intag, objecttype) = self.parse_flow_line(line)
                     if out:
-                        flow[out] = jandw.Drone(intag, getattr(ui, objecttype)())
+                        flow[out] = Drone(intag, getattr(ui, objecttype)())
         except IOError as e:
             logging.getLogger(self.__module__).debug(e)
         except OSError as e:
@@ -333,7 +334,7 @@ class SuApp(object):
                     for line in fh:
                         (out, intag, objecttype) = self.parse_flow_line(line)
                         if out:
-                            flow[out] = jandw.Drone(intag, getattr(ui, objecttype)())
+                            flow[out] = Drone(intag, getattr(ui, objecttype)())
             except IOError as e:
                 logging.getLogger(self.__module__).debug(e)
             except OSError as e:
