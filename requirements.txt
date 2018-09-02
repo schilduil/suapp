@@ -2,11 +2,12 @@ xmltodict >= 0.10.2     # Tested with version 0.10.2
 pyyaml >= 3.12          # Tested with version 3.12
 pony >= 0.7             # Tested with version 0.7
 ## UNDER INVESTIGATION ##
-#pymongo                 # Tested with version 3.6.1
-#dnspython               # Tested with version 1.15.0 (also for pymongo)
-#cerberus >= 1.1         # Tested with version 1.1
-#npyscreen               #
-#werkzeug                #
+#pymongo                 # MONGO            # Tested with version 3.6.1
+#dnspython               #  \-MONGO         # Tested with version 1.15.0 (also for pymongo)
+#cerberus >= 1.1         # DATA VALIDATION  # Tested with version 1.1
+#npyscreen               # COMMAND LINE
+#werkzeug                # WEB SERVER
+#iodine                  # WEB FAT CLIENT
 ## FOR TESTING ##
 #pytest >= 3.0.6         # FOR TESTING
 #pytest-cov >= 2.5.1     # FOR TESTING
