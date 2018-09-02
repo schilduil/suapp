@@ -63,10 +63,10 @@ def update_conf(configuration, option_string):
                         'true': True
                 }.get(value.lower(), value)
                 value = int(value)
-            except ValueError as e:
+            except ValueError:
                 try:
                     value = float(value)
-                except ValueError as ve:
+                except ValueError:
                     pass
             subconfig[context[0]] = value
 
