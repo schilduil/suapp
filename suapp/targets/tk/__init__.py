@@ -649,7 +649,10 @@ class ConfigurationWindow(ToplevelWooster):
         self.text.config(state=NORMAL)
         self.text.delete(1.0, END)
         print(type(self.jeeves.app.configuration))
-        self.text.insert(END, "Configuration of the Application:\n\n%s" % (simple_json.dumps(dict(self.jeeves.app.configuration), indent="    ")))
+        title = "Configuration:"
+        self.text.insert(END, "%s\n\n%s" % (title, simple_json.dumps(dict(self.jeeves.app.configuration), indent="    ")))
+        self.text.tag_add("title", "1.0", "1.%s" % len(title))
+        self.text.tag_config("title", background="black", foreground="yellow")
         self.text.config(state=DISABLED)
         self.update()
 
