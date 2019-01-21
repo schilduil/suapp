@@ -80,7 +80,7 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     if app_name:
         if app_name != module_entity.app_name:
             # Wrong app type: skipping and warn about it.
-            logging.getLogger(__name__).warn("Skipping module %s (%s) as it does not belong to app %s.", module_name, module_entity.app_name, app_name)
+            logging.getLogger(__name__).warning("Skipping module %s (%s) as it does not belong to app %s.", module_name, module_entity.app_name, app_name)
             return False
     else:
         # Initializing it if it isn't set yet.
