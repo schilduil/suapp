@@ -7,9 +7,14 @@ pony >= 0.7             # Tested with version 0.7
 #cerberus >= 1.1         # DATA VALIDATION  # Tested with version 1.1
 #npyscreen               # COMMAND LINE
 #werkzeug                # WEB SERVER
-#pyodide                  # WEB FAT CLIENT
+#pyodide                 # WEB FAT CLIENT
+#tortoise-orm            # possible replacement for PonyORM
+#aiosqlite               # sqlite driver for tortoise-orm
+#eel                     # Python library for making electron apps.
+#python-electron         # Python library for making electron apps.
 ## FOR TESTING ##
 #pytest >= 3.0.6         # FOR TESTING
 #pytest-cov >= 2.5.1     # FOR TESTING
 #pytest-annotate >=1.0.1 # FOR TESTING
+#pytest-monkeytype       # FOR TESTING
 #black                   # FOR TESTING once we're on 3.6
