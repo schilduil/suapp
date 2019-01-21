@@ -81,7 +81,7 @@ running_locale = locale.getlocale()
 if not running_locale[0]:
     running_locale = ('en_GB', 'UTF-8')
 else:
-    running_locale = (running_locale, 'UTF-8')
+    running_locale = (running_locale[0], 'UTF-8')
 try:
     language = running_locale[0].split('_')[0]
 except AttributeError:
