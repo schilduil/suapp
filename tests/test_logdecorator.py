@@ -58,22 +58,22 @@ class SubMyClass(MyClass):
 
 @loguse
 def my_function1(message):
-    logging.getLogger(__name__).warn("Starting %s" % (message))
+    logging.getLogger(__name__).warning("Starting %s" % (message))
     return SubMyClass(message)
 
 @loguse(1)  # Don't log the variable with index 1 (i.e. two)
 def my_function2(one, two):
-    logging.getLogger(__name__).warn("The previous line didn't log 'two', but did log 'one'")
+    logging.getLogger(__name__).warning("The previous line didn't log 'two', but did log 'one'")
     return "three"
 
 @loguse('a')  # Don't log the named argument 'a'
 def my_function3(a, b, g):
-    logging.getLogger(__name__).warn("The previous line didn't log 'a', but did log 'b' and 'g'.")
+    logging.getLogger(__name__).warning("The previous line didn't log 'a', but did log 'b' and 'g'.")
     return "abg"
 
 @loguse('@')  # Don't log the return value.
 def my_function4(one, two):
-    logging.getLogger(__name__).warn("The previous line logged 'one' and 'two' but the next will not log the return value.")
+    logging.getLogger(__name__).warning("The previous line logged 'one' and 'two' but the next will not log the return value.")
     return "three"
 
 def test_timings():

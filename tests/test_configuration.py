@@ -361,11 +361,11 @@ def test_sub_load_into_dict(empty_subclass_ConfigurationParser):
         conf = empty_subclass_ConfigurationParser("here")
         conf.load_into_dict(conf)
 
-def test_sub_save_from_dict():
+def test_sub_save_from_dict(empty_subclass_ConfigurationParser):
     """
     Test the not supported of load_into_dict.
     """
     with pytest.raises(NotImplementedError):
-        conf = empty_subclass_ConfigurationParser()
-        conf.save_from_dict(conf, conf)
+        conf = empty_subclass_ConfigurationParser("here")
+        conf.save_from_dict(conf)
 
