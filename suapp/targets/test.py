@@ -7,7 +7,6 @@ from suapp.logdecorator import *
 
 
 class Application(suapp.jandw.Wooster):
-
     @loguse
     def __init__(self, master=None):
         self.name = "Application"
@@ -22,11 +21,11 @@ class Application(suapp.jandw.Wooster):
             self.dataobject = drone.dataobject
         if not self.dataobject:
             self.dataobject = {}
-        self.name = self.dataobject.get('name', 'SuApp')
+        self.name = self.dataobject.get("name", "SuApp")
         print("=====================")
         print(self.name)
         print("---------------------")
-        self.tables = self.dataobject('tables', {})
+        self.tables = self.dataobject("tables", {})
         print(self.tables)
         self.jeeves = jeeves
         print("Entered with mode %s. " % (drone.mode))
@@ -55,14 +54,13 @@ class Application(suapp.jandw.Wooster):
 
     @loguse
     def close(self):
-        '''
+        """
         Close as Wooster
-        '''
+        """
         pass
 
 
 class About(suapp.jandw.Wooster):
-
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
@@ -74,9 +72,13 @@ class About(suapp.jandw.Wooster):
                 for line in fh:
                     print(line, end="")
         except OSError as e:
-            logging.getLogger(self.__module__).warning("Could not open about text file %s.", drone.dataobject)
+            logging.getLogger(self.__module__).warning(
+                "Could not open about text file %s.", drone.dataobject
+            )
         except IOError as e:
-            logging.getLogger(self.__module__).warning("Could not open about text file %s.", drone.dataobject)
+            logging.getLogger(self.__module__).warning(
+                "Could not open about text file %s.", drone.dataobject
+            )
         print()
         print("---------------------")
         answer = input("Choose option: ")
@@ -84,11 +86,11 @@ class About(suapp.jandw.Wooster):
 
 
 class Configuration(suapp.jandw.Wooster):
-
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
         import json
+
         print("=====================")
         print("Configuration")
         print("---------------------")

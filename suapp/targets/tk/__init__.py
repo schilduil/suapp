@@ -10,7 +10,7 @@ import suapp.simple_json as simple_json
 from suapp.logdecorator import *
 
 
-#Extra widgets
+# Extra widgets
 class MultiListbox(Frame):
     def __init__(self, master, lists):
         Frame.__init__(self, master)
@@ -19,36 +19,43 @@ class MultiListbox(Frame):
             frame = Frame(self)
             frame.pack(side=LEFT, expand=YES, fill=BOTH)
             Label(frame, text=l, borderwidth=1, relief=RAISED).pack(fill=X)
-            lb = Listbox(frame, width=w, borderwidth=0, selectborderwidth=0, relief=FLAT, exportselection=FALSE)
+            lb = Listbox(
+                frame,
+                width=w,
+                borderwidth=0,
+                selectborderwidth=0,
+                relief=FLAT,
+                exportselection=FALSE,
+            )
             lb.pack(expand=YES, fill=BOTH)
             self.lists.append(lb)
-            lb.bind('<B1-Motion>', lambda e, s=self: s._select(e.y))
-            lb.bind('<Button-1>', lambda e, s=self: s._select(e.y))
-            lb.bind('<Leave>', lambda e: 'break')
-            lb.bind('<B2-Motion>', lambda e, s=self: s._b2motion(e.x, e.y))
-            lb.bind('<Button-2>', lambda e, s=self: s._button2(e.x, e.y))
+            lb.bind("<B1-Motion>", lambda e, s=self: s._select(e.y))
+            lb.bind("<Button-1>", lambda e, s=self: s._select(e.y))
+            lb.bind("<Leave>", lambda e: "break")
+            lb.bind("<B2-Motion>", lambda e, s=self: s._b2motion(e.x, e.y))
+            lb.bind("<Button-2>", lambda e, s=self: s._button2(e.x, e.y))
         frame = Frame(self)
         frame.pack(side=LEFT, fill=Y)
         Label(frame, borderwidth=1, relief=RAISED).pack(fill=X)
         sb = Scrollbar(frame, orient=VERTICAL, command=self._scroll)
         sb.pack(expand=YES, fill=Y)
-        self.lists[0]['yscrollcommand'] = sb.set
+        self.lists[0]["yscrollcommand"] = sb.set
 
     def _select(self, y):
         row = self.lists[0].nearest(y)
         self.selection_clear(0, END)
         self.selection_set(row)
-        return 'break'
+        return "break"
 
     def _button2(self, x, y):
         for l in self.lists:
             l.scan_mark(x, y)
-        return 'break'
+        return "break"
 
     def _b2motion(self, x, y):
         for l in self.lists:
             l.scan_dragto(x, y)
-        return 'break'
+        return "break"
 
     def _scroll(self, *args):
         for l in self.lists:
@@ -100,7 +107,9 @@ class MultiListbox(Frame):
     def selection_set(self, first, last=None):
         for l in self.lists:
             l.selection_set(first, last)
-#END of extra widgets
+
+
+# END of extra widgets
 
 
 class ToplevelWooster(Toplevel, suapp.jandw.Wooster):
@@ -113,9 +122,9 @@ class ToplevelWooster(Toplevel, suapp.jandw.Wooster):
     # Overriding this disables the [X]
     @loguse
     def destroy(self):
-        '''
+        """
         When you click the [X] (or the parent window gets destroyed)
-        '''
+        """
         self.closed = True
         # Calling parent destroy() to actually destroy it.
         self.preClose()
@@ -123,13 +132,13 @@ class ToplevelWooster(Toplevel, suapp.jandw.Wooster):
 
     @loguse
     def close(self):
-        '''
+        """
         Close as Wooster
-        '''
+        """
         self.destroy()
 
 
-ipsum = '''Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
+ipsum = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
 Suspendisse pretium sapien sit amet magna viverra id faucibus nibh condimentum. \
 Fusce dui magna, venenatis vel elementum eu, suscipit at quam. Nullam sed felis lorem, vel pretium leo. \
 Cras at neque orci. \
@@ -198,7 +207,7 @@ Mauris sagittis eros aliquam dolor varius sit amet eleifend dolor placerat. \
 Vestibulum nec dui metus. \
 Nullam nec ante in lectus faucibus condimentum. \
 Donec ac enim purus, et bibendum erat. \
-Aliquam vestibulum tempus consectetur.'''
+Aliquam vestibulum tempus consectetur."""
 
 
 class TableWindow(ToplevelWooster):
@@ -209,7 +218,7 @@ class TableWindow(ToplevelWooster):
     def __init__(self, table, master=None):
         Toplevel.__init__(self, master, class_="Table")
         self.data = table
-        self.title("Table %s" % ('TODO'))
+        self.title("Table %s" % ("TODO"))
         # Don't make it smaller then this
         self.minsize(200, 100)
         # So it doesn't get in the task bar as a separate window but as a child of the master/parent
@@ -218,38 +227,44 @@ class TableWindow(ToplevelWooster):
 
     @loguse
     def goTo(self, key):
-        self.jeeves.drone(self, "RECORD", self.jeeves.MODE_OPEN, {'key': key, 'table': self.data})
+        self.jeeves.drone(
+            self, "RECORD", self.jeeves.MODE_OPEN, {"key": key, "table": self.data}
+        )
 
     @loguse
     def goToFunction(self, key):
-        '''
+        """
         Neede to create this intermediat function because 'key' isn't reused in the for loop and hence all buttons go to the last 'key'
-        '''
+        """
         return lambda: self.goTo(key)
 
     @loguse
     def createWidgets(self):
         row = 0
-        #if type(self.data) == type({}):
-        self.listbox = MultiListbox(self, [["ID", 20], ["Represantation", 50]])  # Listbox(self)
+        # if type(self.data) == type({}):
+        self.listbox = MultiListbox(
+            self, [["ID", 20], ["Represantation", 50]]
+        )  # Listbox(self)
         try:
             for key in self.data:
                 # TODO: build in a maximum so we take maximum advantage of iterators
                 label = Button(self, text="%s" % (key), command=self.goToFunction(key))
-                label.grid(column=0, row=row, sticky=E+W)
+                label.grid(column=0, row=row, sticky=E + W)
                 text = Entry(self)
                 text.insert(0, "%s" % (self.data[key]))
                 text.config(state=DISABLED)
-                text.grid(column=1, row=row, sticky=E+W)
+                text.grid(column=1, row=row, sticky=E + W)
                 self.listbox.insert(END, ["%s" % (key), "%s" % (self.data[key])])
                 row += 1
         except Exception as err:
-            logging.getLogger(self.__module__).error(": TableWindow[%r].createWidgets : Not iterable? %s" % (self, err))
+            logging.getLogger(self.__module__).error(
+                ": TableWindow[%r].createWidgets : Not iterable? %s" % (self, err)
+            )
             raise
-        self.listbox.grid(column=0, columnspan=2, row=row, sticky=E+W)
+        self.listbox.grid(column=0, columnspan=2, row=row, sticky=E + W)
         row += 1
         self.buttonS = Button(self, text="Close", command=self.close)
-        self.buttonS.grid(column=0, row=row, sticky=E+W)
+        self.buttonS.grid(column=0, row=row, sticky=E + W)
         self.update()
 
     @loguse
@@ -260,61 +275,52 @@ class TableWindow(ToplevelWooster):
 
 
 class Table(suapp.jandw.Wooster):
-
     @loguse
     def inflow(self, jeeves, drone):
         # TODO: should use the data API for this
         population = {
-            '(131GAOC)298': {
-                'ID': '(131GAOC)298',
-                'band': 'BGC/BR23/2011/298',
-                'father': '(AC62)131',
-                'mother': 'GAOC',
-                'line': 'GA25/(GAOC*)'
+            "(131GAOC)298": {
+                "ID": "(131GAOC)298",
+                "band": "BGC/BR23/2011/298",
+                "father": "(AC62)131",
+                "mother": "GAOC",
+                "line": "GA25/(GAOC*)",
             },
-            '(AC62)131': {
-                'ID': '(AC62)131',
-                'band': 'BGC/BR23/2010/131',
-                'father': 'AC',
-                'mother': '(GOVAYF)62',
-                'line': 'GA25/AC*'
+            "(AC62)131": {
+                "ID": "(AC62)131",
+                "band": "BGC/BR23/2010/131",
+                "father": "AC",
+                "mother": "(GOVAYF)62",
+                "line": "GA25/AC*",
             },
-            'AC': {
-                'ID': 'AC',
-                'line': 'GA25/AC'
+            "AC": {"ID": "AC", "line": "GA25/AC"},
+            "(GOVAYF)62": {
+                "ID": "(GOVAYF)62",
+                "band": "BGC/BR23/2008/62",
+                "father": "GOc",
+                "mother": "VAYF",
+                "line": "FS2/GO*HH731/VAYF",
             },
-            '(GOVAYF)62': {
-                'ID': '(GOVAYF)62',
-                'band': 'BGC/BR23/2008/62',
-                'father': 'GOc',
-                'mother': 'VAYF',
-                'line': 'FS2/GO*HH731/VAYF'
-            },
-            'GOc': {
-                'ID': 'GOc',
-                'line': 'FS2/GO'
-            },
-            'VAYF': {
-                'ID': 'VAYF',
-                'line': 'HH731/VAYF'
-            },
-            'GAOC': {
-                'ID': 'GAOC',
-                'line': 'GA25/GOAC'
-            }
+            "GOc": {"ID": "GOc", "line": "FS2/GO"},
+            "VAYF": {"ID": "VAYF", "line": "HH731/VAYF"},
+            "GAOC": {"ID": "GAOC", "line": "GA25/GOAC"},
         }
         table = population
-        if 'table' in drone.dataobject:
-            if 'tables' in drone.dataobject:
-                if drone.dataobject['table'] in drone.dataobject['tables']:
-                    #print("Table: %s: %s" % (drone.dataobject['table'], drone.dataobject['tables'][drone.dataobject['table']]))
-                    table = drone.dataobject['tables'][drone.dataobject['table']]
+        if "table" in drone.dataobject:
+            if "tables" in drone.dataobject:
+                if drone.dataobject["table"] in drone.dataobject["tables"]:
+                    # print("Table: %s: %s" % (drone.dataobject['table'], drone.dataobject['tables'][drone.dataobject['table']]))
+                    table = drone.dataobject["tables"][drone.dataobject["table"]]
         if isinstance(drone.fromvertex, Frame):
-            logging.getLogger(self.__module__).debug(": TableFactory[%r].inflow : Using parent" % (self))
+            logging.getLogger(self.__module__).debug(
+                ": TableFactory[%r].inflow : Using parent" % (self)
+            )
             # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
             window = TableWindow(table, drone.fromvertex)
         else:
-            logging.getLogger(self.__module__).debug(": TableFactory[%r].inflow : Not using parent" % (self))
+            logging.getLogger(self.__module__).debug(
+                ": TableFactory[%r].inflow : Not using parent" % (self)
+            )
             window = TableWindow(table)
         window.inflow(jeeves, drone)
         window.lift()
@@ -322,7 +328,6 @@ class Table(suapp.jandw.Wooster):
 
 
 class RecordWindow(ToplevelWooster):
-
     @loguse
     def __init__(self, master=None):
         Toplevel.__init__(self, master, class_="About")
@@ -335,7 +340,7 @@ class RecordWindow(ToplevelWooster):
 
     @loguse
     def __edit(self, key):
-        print("Key: %s" % (key)) # DELME
+        print("Key: %s" % (key))  # DELME
         # If the value is composite (map), open a RecordWindow modal
         # If the value is singular, open a EditWindow modal
         return
@@ -351,7 +356,7 @@ class RecordWindow(ToplevelWooster):
         i = styles.index(s.theme_use())
         x = styles[0]
         try:
-            x = styles[i+1]
+            x = styles[i + 1]
         except:
             pass
         s.theme_use(x)
@@ -361,26 +366,36 @@ class RecordWindow(ToplevelWooster):
     def createWidgets(self):
         row = 0
         try:
-            for key in self.table.configuration['fields']:
-                if 'auto_increment' in self.table.configuration['fields'][key]:
-                    if self.table.configuration['fields'][key]['auto_increment']:
+            for key in self.table.configuration["fields"]:
+                if "auto_increment" in self.table.configuration["fields"][key]:
+                    if self.table.configuration["fields"][key]["auto_increment"]:
                         continue
                 label = Label(self, text="%s: " % (key))
                 label.grid(column=0, row=row, sticky=E)
-                text = Entry(self)  #, textvariable=self.data[key])
+                text = Entry(self)  # , textvariable=self.data[key])
                 if key in self.data:
-                    if 'toVisual' in self.table.configuration['fields'][key]:
-                        text.insert(0, "%s" % self.table.configuration['fields'][key]['toVisual'](self.data[key]))
+                    if "toVisual" in self.table.configuration["fields"][key]:
+                        text.insert(
+                            0,
+                            "%s"
+                            % self.table.configuration["fields"][key]["toVisual"](
+                                self.data[key]
+                            ),
+                        )
                     else:
                         text.insert(0, "%s" % (self.data[key]))
                 text.config(state=DISABLED)
-                text.grid(column=1, row=row, sticky=E+W)
-                button = Button(self, text="\u2026", width=2, command=self.__editFunction(key))  # Black pointing left index finger: \u261a ; Triangle: \u2023 ; Tripple bullet: \u2026
+                text.grid(column=1, row=row, sticky=E + W)
+                button = Button(
+                    self, text="\u2026", width=2, command=self.__editFunction(key)
+                )  # Black pointing left index finger: \u261a ; Triangle: \u2023 ; Tripple bullet: \u2026
                 button.grid(column=2, row=row, sticky=E)
                 self.columnconfigure(2, weight=0)
                 row += 1
         except Exception as err:
-            logging.getLogger(self.__module__).error(": RecordWindow[%r].createWidgets : Not iterable? %s" % (self, err))
+            logging.getLogger(self.__module__).error(
+                ": RecordWindow[%r].createWidgets : Not iterable? %s" % (self, err)
+            )
             raise
         self.buttonS = Button(self, text="Save", command=self.close)  # u25b6
         self.buttonS.grid(column=0, row=row)
@@ -391,23 +406,28 @@ class RecordWindow(ToplevelWooster):
     @loguse
     def inflow(self, jeeves, drone):
         self.jeeves = jeeves
-        self.table = drone.dataobject.get('table', None)
-        self.data = drone.dataobject.get('object', drone.dataobject.get('key', None))
+        self.table = drone.dataobject.get("table", None)
+        self.data = drone.dataobject.get("object", drone.dataobject.get("key", None))
         self.createWidgets()
 
 
 class Record(suapp.jandw.Wooster):
-    '''
+    """
     Note: it will open a new window. If you want to avoid doubles open, use subclass UniqueRecordFactory
-    '''
+    """
+
     @loguse
     def inflow(self, jeeves, drone):
         if isinstance(drone.fromvertex, Frame):
-            logging.getLogger(self.__module__).debug(": RecordFactory[%r].inflow : Using parent" % (self))
+            logging.getLogger(self.__module__).debug(
+                ": RecordFactory[%r].inflow : Using parent" % (self)
+            )
             # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
             RecordWindow(drone.fromvertex).inflow(jeeves, drone)
         else:
-            logging.getLogger(self.__module__).debug(": RecordFactory[%r].inflow : Not using parent" % (self))
+            logging.getLogger(self.__module__).debug(
+                ": RecordFactory[%r].inflow : Not using parent" % (self)
+            )
             RecordWindow().inflow(jeeves, drone)
 
 
@@ -418,27 +438,39 @@ class UniqueRecord(Record):
     @loguse
     def inflow(self, jeeves, drone):
         # TODO replace the id and object!
-        table = drone.dataobject['table']
-        if 'key' in drone.dataobject:
-            key = drone.dataobject['key']
-        elif 'object' in drone.dataobject:
-            object = drone.dataobject['object']
+        table = drone.dataobject["table"]
+        if "key" in drone.dataobject:
+            key = drone.dataobject["key"]
+        elif "object" in drone.dataobject:
+            object = drone.dataobject["object"]
             key = table.getKey(object)
             # We looked it up so we just as wel might put it in.
-            drone.dataobject['key'] = key
-        logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : windowreferences: %s in %s" % (self, key, self.windowreferences))
+            drone.dataobject["key"] = key
+        logging.getLogger(self.__module__).debug(
+            ": UniqueRecordFactory[%r].inflow : windowreferences: %s in %s"
+            % (self, key, self.windowreferences)
+        )
         if key in self.windowreferences:
-            logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Reusing for %s" % (self, key))
+            logging.getLogger(self.__module__).debug(
+                ": UniqueRecordFactory[%r].inflow : Reusing for %s" % (self, key)
+            )
             if self.windowreferences[key].closed:
-                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Oops that one is already closed so not reusing it." % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": UniqueRecordFactory[%r].inflow : Oops that one is already closed so not reusing it."
+                    % (self)
+                )
                 del self.windowreferences[key]
         if key not in self.windowreferences:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": UniqueRecordFactory[%r].inflow : Using parent" % (self)
+                )
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.windowreferences[key] = RecordWindow(drone.fromvertex)
             else:
-                logging.getLogger(self.__module__).debug(": UniqueRecordFactory[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": UniqueRecordFactory[%r].inflow : Not using parent" % (self)
+                )
                 self.windowreferences[key] = RecordWindow()
             self.windowreferences[key].inflow(jeeves, drone)
         self.windowreferences[key].lift()
@@ -446,7 +478,6 @@ class UniqueRecord(Record):
 
 
 class AboutWindow(ToplevelWooster):
-
     @loguse
     def __init__(self, master=None):
         Toplevel.__init__(self, master, class_="About")
@@ -479,22 +510,27 @@ class AboutWindow(ToplevelWooster):
                 for line in fh:
                     text.append(line)
         except OSError:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
+            logging.getLogger(self.__module__).warning(
+                "Could not open about file %s.", file_name, exc_info=sys.exc_info()
+            )
         except IOError:
-            logging.getLogger(self.__module__).warning("Could not open about file %s.", file_name, exc_info=sys.exc_info())
+            logging.getLogger(self.__module__).warning(
+                "Could not open about file %s.", file_name, exc_info=sys.exc_info()
+            )
         if not text:
             text = ["ERROR: Could not open file %s." % (file_name)]
         self.text.config(state=NORMAL)
-        self.text.delete('1.0', END)
+        self.text.delete("1.0", END)
         self.text.insert(END, "\n".join(text))
         self.text.config(state=DISABLED)
         self.update()
 
 
 class About(suapp.jandw.Wooster):
-    '''
+    """
     Perhaps I should replace the FACTORY with just a FUNCTION (though it doesn't make a lot of difference in python)
-    '''
+    """
+
     @loguse
     def __init__(self):
         self.window = None
@@ -506,11 +542,15 @@ class About(suapp.jandw.Wooster):
                 self.window = None
         if not self.window:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(self.__module__).debug(": About[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": About[%r].inflow : Using parent" % (self)
+                )
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.window = AboutWindow(drone.fromvertex)
             else:
-                logging.getLogger(self.__module__).debug(": About[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": About[%r].inflow : Not using parent" % (self)
+                )
                 self.window = AboutFrame()
         self.window.inflow(jeeves, drone)
         self.window.focus_set()
@@ -519,7 +559,7 @@ class About(suapp.jandw.Wooster):
 class Application(Frame, suapp.jandw.Wooster):
 
     name = "APP"
-    dataobject = {'name': 'SuApp'}
+    dataobject = {"name": "SuApp"}
     testdata = {"ID": "(150112)164", "ring": "BGC/BR23/10/164"}
     tables = {}
 
@@ -533,16 +573,16 @@ class Application(Frame, suapp.jandw.Wooster):
         # Moved to inflow self.createWidgets()
 
     def openTableWindow(self, tablename):
-        '''
+        """
         Neede to create this intermediat function because 'key' isn't reused in the for loop and hence all buttons go to the last 'key'
-        '''
+        """
         return lambda: self.__testTable(tablename)
 
     @loguse
     def createWidgets(self):
         top = self.winfo_toplevel()
         self.menuBar = Menu(top, tearoff=0)
-        top['menu'] = self.menuBar
+        top["menu"] = self.menuBar
 
         self.menuFile = Menu(self.menuBar, tearoff=0)
         self.menuBar.add_cascade(label="File", menu=self.menuFile)
@@ -550,12 +590,16 @@ class Application(Frame, suapp.jandw.Wooster):
 
         self.menuRecord = Menu(self.menuBar, tearoff=0)
         self.menuBar.add_cascade(label="Record", menu=self.menuRecord)
-        self.menuRecord.add_command(label="Test record (\u20ac)", command=self.__testRecord)
+        self.menuRecord.add_command(
+            label="Test record (\u20ac)", command=self.__testRecord
+        )
 
         self.menuTable = Menu(self.menuBar, tearoff=0)
         self.menuBar.add_cascade(label="Table", menu=self.menuTable)
         for table in self.tables:
-            self.menuTable.add_command(label="%s" % (table), command=self.openTableWindow(table))
+            self.menuTable.add_command(
+                label="%s" % (table), command=self.openTableWindow(table)
+            )
 
         self.menuHelp = Menu(self.menuBar, tearoff=0)
         self.menuBar.add_cascade(label="Help", menu=self.menuHelp)
@@ -564,11 +608,21 @@ class Application(Frame, suapp.jandw.Wooster):
 
     @loguse
     def __testTable(self, tablename):
-        self.jeeves.drone(self, "TABLE", self.jeeves.MODE_OPEN, {'tables': self.tables, 'table': tablename})
+        self.jeeves.drone(
+            self,
+            "TABLE",
+            self.jeeves.MODE_OPEN,
+            {"tables": self.tables, "table": tablename},
+        )
 
     @loguse
     def __testRecord(self):
-        self.jeeves.drone(self, "RECORD", self.jeeves.MODE_OPEN, {'table': self.tables['organism'], 'object': self.testdata})
+        self.jeeves.drone(
+            self,
+            "RECORD",
+            self.jeeves.MODE_OPEN,
+            {"table": self.tables["organism"], "object": self.testdata},
+        )
 
     @loguse
     def __about(self):
@@ -582,12 +636,14 @@ class Application(Frame, suapp.jandw.Wooster):
     def inflow(self, jeeves, drone):
         if drone.dataobject:
             self.dataobject = drone.dataobject
-        if 'name' not in self.dataobject:
-            self.dataobject['name'] = 'SuApp'
-        self._root().title(self.dataobject['name'])
-        if 'tables' in self.dataobject:
-            logging.getLogger(self.__module__).debug(": Application[%r].inflow() : Setting tables." % (self))
-            self.tables = self.dataobject['tables']
+        if "name" not in self.dataobject:
+            self.dataobject["name"] = "SuApp"
+        self._root().title(self.dataobject["name"])
+        if "tables" in self.dataobject:
+            logging.getLogger(self.__module__).debug(
+                ": Application[%r].inflow() : Setting tables." % (self)
+            )
+            self.tables = self.dataobject["tables"]
         self.jeeves = jeeves
         self.createWidgets()  # Perhaps this needs to be in mainloop() so we can do a refresh?
         self.mainloop()
@@ -602,9 +658,9 @@ class Application(Frame, suapp.jandw.Wooster):
 
     @loguse
     def destroy(self):
-        '''
+        """
         When you click the [X]
-        '''
+        """
         self.preClose()
         super().destroy()
 
@@ -614,15 +670,14 @@ class Application(Frame, suapp.jandw.Wooster):
 
     @loguse
     def close(self):
-        '''
+        """
         Close as Wooster
-        '''
+        """
         self.destroy()
         self.quit()
 
 
 class ConfigurationWindow(ToplevelWooster):
-
     @loguse
     def __init__(self, master=None):
         Toplevel.__init__(self, master, class_="Configuration")
@@ -650,7 +705,14 @@ class ConfigurationWindow(ToplevelWooster):
         self.text.delete(1.0, END)
         print(type(self.jeeves.app.configuration))
         title = "Configuration:"
-        self.text.insert(END, "%s\n\n%s" % (title, simple_json.dumps(dict(self.jeeves.app.configuration), indent="    ")))
+        self.text.insert(
+            END,
+            "%s\n\n%s"
+            % (
+                title,
+                simple_json.dumps(dict(self.jeeves.app.configuration), indent="    "),
+            ),
+        )
         self.text.tag_add("title", "1.0", "1.%s" % len(title))
         self.text.tag_config("title", background="black", foreground="yellow")
         self.text.config(state=DISABLED)
@@ -661,9 +723,10 @@ class Configuration(suapp.jandw.Wooster):
 
     name = "CONFIGURATION"
 
-    '''
+    """
     Perhaps I should replace the FACTORY with just a FUNCTION (though it doesn't make a lot of difference in python)
-    '''
+    """
+
     @loguse
     def __init__(self):
         self.window = None
@@ -675,11 +738,15 @@ class Configuration(suapp.jandw.Wooster):
                 self.window = None
         if not self.window:
             if isinstance(drone.fromvertex, Frame):
-                logging.getLogger(self.__module__).debug(": Configuration[%r].inflow : Using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": Configuration[%r].inflow : Using parent" % (self)
+                )
                 # TODO: if it has been closed/destroyed then give the parent of fromvertex instead?
                 self.window = ConfigurationWindow(drone.fromvertex)
             else:
-                logging.getLogger(self.__module__).debug(": Configuration[%r].inflow : Not using parent" % (self))
+                logging.getLogger(self.__module__).debug(
+                    ": Configuration[%r].inflow : Not using parent" % (self)
+                )
                 self.window = AboutFrame()
         self.window.inflow(jeeves, drone)
         self.window.focus_set()
@@ -689,7 +756,8 @@ class View(suapp.jandw.Wooster):
     """
     Generic view page for showing.
     """
-    @loguse('@')  # Not logging the return value.
+
+    @loguse("@")  # Not logging the return value.
     def inflow(self, jeeves, drone):
         """
         Entry point for the view.
@@ -705,21 +773,23 @@ class View(suapp.jandw.Wooster):
         definition = jeeves.views.get(flow_name, {})
 
         # Getting the session, params and preparing the scope.
-        session = drone.dataobject.get('session', {})
+        session = drone.dataobject.get("session", {})
         # Setting default dabase paging parameters for the query.
         query_params = {"pagenum": 1, "pagesize": 5}
         # Getting the http request params.
-        for param in drone.dataobject['params']:
-            query_params[param] = drone.dataobject['params'][param][0]
-        scope = {} # NOTUSED
+        for param in drone.dataobject["params"]:
+            query_params[param] = drone.dataobject["params"][param][0]
+        scope = {}  # NOTUSED
         # scope.update(jeeves.ormscope) # jeeves.ormscope is always empty.
 
         # JS parameters
         js_params = {}
         if drone.dataobject:
-            js_params['query'] = "query/%(query)s?pagenum=%(pagenum)s&pagesize=%(pagesize)s"
+            js_params[
+                "query"
+            ] = "query/%(query)s?pagenum=%(pagenum)s&pagesize=%(pagesize)s"
         result = []
-        js_params['service_url'] = jeeves.app.configuration['httpd']['service_url']
+        js_params["service_url"] = jeeves.app.configuration["httpd"]["service_url"]
 
         """"
         # Title
@@ -892,11 +962,11 @@ if __name__ == "__main__":
     flow.flow = {
         "": {
             "START": suapp.jandw.Drone("START", Application()),
-            "RECORD": suapp.jandw.Drone("RECORD", UniqueRecord())
+            "RECORD": suapp.jandw.Drone("RECORD", UniqueRecord()),
         },
         "APP": {
             "ABOUT": suapp.jandw.Drone("ABOUT", About()),
-            "TABLE": suapp.jandw.Drone("TABLE", Table())
-        }
+            "TABLE": suapp.jandw.Drone("TABLE", Table()),
+        },
     }
     flow.start()
