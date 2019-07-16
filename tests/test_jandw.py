@@ -3,6 +3,7 @@
 import pytest
 
 import logging
+import logging.handlers
 import os
 import os.path
 import re
