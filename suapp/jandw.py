@@ -23,7 +23,7 @@ class ApplicationClosed(FlowException):
     pass
 
 
-class Wooster():
+class Wooster:
     """
     A Wooster represents a UI window/page.
 
@@ -32,6 +32,7 @@ class Wooster():
         1/ Create a new class instance of a subclass of Wooster
         2/ Call inflow on that
     """
+
     def lock(self):
         pass
 
@@ -55,6 +56,7 @@ class Drone(object):
     """
     A drone is the connection between two vertices.
     """
+
     def __init__(self, name, tovertex):
         self.name = name
         self.tovertex = tovertex
@@ -79,6 +81,7 @@ class Jeeves(object):
 
     It uses Drones to go from Wooster to Wooster.
     """
+
     MODE_OPEN = 3
     MODE_REPLACE = 2
     MODE_MODAL = 1
@@ -106,7 +109,9 @@ class Jeeves(object):
         """
         Finding the drone matching the outmessage.
         """
-        logging.getLogger(__name__).debug(": Jeeves[%r].whichDrone : Flow: %s", self, self.flow)
+        logging.getLogger(__name__).debug(
+            ": Jeeves[%r].whichDrone : Flow: %s", self, self.flow
+        )
         drone = None
         try:
             drone = self.flow[fromname][outmessage]
@@ -115,14 +120,18 @@ class Jeeves(object):
                 drone = self.flow[""][outmessage]
             except:
                 # TODO: do something else then bluntly exiting.
-                logging.getLogger(__name__).error(": Jeeves[%r].whichDrone : Not found '%s' - exiting.", self, outmessage)
+                logging.getLogger(__name__).error(
+                    ": Jeeves[%r].whichDrone : Not found '%s' - exiting.",
+                    self,
+                    outmessage,
+                )
                 if outmessage == "EXIT":
                     raise ApplicationClosed()
                 else:
                     raise FlowException("Unknown outmessage: %s" % (outmessage))
         return drone
 
-    @loguse('@')  # Not logging the return value.
+    @loguse("@")  # Not logging the return value.
     def _do_query_str(self, query_template, scope, parameters):
         """
         Execute a query that is a string.
@@ -131,9 +140,9 @@ class Jeeves(object):
         """
         query = query_template % parameters
         exec("result = %s" % (query), scope)
-        return scope['result']
+        return scope["result"]
 
-    @loguse('@')  # Not logging the return value.
+    @loguse("@")  # Not logging the return value.
     def pre_query(self, name, scope=None, params=None):
         """
         Returns the the query and parameters.
@@ -152,17 +161,19 @@ class Jeeves(object):
         parameters.update(params)
         # Making sure the paging parameters are integers.
         try:
-            parameters['pagenum'] = int(parameters['pagenum'])
+            parameters["pagenum"] = int(parameters["pagenum"])
         except:
-            parameters['pagenum'] = 1
+            parameters["pagenum"] = 1
         try:
-            parameters['pagesize'] = int(parameters['pagesize'])
+            parameters["pagesize"] = int(parameters["pagesize"])
         except:
-            parameters['pagesize'] = 10
-        logging.getLogger(__name__).debug("Paging #%s (%s)", parameters['pagenum'], parameters['pagesize'])
+            parameters["pagesize"] = 10
+        logging.getLogger(__name__).debug(
+            "Paging #%s (%s)", parameters["pagenum"], parameters["pagesize"]
+        )
         return (query_template, parameters)
 
-    @loguse('@')  # Not loggin the return value.
+    @loguse("@")  # Not loggin the return value.
     def do_query(self, name, scope=None, params=None):
         """
         Executes a query by name and return the result.
@@ -241,14 +252,16 @@ class Jeeves(object):
                 i += 1
         # Checking if the primary key is a foreign key.
         for column in pk_columns:
-            logging.getLogger(__name__).debug("Primary key column: %s = %s", column, params[column])
+            logging.getLogger(__name__).debug(
+                "Primary key column: %s = %s", column, params[column]
+            )
         logging.getLogger(__name__).debug("Fetching %s (%s)", table_class, params)
         if issubclass(table_class, suapp.orm.UiOrmObject):
             return table_class(**params)
         else:
             return table_class.get(**params)
 
-    @loguse('@')  # Not logging the return value.
+    @loguse("@")  # Not logging the return value.
     def drone(self, fromvertex, name, mode, dataobject, **kwargs):
         """
         Find the drone and execute it.
@@ -264,9 +277,9 @@ class Jeeves(object):
         # Clone a new instance of the drone and setting dataobject & mode.
         drone = drone_type.get_new_instance_clone(dataobject, mode)
         # If there is a callback, call it.
-        if 'callback_drone' in kwargs:
+        if "callback_drone" in kwargs:
             try:
-                kwargs['callback_drone'](drone)
+                kwargs["callback_drone"](drone)
             except:
                 pass
         # Depending on the mode
@@ -297,24 +310,34 @@ class Jeeves(object):
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s %(name)s %(message)s", level=logging.DEBUG
+    )
     logging.getLogger("__main__").setLevel(logging.DEBUG)
     modulename = "__main__"
-    print("__main__: %s (%s)" % (modulename, logging.getLevelName(logging.getLogger(modulename).getEffectiveLevel())))
+    print(
+        "__main__: %s (%s)"
+        % (
+            modulename,
+            logging.getLevelName(logging.getLogger(modulename).getEffectiveLevel()),
+        )
+    )
 
     class Application(Wooster):
         name = "APP"
 
         def inflow(self, jeeves, drone):
             self.jeeves = jeeves
-            print("""This is the Jeeves and Wooster library!
+            print(
+                """This is the Jeeves and Wooster library!
 
 Jeeves is Wooster's indispensible valet: a gentleman's personal
 gentleman. In fact this Jeeves can manage more then one Wooster
 (so he might not be that personal) and guide information from one
 Wooster to another in an organised way making all the Woosters
 march to the drones.
-""")
+"""
+            )
 
         def lock(self):
             pass
@@ -326,9 +349,5 @@ march to the drones.
             pass
 
     flow = Jeeves()
-    flow.flow = {
-        "": {
-            "START": Drone("START", Application())
-        }
-    }
+    flow.flow = {"": {"START": Drone("START", Application())}}
     flow.start()

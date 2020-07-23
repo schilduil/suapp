@@ -45,11 +45,7 @@ modules = []
 db = Database()
 
 
-__all__ = [
-    "ModuleDependencyLoading",
-    "import_modlib", "get_database",
-    "modules"
-]
+__all__ = ["ModuleDependencyLoading", "import_modlib", "get_database", "modules"]
 
 
 def get_database():
@@ -80,7 +76,12 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     if app_name:
         if app_name != module_entity.app_name:
             # Wrong app type: skipping and warn about it.
-            logging.getLogger(__name__).warning("Skipping module %s (%s) as it does not belong to app %s.", module_name, module_entity.app_name, app_name)
+            logging.getLogger(__name__).warning(
+                "Skipping module %s (%s) as it does not belong to app %s.",
+                module_name,
+                module_entity.app_name,
+                app_name,
+            )
             return False
     else:
         # Initializing it if it isn't set yet.
@@ -90,19 +91,24 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
         # Checking if we've already done the required module.
         if requirement_name not in modules:
             # Trying to import
-            required_modules_loaded =  import_modlib(app_name, requirement_name, jeeves, scope)
+            required_modules_loaded = import_modlib(
+                app_name, requirement_name, jeeves, scope
+            )
             if not required_modules_loaded:
                 # Import of the requirement failed.
-                raise ModuleDependencyLoading("Could not load datamodule %s because requirement %s failed to load." % (module_name, requirement_name))
+                raise ModuleDependencyLoading(
+                    "Could not load datamodule %s because requirement %s failed to load."
+                    % (module_name, requirement_name)
+                )
             modules_loaded.extend(required_modules_loaded)
     # Loading all the PonyORM classes into the global scope.
     classes_dict = module_entity.definitions(db, scope)
-    if 'modlib' not in globals():
-        scope['modlib'] = sys.modules['modlib']
-        globals().update({'modlib': sys.modules['modlib']})
+    if "modlib" not in globals():
+        scope["modlib"] = sys.modules["modlib"]
+        globals().update({"modlib": sys.modules["modlib"]})
     for name, value in classes_dict.items():
         setattr(sys.modules[value.__module__], name, value)
-    scope['suapp'] = sys.modules['suapp']
+    scope["suapp"] = sys.modules["suapp"]
     # Loading all the UI ORM classes in to the global scope.
     classes_dict = module_entity.ui_definitions(db, scope)
     for name, value in classes_dict.items():
@@ -122,7 +128,7 @@ def import_modlib(app_name, module_name, jeeves, scope=None, config=None):
     return modules_loaded
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Default settings
     app_name = "suapp"
@@ -137,7 +143,7 @@ if __name__ == '__main__':
 
     # If no modules, at least do base.
     if not modules_to_import:
-        modules_to_import = ['base']
+        modules_to_import = ["base"]
 
     scope = {}
     for mod in modules_to_import:
@@ -152,12 +158,30 @@ if __name__ == '__main__':
         try:
             # === BASE === "
             print(modlib.base.Individual.mro())
-            vayf = modlib.base.Individual(code="VAYF", dob=datetime.date(year=2007, month=1, day=1))
-            goc = modlib.base.Individual(code="GOc", dob=datetime.date(year=2006, month=1, day=1))
-            govayf62 = modlib.base.Individual(code="(GOVAYF)62", dob=datetime.datetime(year=2008, month=1, day=1), parents=[goc, vayf])
-            ac = modlib.base.Individual(code="AC", dob=datetime.datetime(year=2009, month=1, day=1))
-            ac62110 = modlib.base.Individual(code="(AC62)110", dob=datetime.datetime(year=2010, month=1, day=1), parents=[ac, govayf62])
-            ac110280 = modlib.base.Individual(code="(AC110)280", dob=datetime.datetime(year=2011, month=1, day=1), parents=[ac, ac62110])
+            vayf = modlib.base.Individual(
+                code="VAYF", dob=datetime.date(year=2007, month=1, day=1)
+            )
+            goc = modlib.base.Individual(
+                code="GOc", dob=datetime.date(year=2006, month=1, day=1)
+            )
+            govayf62 = modlib.base.Individual(
+                code="(GOVAYF)62",
+                dob=datetime.datetime(year=2008, month=1, day=1),
+                parents=[goc, vayf],
+            )
+            ac = modlib.base.Individual(
+                code="AC", dob=datetime.datetime(year=2009, month=1, day=1)
+            )
+            ac62110 = modlib.base.Individual(
+                code="(AC62)110",
+                dob=datetime.datetime(year=2010, month=1, day=1),
+                parents=[ac, govayf62],
+            )
+            ac110280 = modlib.base.Individual(
+                code="(AC110)280",
+                dob=datetime.datetime(year=2011, month=1, day=1),
+                parents=[ac, ac62110],
+            )
             print(vayf)
             print(goc)
             print(modlib.kinship.Kinship.mro())
@@ -166,10 +190,24 @@ if __name__ == '__main__':
             # === KINSHIP === #
             k_goc_vayf = modlib.kinship.Kinship(first=goc, second=vayf, kinship=0.0)
             ui_k_goc_vayf = modlib.kinship.UiKinship(orm=k_goc_vayf)
-            print("%s, %s: %s" % (ui_k_goc_vayf.first.code, ui_k_goc_vayf.second.code, ui_k_goc_vayf.kinship))
+            print(
+                "%s, %s: %s"
+                % (
+                    ui_k_goc_vayf.first.code,
+                    ui_k_goc_vayf.second.code,
+                    ui_k_goc_vayf.kinship,
+                )
+            )
             flush()
             ui_k_goc_vayf = modlib.kinship.UiKinship(first=vayf, second=goc)
-            print("%s, %s: %s" % (ui_k_goc_vayf.first.code, ui_k_goc_vayf.second.code, ui_k_goc_vayf.kinship))
+            print(
+                "%s, %s: %s"
+                % (
+                    ui_k_goc_vayf.first.code,
+                    ui_k_goc_vayf.second.code,
+                    ui_k_goc_vayf.kinship,
+                )
+            )
 
             print("Parents (GOVAYF)62: %s" % (govayf62.parents.page(1, pagesize=2)))
             print("")
@@ -193,12 +231,30 @@ if __name__ == '__main__':
             print("Calculated kinships:")
             for kinship in select(c for c in modlib.kinship.Kinship):
                 if kinship.pc_kinship:
-                    print("\t%s, %s: %2.2f%% (%2.2f%%)" % (kinship.first.code, kinship.second.code, kinship.kinship * 100.00, kinship.pc_kinship * 100.00))
+                    print(
+                        "\t%s, %s: %2.2f%% (%2.2f%%)"
+                        % (
+                            kinship.first.code,
+                            kinship.second.code,
+                            kinship.kinship * 100.00,
+                            kinship.pc_kinship * 100.00,
+                        )
+                    )
                 else:
-                    print("\t%s, %s: %2.2f%%" % (kinship.first.code, kinship.second.code, kinship.kinship * 100.00))
+                    print(
+                        "\t%s, %s: %2.2f%%"
+                        % (
+                            kinship.first.code,
+                            kinship.second.code,
+                            kinship.kinship * 100.00,
+                        )
+                    )
             print("")
-            print("Inbreeding in %s is: %2.2f%% (%2.2f%%)" % (i.code, (i.ui_inbreeding) * 100.00, (i.ui_pc_inbreeding) * 100.00))
+            print(
+                "Inbreeding in %s is: %2.2f%% (%2.2f%%)"
+                % (i.code, (i.ui_inbreeding) * 100.00, (i.ui_pc_inbreeding) * 100.00)
+            )
             print("")
         except:
-            #raise
+            # raise
             pass

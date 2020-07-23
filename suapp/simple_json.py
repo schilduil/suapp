@@ -34,13 +34,15 @@ def to_json(object_to_serialize):
                 try:
                     return getattr(object_to_serialize, "toJSON")()
                 except AttributeError:
-                    raise TypeError(repr(object_to_serialize) + " is not JSON serializable")
+                    raise TypeError(
+                        repr(object_to_serialize) + " is not JSON serializable"
+                    )
             # Re-raising the TypeError
             raise
         return result
     # Also putting out the primary key
-    result['_pk_'] = object_to_serialize._pk_
-    #result['__str__'] = "%s" % (object_to_serialize)
+    result["_pk_"] = object_to_serialize._pk_
+    # result['__str__'] = "%s" % (object_to_serialize)
     # Checking for foreign keys
     for column, value in result.items():
         if isinstance(value, Entity):
@@ -68,6 +70,7 @@ def to_json(object_to_serialize):
             result[column] = converted_tuple
     return result
 
+
 def dumps(object_to_serialize, **kwargs):
-    kwargs['default'] = to_json
+    kwargs["default"] = to_json
     return json.dumps(object_to_serialize, **kwargs)

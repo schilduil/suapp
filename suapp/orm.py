@@ -10,7 +10,7 @@ from suapp.logdecorator import loguse
 __all__ = ["UiOrmObject"]
 
 
-class UiOrmObject():
+class UiOrmObject:
     """
     Parent of all UI ORM objects.
 

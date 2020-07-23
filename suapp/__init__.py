@@ -15,9 +15,8 @@ from suapp.logdecorator import *
 from suapp.moduleloader import *
 
 
-__all__ = ["SuAppError", "ModuleError", "ConfigurationError",
-           "Config", "SuApp", "main"]
-           # "jandw", "logdecorator", "moduleloader", "orm", "locale", "targets"
+__all__ = ["SuAppError", "ModuleError", "ConfigurationError", "Config", "SuApp", "main"]
+# "jandw", "logdecorator", "moduleloader", "orm", "locale", "targets"
 
 
 class SuAppError(Exception):
@@ -50,6 +49,7 @@ def do_locale(languages=None, domain=None, localedir=None):
     import gettext
     import logging
     import os.path
+
     global _
     if not domain:
         domain = "suapp"
@@ -60,8 +60,12 @@ def do_locale(languages=None, domain=None, localedir=None):
     if isinstance(languages, str):
         languages = [languages]
     if not localedir:
-        localedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'locale')
-    logging.getLogger(__name__).debug("Locale %s: %s", languages, gettext.find(domain, localedir=localedir, languages=languages, all=True))
+        localedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "locale")
+    logging.getLogger(__name__).debug(
+        "Locale %s: %s",
+        languages,
+        gettext.find(domain, localedir=localedir, languages=languages, all=True),
+    )
     try:
         trans = gettext.translation(domain, localedir=localedir, languages=languages)
         # This somehow doesn't work
@@ -69,7 +73,11 @@ def do_locale(languages=None, domain=None, localedir=None):
         # So we have this alternative
         _ = trans.gettext
     except:
-        logging.getLogger(__name__).warn("Locale for domain %s in languages %s not found. Falling back to default.", domain, languages)
+        logging.getLogger(__name__).warn(
+            "Locale for domain %s in languages %s not found. Falling back to default.",
+            domain,
+            languages,
+        )
         _ = lambda s: s
         return False
     # Report our success.
@@ -124,7 +132,20 @@ def convert_to_log_level(txt):
     raise ConfigurationError("Unknow log level: %s" % (txt))
 
 
-def format_float(value, length=10, precision=2, unit=None, scales={1: "µs", 1000: "ms", 1000000: " s", 60000000: " m", 3600000000: " h", 604800000000: " w"}):
+def format_float(
+    value,
+    length=10,
+    precision=2,
+    unit=None,
+    scales={
+        1: "µs",
+        1000: "ms",
+        1000000: " s",
+        60000000: " m",
+        3600000000: " h",
+        604800000000: " w",
+    },
+):
     scale = list(scales.keys())
     scale.sort()
     scale_label = [scales[x] for x in scale]
@@ -135,17 +156,25 @@ def format_float(value, length=10, precision=2, unit=None, scales={1: "µs", 100
         unit = scale_label[0]
     float_length = length - len(unit)
     if precision:
-        float_max = 10**(float_length - 1 - precision) - 1
+        float_max = 10 ** (float_length - 1 - precision) - 1
     else:
-        float_max = 10**float_length - 1
+        float_max = 10 ** float_length - 1
     while value > float_max:
-        value *= (scale[scale_index] / scale[scale_index+1])
+        value *= scale[scale_index] / scale[scale_index + 1]
         scale_index += 1
     if precision:
-        result = ("%" + str(float_length) + "." + str(precision) + "f" + scale_label[scale_index]) % value
+        result = (
+            "%"
+            + str(float_length)
+            + "."
+            + str(precision)
+            + "f"
+            + scale_label[scale_index]
+        ) % value
     else:
         result = ("%" + str(float_length) + ".0f" + scale_label[scale_index]) % value
     return result
+
 
 def print_report(report, top=None):
     """
@@ -168,13 +197,20 @@ def print_report(report, top=None):
     for key, value in report.items():
         if top > 0 or str(key).startswith("loguse "):
             tot = format_float(value[1] * 1000000)
-            cnt = format_float(value[0], length=9, precision=0, unit=" ", scales={1: " ", 1000: "K", 1000000: "M", 1000000000: "T"})
+            cnt = format_float(
+                value[0],
+                length=9,
+                precision=0,
+                unit=" ",
+                scales={1: " ", 1000: "K", 1000000: "M", 1000000000: "T"},
+            )
             avg = format_float(value[2] * 1000000)
             print("%s / %s= %s\t%s" % (tot, cnt, avg, key))
         elif top == 0:
             print(" -" * 39)
         top -= 1
     print("-" * 79)
+
 
 class SuApp(object):
     """
@@ -207,7 +243,11 @@ class SuApp(object):
         # so that all the ORM/tables are defined.
         self.db = get_database()
         try:
-            self.db.bind(self.configuration['datasource']['type'], os.path.expanduser(self.configuration['datasource']['filename']), create_db=True)
+            self.db.bind(
+                self.configuration["datasource"]["type"],
+                os.path.expanduser(self.configuration["datasource"]["filename"]),
+                create_db=True,
+            )
         except KeyError:
             self.db.bind("sqlite", ":memory:")
         self.db.generate_mapping(create_tables=True)
@@ -226,7 +266,7 @@ class SuApp(object):
             filename = "~/.%s/log/suapp.log" % (self.configuration["shortname"].lower())
             filemode = "w"
             level = "INFO"
-            format = '%(asctime)s %(levelname)s %(name)s %(message)s'
+            format = "%(asctime)s %(levelname)s %(name)s %(message)s"
             if "filename" in self.configuration["log"]:
                 filename = os.path.expanduser(self.configuration["log"]["filename"])
             else:
@@ -250,7 +290,12 @@ class SuApp(object):
             # Making sure the directory exists.
             os.makedirs(os.path.dirname(os.path.expanduser(filename)), exist_ok=True)
             # Starting the logging.
-            logging.basicConfig(filename=os.path.expanduser(filename), filemode=filemode, format=format, level=convert_to_log_level(level))
+            logging.basicConfig(
+                filename=os.path.expanduser(filename),
+                filemode=filemode,
+                format=format,
+                level=convert_to_log_level(level),
+            )
             # Putting out the delayed debug statement.
             log.debug(">configure_log() [DELAYED]")
             print(_("Logging to %s.") % (os.path.expanduser(filename)))
@@ -260,17 +305,33 @@ class SuApp(object):
                 for module in self.configuration["log"]["modules"]:
                     module_logger = logging.getLogger("modules.%s" % (module))
                     if "level" in self.configuration["log"]["modules"][module]:
-                        level = convert_to_log_level(self.configuration["log"]["modules"][module]["level"])
+                        level = convert_to_log_level(
+                            self.configuration["log"]["modules"][module]["level"]
+                        )
                         module_logger.setLevel(level)
                     if "filename" in self.configuration["log"]["modules"][module]:
-                        log.info("!Logging modules.%s to %s", module, self.configuration["log"]["modules"][module]["filename"])
+                        log.info(
+                            "!Logging modules.%s to %s",
+                            module,
+                            self.configuration["log"]["modules"][module]["filename"],
+                        )
                         module_logger.propagate = False
-                        module_logger.addHandler(logging.FileHandler(os.path.expanduser(self.configuration["log"]["modules"][module]["filename"])))
+                        module_logger.addHandler(
+                            logging.FileHandler(
+                                os.path.expanduser(
+                                    self.configuration["log"]["modules"][module][
+                                        "filename"
+                                    ]
+                                )
+                            )
+                        )
         except ConfigurationError:
             # Re-raise
             raise
         except AttributeError as err:
-            log.error("!SuApp.configure_log: Error in <log> tag (%s: %s).", type(err), err)
+            log.error(
+                "!SuApp.configure_log: Error in <log> tag (%s: %s).", type(err), err
+            )
             raise ConfigurationError("Error in <log> tag (%s: %s)!" % (type(err), err))
         log.debug("<configure_log() %s", self.configuration["log"])
 
@@ -285,7 +346,9 @@ class SuApp(object):
             self.configuration["target"] = targets.default
         self.target_module = "suapp.targets.%s" % (self.configuration["target"])
         globals()["ui"] = importlib.import_module(self.target_module)
-        logging.getLogger(self.__module__).info("Target module: %s %s", self.target_module, ui)
+        logging.getLogger(self.__module__).info(
+            "Target module: %s %s", self.target_module, ui
+        )
 
     @loguse
     def parse_flow_line(self, line):
@@ -302,7 +365,9 @@ class SuApp(object):
             out = out.strip()
             fullin = fullin.strip()
             (target, intag) = fullin.rsplit(".", 1)
-            logging.getLogger(self.__module__).debug("Flow element: %s: %s.%s (%s)", out, target, intag, comment)
+            logging.getLogger(self.__module__).debug(
+                "Flow element: %s: %s.%s (%s)", out, target, intag, comment
+            )
             return (out, intag, target)
         return (None, None, None)
 
@@ -316,8 +381,12 @@ class SuApp(object):
         installpath = os.path.dirname(os.path.abspath(sys.argv[0]))
         # 2. Look starting from the directory of the config file (if different).
         configpath = os.path.dirname(self.configuration["self"])
-        logging.getLogger(self.__module__).debug("!read_flow from install path: %s" % installpath)
-        logging.getLogger(self.__module__).debug("!read_flow from configuration path: %s" % configpath)
+        logging.getLogger(self.__module__).debug(
+            "!read_flow from install path: %s" % installpath
+        )
+        logging.getLogger(self.__module__).debug(
+            "!read_flow from configuration path: %s" % configpath
+        )
         try:
             with open(os.path.join(installpath, flowfile)) as fh:
                 for line in fh:
@@ -348,7 +417,9 @@ class SuApp(object):
         """
         if "shortname" not in self.configuration:
             self.configuration["shortname"] = "SuApp"
-        self.flow.flow[""] = self.read_flow("%s.flow" % self.configuration["shortname"].lower())
+        self.flow.flow[""] = self.read_flow(
+            "%s.flow" % self.configuration["shortname"].lower()
+        )
         if len(self.flow.flow[""]) == 0:
             raise ConfigurationError("Could not load correct flow configuration.")
         if "modules" in self.configuration:
@@ -366,10 +437,10 @@ class SuApp(object):
         app_name = self.configuration["shortname"].lower()
         # If no modules, at least do base.
         if not modules_to_import:
-            modules_to_import = ['base']
+            modules_to_import = ["base"]
         logging.getLogger(__name__).debug("Modules to load: %s" % (modules_to_import))
         # TODO: I have to find out why I need this next line.
-        #gl = globals()
+        # gl = globals()
         scope = {}
         for mod in modules_to_import:
             import_modlib(app_name, mod, self.flow, scope)
@@ -397,9 +468,12 @@ def main(config):
         print(_("Bye."))
     except Exception as e:
         try:
-            logging.getLogger(__name__).fatal(_("Unexpected end of SuApp: %s (%s)") % (type(e), e))
+            logging.getLogger(__name__).fatal(
+                _("Unexpected end of SuApp: %s (%s)") % (type(e), e)
+            )
         finally:
             print(_("Unexpected end of SuApp!"))
             import traceback
+
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)

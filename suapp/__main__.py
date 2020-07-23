@@ -58,10 +58,7 @@ def update_conf(configuration, option_string):
                 context.pop(0)
             # Transforming so clear booleans from str.
             try:
-                value = {
-                        'false': False,
-                        'true': True
-                }.get(value.lower(), value)
+                value = {"false": False, "true": True}.get(value.lower(), value)
                 value = int(value)
             except ValueError:
                 try:
@@ -79,28 +76,42 @@ def update_conf(configuration, option_string):
 # Get the language, default to UK English and we're always using UTF-8
 running_locale = locale.getlocale()
 if not running_locale[0]:
-    running_locale = ('en_GB', 'UTF-8')
+    running_locale = ("en_GB", "UTF-8")
 else:
-    running_locale = (running_locale[0], 'UTF-8')
+    running_locale = (running_locale[0], "UTF-8")
 try:
-    language = running_locale[0].split('_')[0]
+    language = running_locale[0].split("_")[0]
 except AttributeError:
     pass
 languages = set([running_locale[0], language])
 
-parser = argparse.ArgumentParser(description=suapp._('Start a SuApp application.'))
-parser.add_argument('-l', '--lang', help=suapp._("language, use 'none' if you don't want a language setting. If not set it infers the language from the environment setting."), default=locale.getlocale()[0])
-parser.add_argument('-o', '--options', help=suapp._("[key=value]* overrides to the configuration"))
-parser.add_argument('-c', '--configuration', help=suapp._("path or filename of the configuration file (json)"), default="suapp.json")
-parser.add_argument('-t', '--target', help=suapp._("target user interface"))
+parser = argparse.ArgumentParser(description=suapp._("Start a SuApp application."))
+parser.add_argument(
+    "-l",
+    "--lang",
+    help=suapp._(
+        "language, use 'none' if you don't want a language setting. If not set it infers the language from the environment setting."
+    ),
+    default=locale.getlocale()[0],
+)
+parser.add_argument(
+    "-o", "--options", help=suapp._("[key=value]* overrides to the configuration")
+)
+parser.add_argument(
+    "-c",
+    "--configuration",
+    help=suapp._("path or filename of the configuration file (json)"),
+    default="suapp.json",
+)
+parser.add_argument("-t", "--target", help=suapp._("target user interface"))
 args = parser.parse_args()
 
 if not args.lang:
     suapp.do_locale()
-elif args.lang.lower() == 'none':
+elif args.lang.lower() == "none":
     suapp.do_locale()
 else:
-    languages = set([args.lang, args.lang.split('_')[0]])
+    languages = set([args.lang, args.lang.split("_")[0]])
     suapp.do_locale(languages)
 
 print(suapp._("Python version: %s" % (sys.version)))
@@ -109,8 +120,8 @@ print(suapp._("Configuration file: %s") % (args.configuration))
 print(suapp._("User interface target: %s") % (args.target))
 print(suapp._("Options: %s") % (args.options))
 
-jsonfilename = 'suapp.json'
-json_backup = 'https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json'
+jsonfilename = "suapp.json"
+json_backup = "https://raw.githubusercontent.com/schilduil/suapp/master/suapp.json"
 if args.configuration:
     if os.path.isdir(args.configuration):
         # An existing directory is passed.

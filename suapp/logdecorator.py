@@ -11,7 +11,14 @@ from operator import add
 from functools import wraps
 
 
-__all__ = ["logging", "get_timings", "init_timings", "disable_timings", "timings_report", "loguse"]
+__all__ = [
+    "logging",
+    "get_timings",
+    "init_timings",
+    "disable_timings",
+    "timings_report",
+    "loguse",
+]
 
 
 timings = None
@@ -21,15 +28,18 @@ def get_timings():
     """ Returns the gathered timings. """
     return timings
 
+
 def init_timings():
     """ Initiates/Resets the timings. """
     global timings
     timings = {}
 
+
 def disable_timings():
     """ Disables the gathering of timings. """
     global timings
     timings = None
+
 
 def add_timing(f, time):
     """Adds an executing time for a callable to the timings."""
@@ -40,6 +50,7 @@ def add_timing(f, time):
         timings[f] = tuple(map(add, timings[f], (1, time)))
     else:
         timings[f] = (1, time)
+
 
 def timings_report():
     """Generated a report of the timings of functions.
@@ -55,6 +66,7 @@ def timings_report():
         sorted_report[f] = timings[f] + (report[f],)
 
     return sorted_report
+
 
 def loguse(param=None):
     """When in debug it will log entering and exiting a function or object methods.
@@ -92,7 +104,7 @@ def loguse(param=None):
         ignore_parameters = [param]
     elif isinstance(param, int):
         ignore_parameters = [param]
-    elif hasattr(param, '__iter__'):
+    elif hasattr(param, "__iter__"):
         ignore_parameters = param
     # Looking for the classname.
     classname = "?"
@@ -132,13 +144,19 @@ def loguse(param=None):
                 if classname == "<module>":
                     log.debug("> %s(%r, %r)", f.__name__, tuple(l_args), l_kwargs)
                 else:
-                    log.debug("> %s.%s(%r, %r)", classname, f.__name__, tuple(l_args), l_kwargs)
+                    log.debug(
+                        "> %s.%s(%r, %r)",
+                        classname,
+                        f.__name__,
+                        tuple(l_args),
+                        l_kwargs,
+                    )
             start_time_callable = time.time()
             result = f(*args, **kwargs)
             end_time_callable = time.time()
             add_timing(f, end_time_callable - start_time_callable)
             if log.isEnabledFor(logging.DEBUG):
-                if '@' in ignore_parameters:
+                if "@" in ignore_parameters:
                     if classname == "<module>":
                         log.debug("< %s", f.__name__)
                     else:
@@ -149,11 +167,19 @@ def loguse(param=None):
                     else:
                         log.debug("< %s.%s: %r", classname, f.__name__, result)
             end_time_logdecorator = time.time()
-            add_timing('loguse function call overhead', end_time_logdecorator - end_time_callable + start_time_callable - start_time_logdecorator)
+            add_timing(
+                "loguse function call overhead",
+                end_time_logdecorator
+                - end_time_callable
+                + start_time_callable
+                - start_time_logdecorator,
+            )
             return result
+
         return decorator
+
     end_time = time.time()
-    add_timing('loguse function initialization overhead', end_time - start_time)
+    add_timing("loguse function initialization overhead", end_time - start_time)
     if f:
         return real_loguse(f)
     else:
