@@ -47,3 +47,7 @@ tests/targets/*only/
 # Visual Studio Code
 .vscode
 .vscode/
+
+# Old stuff
+old*
+old*/
