@@ -22,9 +22,6 @@ susm*
 modlib
 modlib/*
 
-# Makefile
-Makefile
-
 # Javascript and CSS files
 suapp/targets/localweb/js/*/*/*.js
 suapp/targets/localweb/js/*/*/*.map

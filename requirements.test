@@ -4,4 +4,5 @@ pytest-cov >= 2.5.1     # FOR TESTING
 pytest-annotate >=1.0.1 # FOR TESTING
 pytest-monkeytype       # FOR TESTING
 pytest-black            # FOR TESTING
-pytest-xdist            # FOR TESTING
+pytest-xdist            # FOR TESTING: parallelize
+pytest-picked           # FOR TESTING: test changes based on git status
