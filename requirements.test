@@ -3,4 +3,5 @@ pytest >= 3.0.6         # FOR TESTING
 pytest-cov >= 2.5.1     # FOR TESTING
 pytest-annotate >=1.0.1 # FOR TESTING
 pytest-monkeytype       # FOR TESTING
-pytest-black            # FOR TESTING once we're on 3.6
+pytest-black            # FOR TESTING
+pytest-xdist            # FOR TESTING
