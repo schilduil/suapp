@@ -605,6 +605,7 @@ class WebConfiguration(Configuration):
         if "/" in file_type:
             # The URL doesn't seem to contain file at the end so this was wrong.
             file_type = None
+        file_name = None
         try:
             # Download the file from `url` and save it locally under `file_name`:
             (os_level_handle, file_name) = tempfile.mkstemp(suffix=".%s" % (file_type))
