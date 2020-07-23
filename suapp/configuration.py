@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 
 """
@@ -355,7 +355,7 @@ class YamlConfigurationParser(ConfigurationParser):
         Parsing a yaml file and updating the configuration.
         """
         import yaml
-        configuration.update(yaml.load(open(self.location, 'r', encoding='utf-8')))
+        configuration.update(yaml.load(open(self.location, 'r', encoding='utf-8'), Loader=yaml.SafeLoader))
 
     def save_from_dict(self, configuration):
         """
