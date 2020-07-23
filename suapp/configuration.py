@@ -367,16 +367,12 @@ class YamlConfigurationParser(ConfigurationParser):
         Parsing a yaml file and updating the configuration.
         """
         import yaml
-<<<<<<< HEAD
-        configuration.update(yaml.load(open(self.location, 'r', encoding='utf-8'), Loader=yaml.SafeLoader))
-=======
 
         configuration.update(
             yaml.load(
                 open(self.location, "r", encoding="utf-8"), Loader=yaml.SafeLoader
             )
         )
->>>>>>> 61908631e8507f03da88742d7d349b1c65b05c31
 
     def save_from_dict(self, configuration):
         """
